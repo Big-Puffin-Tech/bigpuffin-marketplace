@@ -5,6 +5,7 @@ Kinetik's plugins for small and medium-sized businesses. Each business keeps its
 - `business-analyst`: the business analyst, the agent of the business's owner and administrators. It sets up Kinetik with the owner, adds staff and gives them their roles, and interviews the business's people about their workflows.
 - `kinetik`: the database operator, every member of staff's agent, and the skills every business gets.
 - `okb`: the sign-in, the `okb` command, and the tools each agent uses in the knowledge base.
+- `animator`: makes animated recipe videos, as described under [Animated recipes](#animated-recipes). It stands apart from the other three and needs no knowledge base.
 
 ## Getting set up
 
@@ -93,3 +94,40 @@ It then adds this marketplace, and installs the `okb`, `kinetik` and `business-a
 The script never asks for or keeps a password. Only the sign-in asks, at its own prompt.
 
 A step that stops shows Claude Code's or the sign-in's message. Run the same command again: each program and each step already done says so, and the run carries on from where it stopped. A folder that is already signed in keeps its password.
+
+## Animated recipes
+
+The `animator` plugin is free and open source, under the [MIT licence](plugins/animator/LICENSE). It makes an animated, narrated recipe video you can cook along to, with a printable recipe card. You ask for a dish, how many people it's for and any allergens to leave out. It writes an original recipe from whole, natural ingredients, draws each step, has it narrated and renders it to an MP4. Samples are at [animated.recipes](https://animated.recipes/samples/).
+
+### What you need
+
+- Claude Code, in the Claude desktop app's **Code** tab or in a terminal.
+- Node.js 22 or later.
+- Google Chrome. On Windows or Linux, set `CHROME_PATH` to Chrome's program file.
+- FFmpeg.
+- An AssemblyAI account, for the narration. Make an API key in its dashboard, and put it in a file called `.env` in the folder you make videos in, as `ASSEMBLYAI_API_KEY=<your key>`. AssemblyAI charges for the speech it makes.
+
+### Installing it
+
+In Claude Code, type:
+
+```
+/plugin marketplace add Kinetik-Infotech/kinetik-marketplace
+/plugin install animator@kinetik
+```
+
+### Making a video
+
+Start a Code session in the folder that holds your `.env`, and ask, for example:
+
+```
+Make an animated recipe video of chicken pie for six, without milk
+```
+
+You can also choose:
+
+- the style: `line`, `comic`, `anime` or `storyboard`;
+- the narrator: Nancy, Carrie, Yasmin, Audrey, Peter, Gunnar, Steven or Troy;
+- metric or US measures.
+
+Each video is made in its own folder under `jobs/`, and ends as `video.mp4` and `card.pdf`. If a dish can't be made well without an allergen you've left out, the animator says so and makes nothing.
