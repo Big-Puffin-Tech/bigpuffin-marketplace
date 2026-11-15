@@ -1,0 +1,27 @@
+{
+  "name": "legacy",
+  "owner": {
+    "name": "Joel Smalley"
+  },
+  "metadata": {
+    "description": "Legacy's plugins for small and medium-sized businesses: the Legacy knowledge base each business keeps in its own Supabase project, its organisational knowledge base (OKB), and the agents that work in it.",
+    "version": "1.6.0"
+  },
+  "plugins": [
+    {
+      "name": "legacy",
+      "description": "The database operator, every member of staff's agent for their business's Legacy knowledge base, the organisational knowledge base (OKB), with the Dashboard button, which asks what is outstanding, and the skills every business gets: adding staff, approving a model, getting started, ingesting from connectors, showing what is outstanding, updating plugins and support.",
+      "source": "./plugins/legacy"
+    },
+    {
+      "name": "okb",
+      "description": "Lets each person work in their business's Legacy knowledge base, its organisational knowledge base (OKB), in the business's own Supabase project, within their own permissions: records, files and their search, the glossary and data dictionary, boards, graphs and printed PDFs.",
+      "source": "./plugins/okb"
+    },
+    {
+      "name": "business-analyst",
+      "description": "The business analyst, the agent of a business's owner and administrators. It sets up Legacy for the business: its Legacy knowledge base, the organisational knowledge base (OKB), in its own Supabase project. Then it keeps the business's scopes, staff and grants, and interviews its people about their routines, saving each confirmed routine as a model of how the work is done today.",
+      "source": "./plugins/business-analyst"
+    }
+  ]
+}

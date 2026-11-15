@@ -1,0 +1,18 @@
+/* Legacy's colours, from the site's stylesheet, for a card in the chat over the widget kit. Each value follows the
+   card's colour scheme, which the card takes from Claude's theme: the first in light, the second in dark. Square
+   corners, thin rules, and the green key on the one action. */
+:root {
+  --legacy-plate: light-dark(#f5f5f3, #1a1a1a);
+  --legacy-ink: light-dark(#0b0b0b, #f2f2f0);
+  --legacy-muted: light-dark(#56595a, #a8aaa9);
+  --legacy-rule: light-dark(#e3e4e2, #2c2c2c);
+  --legacy-key: #2fe28a;
+  --legacy-key-ink: #0b0b0b;
+  --text-secondary: var(--legacy-muted);
+  --border: var(--legacy-rule);
+  --surface-1: var(--legacy-plate);
+  --radius: 0;
+}
+.wk-head { background: var(--legacy-plate); color: var(--legacy-ink); border-radius: 0; border-left: 3px solid var(--legacy-key); }
+.wk h2 { color: var(--legacy-ink); }
+.wk-row { border-width: 1px; }
