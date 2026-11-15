@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Makes a job's printable recipe card: card.html from script.json and request.json, printed to card.pdf on A4 by
-// Chrome. The card has the title and what it makes (script.json's makes, such as "1 loaf", or else the servings), the ingredients in the request's units, each linked to where to buy
-// it, what was left out and what replaced it, the equipment, and the method, step by step from the narration.
+// Chrome. The card has the title and what it makes (script.json's makes, such as "1 loaf", or else the servings), the ingredients in the request's units, what
+// was left out and what replaced it, the equipment, and the method, step by step from the narration.
 //
 //   node card.mjs <job-dir>
 //
@@ -15,13 +15,9 @@ import { CHROME, confine } from './lib/chrome.mjs';
 /** The servings as a whole number from 1 to 12, so nothing else can reach the card's markup. */
 const people = n => Math.min(12, Math.max(1, Math.round(Number(n)) || 1));
 
-export const SUPPLIERS = 'https://animated.recipes/suppliers/';
 const NAMES = { celery: 'celery', gluten: 'gluten', crustaceans: 'crustaceans', eggs: 'eggs', fish: 'fish', lupin: 'lupin', milk: 'milk', molluscs: 'molluscs', mustard: 'mustard', nuts: 'tree nuts', peanuts: 'peanuts', sesame: 'sesame', soya: 'soya', sulphites: 'sulphites' };
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-/** Whether an ingredient gets a "Where to buy" link: not water, and not one the script marks "buy": false (such as
- *  levain made earlier in the recipe). */
-export const buyable = i => i.buy !== false && !/^(warm |cold |hot )?water\b/i.test(i.name);
 const fail = msg =>{ console.error(`card: ${msg}`); process.exit(1); };
 
 /** The card's HTML for a script and its request. */
@@ -42,7 +38,6 @@ table{width:100%;border-collapse:collapse}
 td{padding:4pt 0;border-top:.5pt solid #ddd;vertical-align:top}
 td.amt{white-space:nowrap;padding-right:10pt;font-weight:600;width:1%}
 a{color:#0a5fa3;text-decoration:none}
-.buy{font-size:8.5pt}
 .note{background:#f3f2ee;border-radius:6pt;padding:8pt 10pt;margin-top:10pt}
 ol{margin:0;padding-left:16pt}
 li{margin:0 0 6pt;break-inside:avoid}
@@ -55,14 +50,14 @@ footer{margin-top:18pt;padding-top:6pt;border-top:.5pt solid #ddd;color:#67655f;
 ${left.length ? `<div class="note"><strong>Left out:</strong> ${esc(left.join(', '))}.${subs.length ? ` ${subs.map(s => `${esc(s.use)} instead of ${esc(s.for)}`).join('; ')}.` : ''}</div>` : ''}
 <div class="cols"><div>
 <h2>Ingredients</h2>
-<table>${script.ingredients.map(i => `<tr><td class="amt">${esc(amount(i))}</td><td>${esc(i.name)}${buyable(i) ? `<br><a class="buy" href="${SUPPLIERS}#${esc(i.id)}">Where to buy</a>` : ''}</td></tr>`).join('')}</table>
+<table>${script.ingredients.map(i => `<tr><td class="amt">${esc(amount(i))}</td><td>${esc(i.name)}</td></tr>`).join('')}</table>
 </div><div>
 <h2>Equipment</h2>
 <ul class="eq">${(script.equipment ?? []).map(e => `<li>${esc(e)}</li>`).join('')}</ul>
 </div></div>
 <h2>Method</h2>
 <ol>${steps.map(s => `<li><b>${esc(s.title)}</b>${esc(us ? s.voUS || s.vo : s.vo)}</li>`).join('')}</ol>
-<footer>Made for you by animated.recipes. Where to buy every ingredient: animated.recipes/suppliers</footer>
+<footer>Made with animated.recipes.</footer>
 </body></html>`;
 }
 

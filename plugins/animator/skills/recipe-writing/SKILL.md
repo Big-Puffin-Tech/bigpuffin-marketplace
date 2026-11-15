@@ -23,7 +23,6 @@ These are checked by `check.mjs` against `data/rules.json`, and a recipe that br
 
 - It says the ingredients, the equipment, the method, the timings and the temperatures.
 - It never gives nutrition figures, calories, health benefits or health advice, and never says an ingredient is healthy or unhealthy.
-- The ingredients card ends with "WHERE TO BUY: ANIMATED.RECIPES".
 
 ## Scaling
 
@@ -52,7 +51,6 @@ Each ingredient in `script.json`:
 - `grams` is the metric amount, or `null` for "a little" items such as oil for the tin.
 - `us` is the US amount in cups, tbsp, tsp, oz or lb, written with the fraction characters ¼ ½ ¾ ⅓ ⅔ ⅛, such as "1½ cups + 1 tbsp". For a `null` amount, write the words ("a little").
 - `gPerCup` (for cups) or `gPerTsp` (for tbsp and tsp) is the ingredient's real density: flour about 120 g a cup, water 237, sugar 200, butter 227, fine salt 6 g a teaspoon. `check.mjs` requires the US amount to be within 10% of the grams through it.
-- `"buy": false` on an ingredient made earlier in the recipe (levain, a stock you make) leaves out its "Where to buy" link on the recipe card. Water never gets one.
 - Each scene lists in `uses` what it adds, `{ "ingredient": "flour", "grams": 600 }`. Each ingredient's uses add up to its grams.
 - Temperatures are °C in the metric text and °F in the US text. Lengths are cm and inches.
 
