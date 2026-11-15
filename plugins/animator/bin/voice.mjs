@@ -69,6 +69,7 @@ if (!KEY) fail('ASSEMBLYAI_API_KEY is not set: put ASSEMBLYAI_API_KEY=<your key>
 
 const script = JSON.parse(await readFile(path.join(first, 'script.json'), 'utf8'));
 const ONLY = only ? new Set(only.split(',')) : null;
+for (const s of script.scenes) if (!/^[A-Za-z][\w-]*$/.test(s.id || '')) fail(`scene id ${JSON.stringify(s.id)} must be a letter then letters, digits, - or _`);
 if (ONLY) for (const id of ONLY) if (!script.scenes.some(s => s.id === id)) fail(`no scene ${id} in script.json`);
 const out = path.join(first, 'audio');
 await mkdir(out, { recursive: true });

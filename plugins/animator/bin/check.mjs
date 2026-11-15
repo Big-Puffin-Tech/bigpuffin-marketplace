@@ -30,10 +30,16 @@ const fail = (check, msg) => fails.push(`${check}: ${msg}`);
 const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ---- text the cook sees or hears -------------------------------------------------------------------------------
-const svgText = svg => (svg || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-const usText = svg => [...(svg || '').matchAll(/data-us="([^"]*)"/g)].map(m => m[1]).join(' ');
+// Entities are decoded, not dropped, so "sun&#102;lower oil" is read as "sunflower oil".
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const decode = t => t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === '#'
+  ? String.fromCodePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : +e.slice(1))
+  : ENTITIES[e.toLowerCase()] ?? ' ').normalize('NFC');
+const svgText = svg => decode((svg || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+const usText = svg => decode([...(svg || '').matchAll(/data-us=(["'])(.*?)\1/g)].map(m => m[2]).join(' '));
 function corpus(script) {
-  const items = [['title', script.title || ''], ['makes', script.makes || '']];
+  const items = [['title', script.title || ''], ['makes', script.makes || ''], ['equipment', (script.equipment || []).join(' ')],
+    ['substitutes', (script.substitutes || []).map(s => s.use || '').join(' ')]];
   for (const i of script.ingredients || []) items.push([`ingredient ${i.id}`, `${i.name} ${i.us || ''}`]);
   for (const s of script.scenes || []) {
     items.push([`scene ${s.id} narration`, `${s.vo || ''} ${s.voUS || ''}`]);
