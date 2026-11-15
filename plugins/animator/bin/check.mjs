@@ -19,6 +19,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { svgProblems } from './lib/svg-safe.mjs';
 
 const DATA = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'data');
 const ALLERGENS = JSON.parse(readFileSync(path.join(DATA, 'allergens.json'), 'utf8'));
@@ -168,12 +169,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (!dir) { console.error('usage: node check.mjs <job-dir> [--before-voice]'); process.exit(2); }
   const read = f => JSON.parse(readFileSync(path.join(dir, f), 'utf8'));
   const request = read('request.json'), script = read('script.json');
+  for (const s of script.scenes || []) for (const p of svgProblems(s.svg)) fail('drawing', `scene ${s.id}: ${p}`);
   checkUses(script); checkUs(script); checkAllergens(script, request); checkRules(script);
   if (flag !== '--before-voice') {
     const d = path.join(dir, 'audio', 'durations.json');
     if (!existsSync(d)) fail('clips', 'audio/durations.json is missing'); else checkClips(script, JSON.parse(readFileSync(d, 'utf8')));
     const p = path.join(dir, 'page.html');
-    if (!existsSync(p)) fail('layout', 'page.html is missing'); else await checkLayout(p);
+    if (!existsSync(p)) fail('layout', 'page.html is missing'); else if (!fails.some(f => f.startsWith('drawing:'))) await checkLayout(p);
   }
   for (const f of fails) console.log(f);
   process.exit(fails.length ? 1 : 0);

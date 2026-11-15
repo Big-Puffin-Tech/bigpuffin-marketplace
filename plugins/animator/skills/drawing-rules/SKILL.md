@@ -62,3 +62,4 @@ An arrowhead follows its line's direction at the tip. For a quadratic curve `M x
 - No comic sound effects (POP!, SIZZLE!).
 - No brand names or logos.
 - No nutrition figures or health claims.
+- No elements beyond g, path, rect, circle, ellipse, line, polyline, polygon, text, tspan and title, and no attributes beyond class, id, the shape's own geometry, transform, text-anchor, opacity and data-*. No style attributes, images, links, scripts or event attributes: build.mjs and check.mjs refuse them.
