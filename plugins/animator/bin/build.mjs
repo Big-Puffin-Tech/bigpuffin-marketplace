@@ -7,6 +7,7 @@
 // <audio-dir>/durations.json inlined. It plays the clips from <audio-dir>, by a path relative to <out.html>.
 // Open it as is to play it; add ?record for the bare 1600 × 900 frame a recorder steps with window.renderAt(t).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { svgProblems } from './lib/svg-safe.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,6 +40,7 @@ const ids = new Set();
   ids.add(s.id);
   if (!(s.dur > 0)) problems.push(`${at}: dur must be a positive number of seconds`);
   if (typeof s.svg !== 'string' || !s.svg.trim()) problems.push(`${at}: svg is missing`);
+  else for (const p of svgProblems(s.svg)) problems.push(`${at}: svg ${p}`);
   if (!Array.isArray(s.cap) || !s.cap.length) problems.push(`${at}: cap needs at least one caption`);
   else if (s.cap[0][0] !== 0) problems.push(`${at}: the first caption must start at 0`);
   if (s.capUS && (!Array.isArray(s.capUS) || s.capUS.length !== (s.cap || []).length)) problems.push(`${at}: capUS must have one entry per caption`);

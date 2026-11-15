@@ -10,7 +10,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer-core';
-import { CHROME } from './lib/chrome.mjs';
+import { CHROME, confine } from './lib/chrome.mjs';
+
+/** The servings as a whole number from 1 to 12, so nothing else can reach the card's markup. */
+const people = n => Math.min(12, Math.max(1, Math.round(Number(n)) || 1));
 
 export const SUPPLIERS = 'https://animated.recipes/suppliers/';
 const NAMES = { celery: 'celery', gluten: 'gluten', crustaceans: 'crustaceans', eggs: 'eggs', fish: 'fish', lupin: 'lupin', milk: 'milk', molluscs: 'molluscs', mustard: 'mustard', nuts: 'tree nuts', peanuts: 'peanuts', sesame: 'sesame', soya: 'soya', sulphites: 'sulphites' };
@@ -48,7 +51,7 @@ ul.eq{margin:0;padding-left:14pt}
 footer{margin-top:18pt;padding-top:6pt;border-top:.5pt solid #ddd;color:#67655f;font-size:8.5pt}
 </style></head><body>
 <h1>${esc(script.title)}</h1>
-<p class="meta">${script.makes ? `Makes ${esc(script.makes)}` : `For ${script.servings} ${script.servings === 1 ? 'person' : 'people'}`} · ${us ? 'US measures' : 'metric'}</p>
+<p class="meta">${script.makes ? `Makes ${esc(script.makes)}` : `For ${people(script.servings)} ${people(script.servings) === 1 ? 'person' : 'people'}`} · ${us ? 'US measures' : 'metric'}</p>
 ${left.length ? `<div class="note"><strong>Left out:</strong> ${esc(left.join(', '))}.${subs.length ? ` ${subs.map(s => `${esc(s.use)} instead of ${esc(s.for)}`).join('; ')}.` : ''}</div>` : ''}
 <div class="cols"><div>
 <h2>Ingredients</h2>
@@ -74,6 +77,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new' });
   try {
     const page = await browser.newPage();
+    await confine(page, path.dirname(html));
     await page.goto(pathToFileURL(html).href, { waitUntil: 'load' });
     await page.pdf({ path: pdf, format: 'A4', printBackground: true, preferCSSPageSize: true });
   } finally { await browser.close(); }
