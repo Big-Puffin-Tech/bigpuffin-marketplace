@@ -1,0 +1,11 @@
+{
+  "name": "business-analyst",
+  "description": "The business analyst, the agent of a business's owner and administrators. It sets up Kinetik for the business: its Kinetik knowledge base, the organisational knowledge base (OKB), in its own Supabase project. Then it keeps the business's scopes, staff and grants, and interviews its people about their routines, saving each confirmed routine as a model of how the work is done today.",
+  "version": "0.11.0",
+  "author": {
+    "name": "Kinetik"
+  },
+  "dependencies": [
+    "okb"
+  ]
+}

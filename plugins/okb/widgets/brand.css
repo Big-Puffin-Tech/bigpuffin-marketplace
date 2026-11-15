@@ -1,0 +1,18 @@
+/* Kinetik's colours, from the site's stylesheet, for a card in the chat over the widget kit. Each value follows the
+   card's colour scheme, which the card takes from Claude's theme: the first in light, the second in dark. Square
+   corners, thin rules, and the green key on the one action. */
+:root {
+  --kinetik-plate: light-dark(#f5f5f3, #1a1a1a);
+  --kinetik-ink: light-dark(#0b0b0b, #f2f2f0);
+  --kinetik-muted: light-dark(#56595a, #a8aaa9);
+  --kinetik-rule: light-dark(#e3e4e2, #2c2c2c);
+  --kinetik-key: #2fe28a;
+  --kinetik-key-ink: #0b0b0b;
+  --text-secondary: var(--kinetik-muted);
+  --border: var(--kinetik-rule);
+  --surface-1: var(--kinetik-plate);
+  --radius: 0;
+}
+.wk-head { background: var(--kinetik-plate); color: var(--kinetik-ink); border-radius: 0; border-left: 3px solid var(--kinetik-key); }
+.wk h2 { color: var(--kinetik-ink); }
+.wk-row { border-width: 1px; }

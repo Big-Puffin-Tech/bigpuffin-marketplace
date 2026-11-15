@@ -1,0 +1,23 @@
+{
+  "workflow": "orders",
+  "scope": {
+    "code": "orders",
+    "display_name": "Orders",
+    "description": "Each customer order, from the first enquiry to delivery."
+  },
+  "roles": {
+    "adviser": {
+      "description": "An adviser takes and follows up orders, and sees only the orders they started.",
+      "grants": [
+        { "scope": "orders", "record_kinds": ["activity", "decision", "model", "evidence"], "actions": ["read", "create", "edit", "start", "complete", "cancel"], "own_records": true }
+      ]
+    },
+    "manager": {
+      "description": "The manager sees every order, takes one over, and decides on discounts.",
+      "grants": [
+        { "scope": "orders", "record_kinds": ["activity", "decision", "model", "evidence"], "actions": ["read", "create", "edit", "start", "hold", "complete", "reopen", "cancel", "decide"], "own_records": false }
+      ]
+    }
+  },
+  "plugin_readers": ["adviser", "manager"]
+}
