@@ -1,7 +1,7 @@
 {
   "name": "legacy",
   "description": "The database operator, every member of staff's agent for their business's Legacy knowledge base, the organisational knowledge base (OKB), with the Dashboard button, which asks what is outstanding, and the skills every business gets: adding staff, approving a model, getting started, ingesting from connectors, showing what is outstanding, updating plugins and support.",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "author": {
     "name": "Legacy"
   },
