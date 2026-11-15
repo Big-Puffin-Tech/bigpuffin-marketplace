@@ -130,4 +130,4 @@ You can also choose:
 - the narrator: Nancy, Carrie, Yasmin, Audrey, Peter, Gunnar, Steven or Troy;
 - metric or US measures.
 
-Each video is made in its own folder under `jobs/`, and ends as `video.mp4` and `card.pdf`. If a dish can't be made well without an allergen you've left out, the animator says so and makes nothing.
+Each video is made in its own folder under `jobs/`, and ends as `video.mp4` and `card.pdf`.
