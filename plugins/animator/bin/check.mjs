@@ -32,12 +32,15 @@ const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // ---- text the cook sees or hears -------------------------------------------------------------------------------
 // Entities are decoded, not dropped, so "sun&#102;lower oil" is read as "sunflower oil".
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', shy: '', zwj: '', zwnj: '' };
-const codePoint = n => Number.isInteger(n) && n >= 0 && n <= 0x10FFFF ? String.fromCodePoint(n) : '';
-// Invisible characters (soft hyphens, zero-width spaces and joiners, format marks, variation selectors, unassigned and
-// invalid codes) are removed, so they can't split a word.
-const decode = t => t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === '#'
-  ? codePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : Number(e.slice(1)))
-  : ENTITIES[e.toLowerCase()] ?? ' ').normalize('NFKC').replace(/[\p{Cf}\p{Cn}\p{Cs}\u00AD\uFE00-\uFE0F]/gu, '');
+const codePoint = (n, gap) => Number.isInteger(n) && n >= 0 && n <= 0x10FFFF && !(n >= 0xD800 && n <= 0xDFFF) ? String.fromCodePoint(n) : gap;
+// Zero-width characters (soft hyphens, zero-width spaces and joiners, format marks, variation selectors) are removed.
+// Invalid, unassigned and private-use codes show as a glyph, so they are read both as a gap and as nothing: the text
+// comes back in both readings, and a word found in either one is caught.
+const reading = (t, gap) => t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === '#'
+  ? codePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : Number(e.slice(1)), gap)
+  : ENTITIES[e.toLowerCase()] ?? gap).normalize('NFKC').replace(/[\p{Cf}\u00AD\uFE00-\uFE0F]/gu, '')
+  .replace(/[\p{Cn}\p{Cs}\p{Co}\uFFFD]/gu, gap);
+const decode = t => { const a = reading(t, ' '), b = reading(t, ''); return a === b ? a : `${a} | ${b}`; };
 const svgText = svg => decode((svg || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 const usText = svg => decode([...(svg || '').matchAll(/data-us=(["'])([\s\S]*?)\1/g)].map(m => m[2]).join(' ')).replace(/\s+/g, ' ').trim();
 function corpus(script) {
