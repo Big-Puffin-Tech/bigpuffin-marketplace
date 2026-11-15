@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Legacy's plugins for small and medium-sized businesses: the Legacy knowledge base each business keeps in its own Supabase project, its organisational knowledge base (OKB), and the agents that work in it.",
-    "version": "1.6.0"
+    "version": "1.7.0"
   },
   "plugins": [
     {
@@ -22,6 +22,11 @@
       "name": "business-analyst",
       "description": "The business analyst, the agent of a business's owner and administrators. It sets up Legacy for the business: its Legacy knowledge base, the organisational knowledge base (OKB), in its own Supabase project. Then it keeps the business's scopes, staff and grants, and interviews its people about their routines, saving each confirmed routine as a model of how the work is done today.",
       "source": "./plugins/business-analyst"
+    },
+    {
+      "name": "animator",
+      "description": "Turns a recipe request into an animated, narrated recipe video you can cook along to: an original whole-food recipe for your number of servings, drawn as SVG scenes, checked, narrated with AssemblyAI and rendered to MP4, with a printable recipe card.",
+      "source": "./plugins/animator"
     }
   ]
 }
