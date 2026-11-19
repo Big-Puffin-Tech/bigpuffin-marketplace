@@ -7,7 +7,7 @@
 //   file search's functions and schedule; the Data API serving okb; the owner's own sign-in; the business's short
 //   name, its slug, kept with Kinetik's website; the administrator, the health check, the scopes and file search
 //   checked as the owner, the setup record and the open task saved, okb_setup dropped, setup ended in the folder;
-//   then the four settings of Kinetik's connector, and the summary.
+//   then the five settings of Kinetik's connector, public sign-up off among them, and the summary.
 //
 // The token, the owner's password and the database password the command makes stay in this process's memory. None
 // goes on a command line, into an environment variable, a file or a log, and none is printed.
@@ -33,7 +33,7 @@ import {
   API, apiBase, askHidden as terminalHidden, createProject, deployFunction, exposeOkb, functionsList, managementClient,
   organization, organizations, PROJECT_REF, projects, publishableKey, query, Refused, waitHealthy,
 } from "./management.mjs";
-import { AGAIN, makeSettings, TOKEN_PAGE } from "./connector-settings.mjs";
+import { AGAIN, makeSettings, TOKEN_OPTIONS, TOKEN_PAGE } from "./connector-settings.mjs";
 import { ownerSignIn } from "../mcp/lib/sign-in-flow.mjs";
 import { createTools } from "../mcp/lib/tools.mjs";
 import { readActor } from "../mcp/lib/actor-file.mjs";
@@ -91,8 +91,8 @@ export const slugTry = (slug, n) => n === 1 ? slug : `${cutAt(slug, 38)}-${n}`;
 export const OWNER_SETUP_USAGE = `Usage: node okb.mjs setup --owner --folder <folder>
 
 setup --owner sets Kinetik up for your business in one run. It asks for a Supabase access token, which you make
-at ${TOKEN_PAGE}, with a short expiry, and you delete it on that page once setup is done. It then asks your business's name, finds or creates your Supabase project in London, builds your
-Kinetik knowledge base in it, asks your name, email and the password you choose, and makes the four settings of
+at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} You delete it on that page once setup is done. It then asks your business's name, finds or creates your Supabase project in London, builds your
+Kinetik knowledge base in it, asks your name, email and the password you choose, and makes the five settings of
 Kinetik's connector. Run it again after a stop, and it carries on from where it stopped.`;
 
 /** --folder, checked. */
@@ -240,7 +240,7 @@ export async function ownerSetup(argv, {
   const projectUrl = ref => stand ? base : `https://${ref}.supabase.co`;
   const waitMs = stand && Number(env.OKB_TEST_HEALTH_WAIT_MS) > 0 ? Number(env.OKB_TEST_HEALTH_WAIT_MS) : 600000;
 
-  say(`Make a Supabase access token at ${TOKEN_PAGE}, with a short expiry, and paste it here. Delete it on that page once setup is done.`);
+  say(`Make a Supabase access token at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} Paste it here, and delete it on that page once setup is done.`);
   let token;
   try { token = await askHidden("Supabase access token: "); }
   catch (err) { say(`Stopped: ${said(err)}`); return 1; }
@@ -454,7 +454,7 @@ export async function ownerSetup(argv, {
     doing = "Ending setup in your folder";
     await endFolder(folder);
 
-    // The four settings of Kinetik's connector, with the slug.
+    // The five settings of Kinetik's connector, with the slug.
     doing = "Kinetik's connector's settings";
     if (!business.held || typeof business.slug !== "string" || !SLUG.test(business.slug)) throw new Stop(`${folder} holds no short name for ${business.name}. Once Kinetik gives you its address, run node okb.mjs connector-settings.`);
     const settings = await makeSettings({ ref, slug: business.slug }, null, base, c);
@@ -467,7 +467,9 @@ export async function ownerSetup(argv, {
     say(`Kinetik is set up in ${business.project}, and you are its administrator.`);
     for (const line of codes) say(`Kinetik's website did not take its invitation code. Please email it to ${support ?? "Kinetik"}, so Kinetik can sign in: ${line}.`);
     if (plan === "free") say("Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running.");
-    say(`One step is left. Once Kinetik confirms your business, the Owner of your Claude organisation adds Kinetik's connector at ${CONNECTOR}/${business.slug}.`);
+    say("One step is left. Once Kinetik confirms your business, the Owner of your Claude organisation adds Kinetik's connector at this address:");
+    say(`${CONNECTOR}/${business.slug}`);
+    say("When you connect it in Claude, sign in with the email and password you chose in this setup, not your Claude or Supabase login.");
     // The session the owner ran this from started before their sign-in, so its okb plugin cannot see it: a new one can.
     say(`Start a new Code session on ${folder}, and type done there.`);
     rmSync(join(folder, build.KINETIK_CODE_FILE), { force: true });

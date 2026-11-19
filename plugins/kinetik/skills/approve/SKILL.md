@@ -12,7 +12,9 @@ A person approves one exact version of a model record in the business's OKB. The
 
 Each approval is a decision record, saved by the person who approves, signed in as themselves, so the audit log names them. It names its routine in its title and its fields. It links to the exact model version with `supports`. A request for changes to a routine is a decision too. It links to the version with `describes`, and holds the person's words.
 
-This skill belongs to no one agent. The person's own agent runs it in the session where the person asks, and never sends them to another session or another agent to approve. Every call goes through the okb plugin's `rpc` tool, as the `okb:records` skill says. Every save follows that skill's section 3: preview first, and save only what the person agrees to. Drawing follows the `okb:graph` skill's section 3. Every sentence the person reads follows the `okb:writing` skill.
+This skill belongs to no one agent. The person's own agent runs it in the session where the person asks, and never sends them to another session or another agent to approve.
+
+Every call goes through the okb plugin's `rpc` tool, as the `okb:records` skill says. Every save follows that skill's section 3: preview first, and save only what the person agrees to. Where the session has Kinetik's connector, each decision is shown on its approval card, and the card's Yes saves it as the person. Drawing follows the `okb:graph` skill's section 3. Every sentence the person reads follows the `okb:writing` skill.
 
 ## Choose the mode
 
@@ -84,10 +86,12 @@ One reply deals with one routine, and asks one question. The first reply also ho
      - `alternatives`: `["Approve this routine", "Ask for changes"]`.
      - `decision`: "Approved: routine <id> <name> is how we work today" for a current state, "Approved: routine <id> <name>, £250 plus VAT, then £25 a month plus VAT" for a proposed design, or "Changes asked for: routine <id> <name>".
      - `rationale`: the person's own words, as they said them. `decided_on`: today's date.
-     It sets the preview's `request` `links` to one link to the `version_id`: `supports` for an approval, `describes` for changes. It calls `okb_save_version` with that request and the preview's `authorisation_id`. For changes, it shows the decision first, asks "Shall I save this change request for routine <id> <name>?", and saves it once the person agrees.
+     It sets the preview's `request` `links` to one link to the `version_id`: `supports` for an approval, `describes` for changes. For changes, it shows the decision first, asks "Shall I save this change request for routine <id> <name>?", and saves it once the person agrees.
+   - **With Kinetik's connector:** the agent shows the request on the approval card with `show_approval`, as the `okb:records` skill's "The approval card" says, and ends the turn. The person's own yes to the routine's question comes first, and the card's Yes saves it. Several routines approved at once go on one card, titled for the model and its version. At the next turn, the agent reads the card's outcome, and goes on only for each decision the card saved.
+   - **Without the connector:** it calls `okb_save_version` with that request and the preview's `authorisation_id`.
 2. **Go on to the next routine.**
    - **Person:** reads that the routine is saved, and the next one.
-   - **The agent:** says "Saved: routine <id> <name>, approved." or "Saved: your changes to routine <id> <name>." In the same reply, it shows the next routine still to decide and asks its question, as section 3's step 2 says. After the last routine, it goes to section 5. When the person stops part way, it says which routines are still to decide, and that they can carry on in any session.
+   - **The agent:** once the save is made, says "Saved: routine <id> <name>, approved." or "Saved: your changes to routine <id> <name>." When the person pressed No on the card, it asks once what to change, and saves nothing for that routine. In the same reply, it shows the next routine still to decide and asks its question, as section 3's step 2 says. After the last routine, it goes to section 5. When the person stops part way, it says which routines are still to decide, and that they can carry on in any session.
 
 **AI guided:** the agent shows the person each decision before saving it, and waits for their approval.
 

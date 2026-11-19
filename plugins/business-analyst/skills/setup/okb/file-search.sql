@@ -421,12 +421,14 @@ revoke all on file_search.claimable_entity from public, anon, authenticated;
 create or replace function file_search.claim_entities(p_limit integer)
 returns table(entity_id uuid, body text)
 language sql volatile set search_path=pg_catalog as $$
- with claimed as (
+ with picked as materialized (
+  select w.entity_id from file_search.entity w
+  where w.state='waiting' and w.attempts<5
+   and (w.last_attempt_at is null or w.last_attempt_at<clock_timestamp()-interval '5 minutes')
+  order by w.created_at, w.entity_id limit greatest(1, least(p_limit, 50)) for update of w skip locked),
+ claimed as (
   update file_search.entity e set attempts=e.attempts+1, last_attempt_at=clock_timestamp()
-  where e.entity_id in (
-   select w.entity_id from file_search.entity w
-   where w.entity_id in (select c.entity_id from file_search.claimable_entity c)
-   order by w.created_at, w.entity_id limit greatest(1, least(p_limit, 50)) for update of w skip locked)
+  from picked p where e.entity_id=p.entity_id
   returning e.entity_id, e.name, e.entity_type)
  select c.entity_id, c.name||' ('||c.entity_type||')' from claimed c
 $$;
@@ -612,14 +614,20 @@ begin
  update file_search.file_version v set state='retired', finished_at=clock_timestamp(), error='A newer content replaced it'
  where v.state='waiting' and exists(select 1 from file_search.file_version n
   where n.object_id=v.object_id and n.queued_at>v.queued_at and n.state not in ('retired','purged'));
+ -- The rows are picked once, in a materialized step, then updated: a LIMIT ... SKIP LOCKED subquery inside the
+ -- UPDATE can be planned to run again for each row, each run skipping the rows already locked and taking more.
+ -- The conditions are on the locked row itself, so a row another worker claimed after this one began is
+ -- checked again as it now stands, and skipped.
  return query
- with claimed as (
+ with picked as materialized (
+  select w.version_id from file_search.file_version w
+  where w.state='waiting' and w.attempts<5
+   and (w.last_attempt_at is null or w.last_attempt_at<clock_timestamp()-interval '5 minutes')
+  order by w.queued_at limit greatest(1, least(p_limit, 20)) for update skip locked),
+ claimed as (
   update file_search.file_version f set attempts=f.attempts+1, last_attempt_at=clock_timestamp()
-  from storage.objects o
-  where o.id=f.object_id and f.version_id in (
-   select w.version_id from file_search.file_version w
-   where w.version_id in (select c.version_id from file_search.claimable_file c)
-   order by w.queued_at limit greatest(1, least(p_limit, 20)) for update skip locked)
+  from picked p, storage.objects o
+  where f.version_id=p.version_id and o.id=f.object_id
   returning f.version_id, f.object_id, o.bucket_id, o.name),
  noted as (
   insert into file_search.worker_claim(call_id, version_id, object_id)
@@ -670,12 +678,14 @@ end $$;
 create function file_search.claim_chunks(p_limit integer, p_call bigint default null)
 returns table(chunk_id uuid, body text)
 language sql volatile set search_path=pg_catalog as $$
- with claimed as (
+ with picked as materialized (
+  select w.chunk_id from file_search.chunk w join file_search.file_version v on v.version_id=w.version_id
+  where w.state='waiting' and v.state not in ('retired','purged') and w.attempts<5
+   and (w.last_attempt_at is null or w.last_attempt_at<clock_timestamp()-interval '5 minutes')
+  order by w.chunk_id limit greatest(1, least(p_limit, 50)) for update of w skip locked),
+ claimed as (
   update file_search.chunk c set attempts=c.attempts+1, last_attempt_at=clock_timestamp()
-  where c.chunk_id in (
-   select w.chunk_id from file_search.chunk w
-   where w.chunk_id in (select c.chunk_id from file_search.claimable_chunk c)
-   order by w.chunk_id limit greatest(1, least(p_limit, 50)) for update of w skip locked)
+  from picked p where c.chunk_id=p.chunk_id
   returning c.chunk_id, c.version_id, c.object_id, c.body),
  noted as (
   insert into file_search.worker_claim(call_id, version_id, chunk_id, object_id)
@@ -710,17 +720,32 @@ revoke all on file_search.claimable_sentence from public, anon, authenticated;
 
 -- The embed job takes sentences once no chunk waits, those never tried first, a chunk's together,
 -- from the index of waiting sentences. A retired file's sentences are retired, so the claim never
--- walks past them.
+-- walks past them. It takes sentences in that order while their lengths add up to no more than
+-- p_chars, and always one. It locks the next sentences no other claim holds before it adds up their lengths.
+create or replace function file_search.claim_sentences(p_limit integer, p_chars integer)
+returns table(sentence_id uuid, body text)
+language sql volatile set search_path=pg_catalog as $$
+ with locked as materialized (
+  select w.sentence_id, w.body, w.last_attempt_at, w.chunk_id, w.ordinal
+  from file_search.chunk_sentence w join file_search.chunk c on c.chunk_id=w.chunk_id
+  where w.state='waiting' and c.state='embedded' and w.attempts<5
+   and (w.last_attempt_at is null or w.last_attempt_at<clock_timestamp()-interval '5 minutes')
+  order by w.last_attempt_at nulls first, w.chunk_id, w.ordinal limit greatest(1, least(p_limit, 50))
+  for update of w skip locked),
+ picked as materialized (
+  select l.sentence_id from (select l.sentence_id, row_number() over k as n, sum(length(l.body)) over k as total
+   from locked l
+   window k as (order by l.last_attempt_at nulls first, l.chunk_id, l.ordinal rows between unbounded preceding and current row)) l
+  where l.n=1 or l.total<=p_chars)
+ update file_search.chunk_sentence s set attempts=s.attempts+1, last_attempt_at=clock_timestamp()
+ from picked p where s.sentence_id=p.sentence_id
+ returning s.sentence_id, s.body
+$$;
+-- The claim of a count alone, as a worker deployed before 0005-worker-budget calls it.
 create or replace function file_search.claim_sentences(p_limit integer)
 returns table(sentence_id uuid, body text)
 language sql volatile set search_path=pg_catalog as $$
- update file_search.chunk_sentence s set attempts=s.attempts+1, last_attempt_at=clock_timestamp()
- where s.sentence_id in (
-  select w.sentence_id from file_search.chunk_sentence w join file_search.chunk c on c.chunk_id=w.chunk_id
-  where w.state='waiting' and c.state='embedded' and w.attempts<5
-   and (w.last_attempt_at is null or w.last_attempt_at<clock_timestamp()-interval '5 minutes')
-  order by w.last_attempt_at nulls first, w.chunk_id, w.ordinal limit greatest(1, least(p_limit, 50)) for update of w skip locked)
- returning s.sentence_id, s.body
+ select * from file_search.claim_sentences(p_limit, 2147483647)
 $$;
 
 -- A retired version's waiting sentences are retired, and a version that comes back makes them wait again.
@@ -917,7 +942,7 @@ revoke all on function file_search.index_bucket(text), file_search.unindex_bucke
  file_search.call_worker(text), file_search.record_worker_answers(), file_search.last_problem(uuid,uuid),
  file_search.has_work(text), file_search.job_running(text),
  file_search.failed_worker_runs(), file_search.worker_problems(),
- file_search.split_sentences(uuid), file_search.claim_sentences(integer), file_search.record_sentence_vector(uuid,text,text)
+ file_search.split_sentences(uuid), file_search.claim_sentences(integer), file_search.claim_sentences(integer,integer), file_search.record_sentence_vector(uuid,text,text)
  from public, anon, authenticated;
 grant execute on function file_search.failed_worker_runs(), file_search.worker_problems() to authenticated;
 
@@ -1575,4 +1600,4 @@ revoke all on function file_search.graph_held_chunks() from public, anon;
 grant execute on function file_search.graph_held_chunks() to authenticated;
 
 -- The upgrades this build already contains, so a new project has none pending.
-insert into file_search.schema_upgrade(id) values ('0001-baseline'), ('0002-sentence-claim'), ('0003-graph-reader') on conflict (id) do nothing;
+insert into file_search.schema_upgrade(id) values ('0001-baseline'), ('0002-sentence-claim'), ('0003-graph-reader'), ('0004-claim-once'), ('0005-worker-budget') on conflict (id) do nothing;

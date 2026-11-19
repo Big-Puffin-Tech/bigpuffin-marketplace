@@ -99,7 +99,7 @@ async function signOut(file) {
 
 /** Kinetik's own plugins, whose agents a folder okb setup made names. A business's workflow plugins are the others
  * installed from the kinetik marketplace. */
-export const KINETIK_PLUGINS = ["business-analyst", "kinetik", "kinetik-internal", "okb"];
+export const KINETIK_PLUGINS = ["business-analyst", "kinetik", "okb"];
 
 /** The local folder a file:// git source names, or null. */
 function sourceFolder(url) {

@@ -7,7 +7,7 @@ description: Use when a person, or their agent, works in OKB's records as themse
 
 This skill is how a signed-in actor works in the records of OKB, the business's organisational knowledge base. Changes to OKB are made by the database operator, `@kinetik:database-operator`, or for an administrator by the business analyst, `@business-analyst:business-analyst`. Each follows this skill's rules on asking before each change. A session that is neither calls the database operator for each change. It passes on the person's answer, quoting their words with the change the agent proposed.
 
-Every task is a call to one of OKB's database functions, in the `okb` schema, through the okb plugin's `rpc` tool, as the signed-in person. OKB itself decides what each call may see and change, from the actor's grants. A record the actor may not read is absent, and a change the actor may not make is refused.
+Every task is a call to one of OKB's database functions, in the `okb` schema, through the okb plugin's `rpc` tool, as the signed-in person. From claude.ai or the Claude phone app, the call goes through Kinetik's connector instead, as "Kinetik's connector" below says. OKB itself decides what each call may see and change, from the actor's grants. A record the actor may not read is absent, and a change the actor may not make is refused.
 
 A person without the agent makes each call with the `okb` command, as the `okb:actor` skill sets it up. Each step's **Person** line gives the command.
 
@@ -30,6 +30,52 @@ The person chooses the mode.
 Each step below gives a **Person** line and an **Agent** line.
 
 With the agent, the person's own instruction replaces a rule of this skill, such as the order of the reads. The agent names the rule once and does as told. A refusal from OKB or a tool still stands, and the agent gives it to the person with what they can do instead. An autonomous agent follows the Agent lines, in human directed mode, with the person accountable for it as the person.
+
+## Kinetik's connector
+
+In claude.ai, in a browser or the Claude phone app, there is no okb plugin. The agent works in OKB through Kinetik's connector, which calls each OKB function as the signed-in person, within their own grants. Where this skill names one of the okb plugin's tools, the agent uses the connector's tool in its place:
+
+| The okb plugin's tool | The connector's tool |
+|---|---|
+| `rpc`, with an OKB function | `okb`, with `function` and `args` |
+| `call_function`, with the name `file-search` | `okb_file_search`, with `query`, and `bucket` for one scope |
+| `list_files` | `okb_list_files`, with `bucket` and `prefix` |
+| `download_file` | `okb_file_link`, a link that opens the file in the person's browser for 10 minutes |
+| `upload_file` | `okb_file_upload_link`, with `scope` and `name`, a link to Kinetik's upload page, as "Files" says |
+
+`okb_guide` gives this skill one section at a time. The agent reads "Kinetik's connector", 1, 2 and 3 before its first call, and the section for any other task before it starts that task.
+
+The connector also has tools of its own:
+
+- `okb_routines` lists the routines the person may follow. Each is a skill of a workflow plugin their grants reach, from the newest release Kinetik signed. `okb_routine` gives one routine's `SKILL.md`, or a Markdown file in its folder. Before work a routine covers, the agent reads the routine, tells the person which one it follows, and does its steps in order. A step that says it needs Claude Code is done there, on the person's computer. The agent never follows a release or skill that `okb_routines` lists as refused.
+- `okb_show_records` shows the records card. It lists the records the person may read, newest save first, and opens each one to its fields and links. The card saves nothing.
+- `okb_help` answers how to do something with Kinetik from Kinetik's own guides. The agent answers only from the guide it gives. When no guide fits, it says so and names the guides.
+
+The connector has none of the tools that need the person's computer. That means the agent folder, `result_file`, `file_args`, `run_code`, and the tools that draw pages or print PDFs. The agent reads each answer in the tool's reply, and passes a model's payload in `args`. Adding, renaming or deleting a scope, grants, access templates and sign-ins are an administrator's, with the business analyst in Claude Code. For any of these, the connector answers "Kinetik's connector does not reach that function.", and the agent tells the person to do it in Claude Code on their computer.
+
+Every change is a preview first. The `okb` tool runs a task function from section 11 only with `p_preview` true. Without it, the connector refuses with "Show this change on the approval card, and save it with Yes.", and nothing is saved. The agent shows the preview's request on the approval card with `show_approval`, as section 3 says, and the card's Yes saves it. Only the card calls `okb_save_version`.
+
+A change of several saves, or one with its own approval step, is one item on the card: `{"call": {"function", "args"}, "shows"}`. `args` holds the function's arguments, without `p_preview`. `shows` holds one or more lines, in the person's words, saying what the call changes. The card reads from OKB what the call would change, and shows it under those lines. Yes runs the call once, as the person.
+
+One card holds up to 20 items, saves and calls together, with a title for more than one. A card changes each record only once, so two deliverables for one task go on two cards, one after the other.
+
+| `function` | `args` | Section |
+|---|---|---|
+| `okb_add_blocker` | `p_task`, `p_title`, `p_requirements`, `p_reason` | 11 |
+| `okb_add_deliverable` | `p_task`, `p_title`, `p_requirements`, `p_reason` | 11 |
+| `okb_clear_blocker` | `p_blocker`, `p_note`, `p_evidence`, `p_reason` | 11 |
+| `complete_task` | `p_record`, `p_note`, `p_reason` | 4 |
+| `okb_approve_change` | `p_issuance_request_id`, `p_executor_id`, `p_request`, `p_expires_at`, `p_reason` | 5 |
+| `okb_delete_record` | `p_request`, `p_authorisation_id` | 7 |
+| `okb_move_records` | `p_request` | 12 |
+
+`complete_task` is the connector's own call. It saves the note as evidence in the task's scope, and links the task to it with `supports`. Then it completes the task.
+
+A deletion takes two cards. On the first, the administrator approves the deletion with `okb_approve_change`. On the second, `okb_delete_record` deletes the record with that approval's id, which exists only once the first card's Yes has run. The first card's outcome gives the agent the id as `authorisation_id`, and the second card takes it. Without the outcome, the agent reads the id with `okb_get_authorisations`, from the approval whose `request_id` is the deletion request's. An approval of another actor's change, in section 5, gives its id the same way.
+
+The card runs only the call it showed. When the arguments differ, or a record the call changes has changed since the card read it, the connector answers "This change differs from the one the approval card showed, or a record it changes has changed since. Show it on a new card. Nothing was changed." The agent then reads the record again and shows the change on a new card. A second Yes on the same card runs nothing.
+
+In Claude Code with the okb plugin, the agent uses the plugin's own tools. The okb plugin's hook refuses it the connector's record tools: `okb`, the file tools, `okb_guide`, `okb_routines`, `okb_routine`, `okb_show_records` and `okb_help`. The workflow plugins `okb sync` installs hold the same routines. The approval card is the same in both.
 
 ## 1. The actor, their scopes and grants
 
@@ -108,12 +154,12 @@ A new version carries the whole record again. The agent reads the latest version
 **Deliverables.** An activity's `completion_requirements` are its deliverables: what must exist for it to be completed.
 
 - For a new activity, the agent asks the person for its deliverables, and shows any that the source document states.
-- The person may leave them empty. The agent then tells the person the activity can be completed once its deliverables are written, in a new version.
-- When the agent builds activities from a document, it takes what the document states. That is each activity's deliverables, dates and `depends_on` links, and nothing more.
+- The person may leave them empty, and write them in a later version before the activity is completed.
+- From a document, the agent takes each activity's deliverables, dates and `depends_on` links as the document states them, and nothing more.
 
 **Index, deliverables and blockers.** A plan's board and graph are drawn from its activities, in index order.
 
-- Each activity in a plan carries its `index`, kept apart from its title. A title carries no number.
+- Each activity in a plan carries its `index`. Its title carries no number.
 - A part of the plan is `<n>`, such as `2`. A task is `<part>.<n>`, such as `2.2`. A deliverable is its task's index and a letter, such as `2.2a`. A blocker is its task's index, `-B` and a number, such as `2.2-B1`.
 - Each task carries its `task_type`. A deliverable is its own task, with `task_type` `deliverable`, under the same plan as its task, and the task `depends_on` it.
 - A blocker is its own task, with `task_type` `blocker`, under the same plan as the task it holds up, and that task `depends_on` it. The task also lists it in `blockers`, with `blocker_id` set to the blocker's own `record_id` and `description` set to its title.
@@ -125,17 +171,18 @@ A new version carries the whole record again. The agent reads the latest version
 - **Agent:**
   1. Calls the task function from section 11 with `p_preview` true. It names the record by its id. Its preview holds the request, with the latest version read and the grant found.
   2. Shows the person what it will save: the scope, the kind, the title, the reason, each field it changes, and the links. For an activity, it shows the deliverables, or "Deliverables: none". It saves only when the person agrees, and nothing they decline.
-     Where the session has the Kinetik connector, it shows the save on the connector's approval card. "The approval card" below says how. It then ends the turn. The person answers on the card.
-     Without the connector, it shows the save as text, and asks the person whether to save it.
-  3. With the card, reads the card's outcome at the next turn. The card gives it to the agent as an update to the model's context, and `mcp__ccd_session__read_widget_context` is one way to read it where the app has that tool. The outcome is each record saved with its version, OKB's refusal, or declined. It reads each saved record back with `okb_show_record`. On declined, it asks once what to change.
-     Without the card, calls `okb_save_version` with the preview's `request` and `authorisation_id`, unchanged, once the person agrees. A model's payload from a file is a request built as this section describes. When the answer is lost, it retries with the same request, unchanged. When the answer says the previous version is stale, it reads the record again and shows the person the newer version before trying again.
+     With Kinetik's connector, it shows the save on the approval card, as "The approval card" below says, and ends the turn.
+  3. With the card, reads the card's outcome at the next turn, as "The approval card" below says. The outcome is each record saved with its version, OKB's refusal, or declined. It reads each saved record back with `okb_show_record`. On declined, it asks once what to change.
+     Without the card, shows the save as text and asks. Once the person agrees, calls `okb_save_version` with the preview's `request` and `authorisation_id`, unchanged. When the answer is lost, it retries with the same request, unchanged. When the answer says the previous version is stale, it reads the record again and shows the person the newer version before trying again.
 - **Evidence:** the saved version's `version_id` and `version_number`, and the call's result.
 
 **AI guided:** the agent shows the person each save before it is made, and waits for their approval.
 
 ### The approval card
 
-The approval card shows one save, or a batch of up to 20, such as an interview's statements. The agent calls the Kinetik connector's `show_approval` with the card's data. It ends the turn with no question. Its reply names the change in one line, and says nothing about the card's buttons. Until the person presses Yes, the agent never says it saved, kept or stored anything. It says what the card will save, such as "I set it up as evidence".
+The approval card shows one save, or a batch of up to 20, such as an interview's statements. An item can also be a call of several saves, as "Kinetik's connector" above says.
+
+The agent calls the Kinetik connector's `show_approval` with the card's data. It ends the turn with no question. Its reply names the change in one line, and says nothing about the card's buttons. Until the person presses Yes, the agent never says it saved, kept or stored anything. It says what the card will save, such as "I set it up as evidence".
 
 The card has Yes and No buttons. Yes saves each change in the card's order, as the signed-in person, and shows each record's new version or OKB's refusal. A refusal stops the saves after it. No saves nothing. Opened again, the card shows each save OKB holds, with no buttons. A No leaves nothing in OKB. The card keeps it only in that browser's storage, so a card opened on another computer, or with that storage cleared, shows its buttons again. The card gives its outcome to the agent as an update to the model's context. At the next turn, the agent reads it there, and `mcp__ccd_session__read_widget_context`, with `tool_name` the connector's `show_approval` tool as the session names it, is one way to read it where the app has that tool.
 
@@ -155,7 +202,7 @@ The card has its own name for most fields. A change to any other field can also 
 
 A save of a new record shows each field with its value. Otherwise the card shows each value before and after the save. It names each field in words, shows references one to a line, such as "Team: Sales", and leaves out each field the save leaves as it was. A long value is in a block that opens and closes.
 
-Where a save changes the record's links, each of its `links` also holds `target_version_id`, as the request has it. The connector refuses a save whose request writes anything the card does not show. That is another scope or kind, a field or a changed title missing from `changes`, an `old` other than OKB's, a link with no `target_version_id`, or a name that is not that person's. It also refuses a card whose `person` is not the signed-in person. The agent then shows the save as text.
+Where a save changes the record's links, each of its `links` also holds `target_version_id`, as the request has it. The connector refuses a save whose request writes anything the card does not show. That is another scope or kind, a field or a changed title missing from `changes`, an `old` other than OKB's, a link with no `target_version_id`, or a name that is not that person's. It also refuses a card whose `person` is not the signed-in person. With the connector, the agent then corrects each field the refusal names, and shows the card again. Only a session without the connector shows the save as text.
 
 ## 4. An activity's state
 
@@ -708,6 +755,13 @@ An **access template** is a named set of grants, which OKB holds. Each of its gr
 ## Files
 
 Each scope's files are in its own private bucket, named after the scope's code. The okb plugin's `upload_file`, `list_files` and `download_file` upload, list and download them. The `okb:actor` skill's "Search results" and "File deletion" sections cover searching them and deleting one for good. Sections 18 and 19 cover the graph of their parts.
+
+From claude.ai or the phone, the agent adds a file with the connector's `okb_file_upload_link`. It gives the scope's code and the new file's path in the scope, such as `receipts/2026-11-18 taxi.jpg`, ending in the file's type. Then it gives the person the link.
+
+- On the upload page, the person chooses the file and presses Send. Their browser sends it straight to their business's Supabase, and no file passes through Kinetik. Nothing is saved until they press Send, so the upload needs no approval card.
+- The link adds that one file, and stops working 2 hours after the agent asked for it. After that, the person asks the agent for a new link.
+- Storage gives a link only when the person may add files to the scope. It refuses a name already in the scope, and nothing is replaced. The agent then asks for a link with another name.
+- The page takes the link out of the address bar as it opens, so reloading the page loses it. The person then asks the agent for a new link.
 
 ## Problems with records
 

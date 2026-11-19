@@ -52,7 +52,7 @@ export const KINETIK_CODE_FILE = ".okb-kinetik-code";
  */
 export const FUNCTIONS = [
   { name: "okb-setup", verify_jwt: false, files: ["index.ts", "kinetik.ts"] },
-  { name: "file-search-worker", verify_jwt: false, files: ["index.ts", "text.ts"] },
+  { name: "file-search-worker", verify_jwt: false, files: ["index.ts", "text.ts", "vendor/sheetjs-0.20.3/xlsx.mjs", "vendor/sheetjs-0.20.3/types/index.d.ts"] },
   { name: "file-search", verify_jwt: true, files: ["index.ts"] },
   { name: "file-search-purge", verify_jwt: true, files: ["index.ts"] },
   { name: "okb-invite", verify_jwt: true, files: ["index.ts"] },

@@ -1,20 +1,20 @@
-// Makes the four settings Kinetik's connector needs in a business's Supabase project, through Supabase's
+// Makes the five settings Kinetik's connector needs in a business's Supabase project, through Supabase's
 // Management API, with a personal access token the owner pastes at a hidden prompt. The token is used for
 // this run only: it never goes on a command line, into an environment variable, a file or a log, and is
 // never printed.
 //
 //   node okb.mjs connector-settings --url <project URL> --slug <slug>
 //
-// The four settings: the project signs its tokens with an asymmetric key, ES256 or RS256. The OAuth server is
+// The five settings: the project signs its tokens with an asymmetric key, ES256 or RS256. The OAuth server is
 // on, with dynamic OAuth apps. Its authorization path is /oauth/consent. The Site URL is
-// https://mcp.kinetik.it.com/<slug>/sign-in/.
+// https://mcp.kinetik.it.com/<slug>/sign-in/. Public sign-up is off.
 //
 // The signing key is switched in two runs, as Supabase's guide "JWT Signing Keys" gives a safe rotation.
 // Supabase throttles a key's state changes for about 5 minutes, and caches a project's published keys for up
 // to about 20 minutes. So the first run imports the legacy JWT secret as the key in use, if it is not yet,
 // and creates an ES256 key on standby. It exits 3, "run again later". A run 20 minutes later puts the standby
 // key in use. The legacy secret becomes a previously used key, so tokens it signed stay valid until they
-// expire. When Supabase answers that the change is throttled, the run exits 3 too. Exit 0 means all four
+// expire. When Supabase answers that the change is throttled, the run exits 3 too. Exit 0 means all five
 // settings hold, and 1 that one failed.
 //
 // It calls Supabase through management.mjs, which also says when OKB_TEST_MANAGEMENT_API names a stand-in.
@@ -25,10 +25,10 @@ export { API, apiBase };
 
 export const CONNECTOR_SETTINGS_USAGE = `Usage: node okb.mjs connector-settings --url <project URL> --slug <slug>
 
-connector-settings makes the four settings Kinetik's connector needs in your business's Supabase project.
+connector-settings makes the five settings Kinetik's connector needs in your business's Supabase project.
 It asks for a Supabase access token, which you make at https://supabase.com/dashboard/account/tokens.
-Give the token a short expiry, and delete it on that page once
-every line says done.
+Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it
+on that page once every line says done.
 
 The signing key takes two runs, 20 minutes apart. The first run says when to run it again, and exits 3.
 
@@ -36,6 +36,8 @@ The signing key takes two runs, 20 minutes apart. The first run says when to run
 --slug is your business's short name in Kinetik's connector's address, https://mcp.kinetik.it.com/<slug>.`;
 
 export const TOKEN_PAGE = "https://supabase.com/dashboard/account/tokens";
+/** The options every prompt for the token gives: the token is made for one run, in the organisation that holds the project. */
+export const TOKEN_OPTIONS = "Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access.";
 const PROJECT_URL = /^https:\/\/([a-z]{20})\.supabase\.co\/?$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ASYMMETRIC = ["ES256", "RS256"];
@@ -109,6 +111,9 @@ const LINES = slug => [
   { name: `Authorization path ${AUTHORIZATION_PATH}`, holds: c => c.oauth_server_authorization_path === AUTHORIZATION_PATH,
     change: { oauth_server_authorization_path: AUTHORIZATION_PATH } },
   { name: `Site URL ${siteUrl(slug)}`, holds: c => c.site_url === siteUrl(slug), change: { site_url: siteUrl(slug) } },
+  // Supabase leaves sign-up open, and the sign-in page publishes the key a stranger needs to sign up. The owner's
+  // account is made through the admin API, which works with it off.
+  { name: "Public sign-up off", holds: c => c.disable_signup === true, change: { disable_signup: true } },
 ];
 const KEY_LINE = "Asymmetric signing key";
 
@@ -116,8 +121,8 @@ const KEY_LINE = "Asymmetric signing key";
 export const AGAIN = 3;
 
 /**
- * Makes the four settings with token, and returns { code, lines }: one line per setting, or the line of the
- * call that failed. Code 0 only when all four hold when read back, 3 when the signing key needs another run.
+ * Makes the five settings with token, and returns { code, lines }: one line per setting, or the line of the
+ * call that failed. Code 0 only when all five hold when read back, 3 when the signing key needs another run.
  * okb setup --owner passes its own client as api, which already holds the token.
  */
 export async function makeSettings({ ref, slug }, token, base = apiBase(), api = managementClient(token, base)) {
@@ -178,7 +183,7 @@ export async function connectorSettings(argv) {
   // A stand-in named by OKB_TEST_MANAGEMENT_API is said before the prompt, so a token is never pasted for it unseen.
   const base = apiBase();
   if (base !== API) stdout.write(`This run talks to a test stand-in at ${base}, not to Supabase. Paste no real token.\n`);
-  stdout.write(`Make a Supabase access token at ${TOKEN_PAGE}, with a short expiry, and paste it here. Delete it on that page once every line says done.\n`);
+  stdout.write(`Make a Supabase access token at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} Paste it here, and delete it on that page once every line says done.\n`);
   let token;
   try { token = await askHidden("Supabase access token: "); }
   catch (err) { stderr.write(`Stopped: ${err instanceof Error ? err.message : err}\n`); return 1; }
