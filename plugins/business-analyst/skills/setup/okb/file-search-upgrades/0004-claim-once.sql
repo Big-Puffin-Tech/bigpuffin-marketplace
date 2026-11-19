@@ -1,4 +1,4 @@
--- File search upgrade 0004-claim-once
+-- 0004-claim-once: file search upgrade
 -- base: e8fa7a3
 -- File search's claims take at most the rows they ask for, and never a row another worker has just claimed.
 -- claim_files, claim_entities, claim_chunks and claim_sentences each picked their rows in a LIMIT ... SKIP
