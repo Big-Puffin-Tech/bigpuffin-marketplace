@@ -1,4 +1,4 @@
--- File search upgrade 0003-graph-reader
+-- 0003-graph-reader: file search upgrade
 -- base: 3772445
 -- The graph reader: the batches of waiting
 -- chunks the graph-reader hosted function reads with Claude, each with its tokens and cost, the month's cap on that

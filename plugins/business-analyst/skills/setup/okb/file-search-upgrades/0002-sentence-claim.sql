@@ -1,4 +1,4 @@
--- File search upgrade 0002-sentence-claim
+-- 0002-sentence-claim: file search upgrade
 -- base: 7740797
 -- A retired file version retires its waiting sentences, and one that comes back makes them wait
 -- again. The sentence claim takes never-tried sentences first, a chunk's together, through an index
