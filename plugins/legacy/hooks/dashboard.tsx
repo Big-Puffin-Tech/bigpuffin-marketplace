@@ -21,7 +21,7 @@ export const register: Register = on => {
     }
     const { Box, Button } = $.ui.resolve(e)
 
-    // The app's own button, as Acme's plan 375 measured: rounded, one line tall, and a label the app makes
+    // The app's own button, as measured in the Claude desktop app: rounded, one line tall, and a label the app makes
     // readable in light and dark. A colour of our own around it left the label unreadable in one mode or the other.
     return (
       <Box flexDirection="row">

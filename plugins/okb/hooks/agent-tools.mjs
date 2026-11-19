@@ -65,9 +65,18 @@ export const LEGACY = ["show_home", "show_approval"];
 // never pass this hook (seen in a live session: the hook saw show_home, and none of the card's card_page and card_call).
 // So both agents are refused them by name on any server, as a second layer to Claude's, whether a card's tool is
 // reached through card_call or called by its own name.
-// The list holds every tool the connector registers with appTool, in workers/connector/src/tools.ts, and hook.test.mjs
+// The list holds every tool the connector registers with appTool, in any file of workers/connector/src, and hook.test.mjs
 // checks it against that file.
-export const CARD_ONLY = ["card_page", "card_call", "card_state", "save_version", "home_state", "task_list", "task_save", "task_open", "task_state"];
+export const CARD_ONLY = ["card_page", "card_call", "card_state", "save_version", "home_state", "task_list", "task_save", "task_open", "task_state", "run_call", "card_find_records", "card_record"];
+// Legacy's connector's record, file and routine tools and the records card, for claude.ai and the phone, which load
+// no plugins. This hook is the okb plugin's, so a session it runs in has the plugin's own server. Its rpc, list_files and
+// file tools reach the same records and files, and the workflow plugins okb sync installs hold the same routines. Both
+// agents are refused these names on any server but the okb plugin's own, so they keep to the plugin's tools in Claude
+// Code. Each name starts okb, so another connector's guide, list_files or show_records is never refused.
+export const CONNECTOR_RECORDS = ["okb", "okb_list_files", "okb_file_search", "okb_file_link", "okb_file_upload_link", "okb_guide", "okb_help", "okb_routines", "okb_routine", "okb_show_records"];
+
+/** Whether the tool is one of Legacy's connector's record, file or routine tools, on a server other than the okb plugin's. */
+export const connectorRecord = (server, tool) => server !== SERVER && CONNECTOR_RECORDS.includes(tool);
 
 /** Whether the tool, exactly mcp__<server>__<tool>, is one of Legacy's connector's, by its tool's name. */
 export function legacyTool(toolName) {
@@ -211,12 +220,22 @@ export function allowed(agentType, toolName, marked = {}, input = {}) {
   const [, server = "", ...rest] = String(toolName).split("__");
   const tool = rest.join("__");
   if (rest.length === 1 && server !== "" && CARD_ONLY.includes(tool)) return false;
+  if (connectorRecord(server, tool)) return false;
   if (server === SERVER && agentType !== ADMIN_ONLY.agent
     && (ADMIN_ONLY.tools.includes(tool) || (tool === "call_function" && ADMIN_ONLY.functions.includes(String(input?.name ?? "").trim())))) return false;
   // Legacy's connector's tools, on a server that is neither refused nor marked as Supabase's.
   if (legacyTool(toolName) && !REFUSED_SERVERS.some(r => r.test(server)) && !(marked?.supabase ?? []).includes(server)) return true;
   return (server === SERVER && OKB.includes(tool)) || (server === CHROME && CHROME_READ.includes(tool))
     || (AGENTS[agentType].connectors && connectorOf(server, tool, marked) !== null);
+}
+
+/** Why the agent is refused one of Legacy's connector's record, file or routine tools, named in full as tool, and what
+ * it uses in Claude Code. */
+export function connectorRefusal(who, name, tool) {
+  if (name === "okb_routines" || name === "okb_routine")
+    return `The ${who} follows a routine with its workflow plugin's own skill, which okb sync installs in Claude Code, not ${tool}.`;
+  if (name === "okb_help") return `The ${who} answers how-to questions with the legacy:support skill, not ${tool}.`;
+  return `The ${who} reaches records and files with the okb plugin's own tools, such as rpc, list_files and read_file, not ${tool}.`;
 }
 
 const real = file => { try { return realpathSync(file); } catch { return file; } };
@@ -257,6 +276,7 @@ if (argv[1] && real(fileURLToPath(import.meta.url)) === real(argv[1])) {
     if (!allowed(call?.agent_type ?? "", tool, marking?.marked, call?.tool_input)) {
       const adminOnly = server === SERVER && (ADMIN_ONLY.tools.includes(name) || name === "call_function");
       deny(adminOnly ? `The ${who} adds no one: inviting a person is your administrator's, with their business analyst, @business-analyst:business-analyst.`
+        : connectorRecord(server, name) ? connectorRefusal(who, name, tool)
         : `The ${who} does not use ${tool}.`);
     }
     if (AGENTS[call?.agent_type] && tool === `mcp__${CHROME}__navigate` && !chromeUrlAllowed(call?.tool_input?.url))

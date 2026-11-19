@@ -1,4 +1,4 @@
--- file_search checks 1.4.0
+-- file_search checks 1.5.0
 -- File search: checks that file-search.sql works as its skill says, installed as a stored
 -- function. Install this file as postgres, after file-search.sql, then run the checks with:
 --   select file_search.run_checks();
@@ -721,6 +721,7 @@ begin
   or has_function_privilege('authenticated', 'file_search.claim_entities(integer)', 'execute')
   or has_function_privilege('authenticated', 'file_search.record_entity_vector(uuid,text,text)', 'execute')
   or has_function_privilege('authenticated', 'file_search.claim_sentences(integer)', 'execute')
+  or has_function_privilege('authenticated', 'file_search.claim_sentences(integer,integer)', 'execute')
   or has_function_privilege('authenticated', 'file_search.record_sentence_vector(uuid,text,text)', 'execute')
   or has_table_privilege('authenticated', 'file_search.chunk_sentence', 'insert,update,delete')
   or has_function_privilege('authenticated', 'file_search.delete_unsupported()', 'execute')
@@ -742,4 +743,4 @@ end $checks$;
 
 revoke execute on function file_search.run_checks() from public, anon, authenticated, service_role;
 
-comment on function file_search.run_checks() is 'file_search checks 1.4.0';
+comment on function file_search.run_checks() is 'file_search checks 1.5.0';

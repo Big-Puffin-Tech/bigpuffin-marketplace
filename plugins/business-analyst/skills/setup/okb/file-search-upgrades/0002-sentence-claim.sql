@@ -3,7 +3,7 @@
 -- A retired file version retires its waiting sentences, and one that comes back makes them wait
 -- again. The sentence claim takes never-tried sentences first, a chunk's together, through an index
 -- of waiting sentences, so its cost no longer grows with the sentences of retired files and those
--- already tried. Ported from acme-setup 12938b0 and 3e7eccb, file search's 0013-sentence-claim.
+-- already tried.
 -- Safe to run twice. Run as postgres.
 
 alter table file_search.chunk_sentence drop constraint if exists chunk_sentence_state_check;

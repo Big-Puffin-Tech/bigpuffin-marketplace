@@ -18,7 +18,7 @@
 // .okb-actor.json, signs in again as the file's person, with the project's address and key saved at
 // the first sign-in. sync installs the newest release of the business's plugins from OKB's Plugins
 // scope, as sync.mjs describes. uninstall takes Legacy's install off the computer and keeps the person's
-// folders, as uninstall.mjs describes. connector-settings makes the four settings Legacy's connector needs in the
+// folders, as uninstall.mjs describes. connector-settings makes the five settings Legacy's connector needs in the
 // project, with a Supabase access token typed at its own hidden prompt, as connector-settings.mjs describes. --folder signs in as --email and writes that folder's actor file, so a session
 // opened on it works as that person. The first sign-in asks for the project's address and
 // publishable key, unless --url and --key give them.
@@ -73,7 +73,7 @@ authenticator app: it prints the secret and the otpauth:// address to add to the
 sync installs the newest release of your business's plugins from the Plugins scope of your business's OKB,
 signed in as you, and updates each plugin installed from it. node okb.mjs sync --help says more.
 
-connector-settings makes the four settings Legacy's connector needs in your business's Supabase project. It asks
+connector-settings makes the five settings Legacy's connector needs in your business's Supabase project. It asks
 for a Supabase access token at a hidden prompt, and uses it once. node okb.mjs connector-settings --help says more.
 
 uninstall takes Legacy's install off this computer, signs you out and keeps your folders. It lists

@@ -99,7 +99,7 @@ async function signOut(file) {
 
 /** Legacy's own plugins, whose agents a folder okb setup made names. A business's workflow plugins are the others
  * installed from the legacy marketplace. */
-export const LEGACY_PLUGINS = ["business-analyst", "legacy", "legacy-internal", "okb"];
+export const LEGACY_PLUGINS = ["business-analyst", "legacy", "okb"];
 
 /** The local folder a file:// git source names, or null. */
 function sourceFolder(url) {

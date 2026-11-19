@@ -60,9 +60,9 @@ button.hc-row:first-child { border-top: 0; }
 </section>
 <script>
 // The home card's code. It reads the person's counts, tabs and rows with home_state, and draws them. The Tasks tab's
-// Create task and View my tasks are ported from Acme's acmekb-apps home card: taskForm and listTasks. A task's row opens
-// the task, and its buttons change its state. Each tool call names the button pressed, for the usage row. The shell
-// gives it callTool, tellAgent and onNotice.
+// Create task is taskForm and View my tasks is listTasks. A task's row opens the task, and its buttons change its
+// state. Each tool call names the button pressed, for the usage row. The shell gives it callTool, tellAgent and
+// onNotice.
 var home = null, begun = false;
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 function textOf(r) { return (r && r.content || []).map(function (c) { return c.text || ""; }).join("\n"); }

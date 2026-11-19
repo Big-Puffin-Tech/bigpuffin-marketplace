@@ -6495,7 +6495,7 @@ reset role;
 
 -- ===================================================================
 -- 8w. A record named by its title, and a read's cutoff, found from the readable records as a set.
--- Upgrade 0005-set-based-lookups, from ACMEKB's 0072.
+-- Upgrade 0005-set-based-lookups.
 -- ===================================================================
 grant create on schema okb_private to okb_identity;
 set role okb_identity;
@@ -6584,7 +6584,6 @@ reset role;
 -- actor whose authority class is administrator: request_auth_uid() gives no caller for it, so each OKB function, Storage
 -- policy and file search policy refuses it. Every other actor, Legacy's included, keeps its password sign-in. The
 -- level of a sign-in is the access token's aal claim: aal2 once the sign-in gave a code from an authenticator app.
--- From ACMEKB's upgrade 0109-second-factor.
 set role okb_owner;
 create table if not exists okb_private.sign_in_setting (
  only_row boolean primary key default true check (only_row),
@@ -6826,7 +6825,7 @@ notify pgrst, 'reload schema';
 -- Guides file and no plugin scope's. Each entity's type is one of the glossary's classes and each relation one of its
 -- relationships; a finding that fits none is dropped and kept with its reason. okb_get_graph_reader says whether it
 -- is on and which scopes it reads, and okb_get_file_parts gives a file's parts, for a person to correct one. The
--- audit log gives each batch to administrators. From ACMEKB's upgrades 0105-graph-reader and 0108-graph-batch-drops.
+-- audit log gives each batch to administrators.
 -- Owned by the postgres login, which owns file search and reads the Vault.
 
 -- Graph reader's actor id, or null before its first save.
@@ -7207,7 +7206,7 @@ notify pgrst, 'reload schema';
 -- okb_make_sessions_private: each grant there ends, and the person holds one grant on evidence, issued in their own
 -- name. An administrator then sees the scope's name and owner, and nothing in it. Its owner alone makes it ordinary
 -- again, with okb_make_sessions_ordinary. okb_add_scope makes a private sessions scope for the person its code names.
--- The audit log gives sessions_made_private and sessions_made_ordinary. From ACMEKB's upgrade 0084-private-sessions.
+-- The audit log gives sessions_made_private and sessions_made_ordinary.
 set role okb_owner;
 alter table okb.scope_change drop constraint if exists scope_change_field_check;
 alter table okb.scope_change add constraint scope_change_field_check check (field in ('display_name','description','owner_actor_id','is_private'));

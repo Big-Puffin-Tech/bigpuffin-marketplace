@@ -37,7 +37,7 @@ Set up Legacy
 
 Before you type it, create a free account at supabase.com. The business analyst then gives you one command.
 
-Click Run on it, and paste a Supabase access token you make with a short expiry. The command asks your business's name and which Supabase project to use, or creates one in London. It builds everything, and asks your name, email and a password you choose. It ends with a short summary. The business analyst never sees, asks for or types a password, a secret key or a token.
+Click Run on it, and paste a Supabase access token. Make it at supabase.com/dashboard/account/tokens: name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. The command asks your business's name and which Supabase project to use, or creates one in London. It builds everything, and asks your name, email and a password you choose. It ends with a short summary. The business analyst never sees, asks for or types a password, a secret key or a token.
 
 ### 2. Each member of staff, after setup
 

@@ -1,6 +1,6 @@
 -- File search upgrade 0003-graph-reader
 -- base: 3772445
--- From ACMEKB's file search upgrades 0014-graph-reader and 0015-graph-drops. The graph reader: the batches of waiting
+-- The graph reader: the batches of waiting
 -- chunks the graph-reader hosted function reads with Claude, each with its tokens and cost, the month's cap on that
 -- cost, and each chunk's failed reads, marked failed after 3. close_graph_batch trims each read before its save and
 -- keeps each dropped item, with its reason, in graph_drop, beside the items OKB dropped for its glossary. A search's

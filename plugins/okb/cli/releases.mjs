@@ -65,7 +65,9 @@ export function releaseKeysFor(url) {
  * bytes, in that order. A signature holds for one release in one scope: the same MANIFEST under another name, or in
  * another scope, fails.
  */
-export const signedBytes = (scope, release, manifest) => Buffer.concat([Buffer.from(`legacy-release\n${scope}\n${release}\n`), Buffer.from(manifest)]);
+export const signedBytes = (scope, release, manifest) => Buffer.concat([Buffer.from(`${SIGNED_LINE}\n${scope}\n${release}\n`), Buffer.from(manifest)]);
+/** The first line of what a release's signature covers. */
+export const SIGNED_LINE = "legacy-release";
 
 /** True when signature, in base64, is the Ed25519 signature of the release named, in its scope, with the MANIFEST bytes, by one of keys. */
 export function verifyManifest(bytes, signature, scope, release, keys = []) {
@@ -90,10 +92,14 @@ export function pastPublish(name, now = Date.now()) {
 export const UNSIGNED = `${SIGNATURE} missing`;
 /** What a release gives as its one problem when it has had no signature for longer than a publish takes. */
 export const NEVER_SIGNED = `${SIGNATURE} missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Legacy publishes again, or deletes the release`;
+/** What a release with no MANIFEST gives as its one problem, while its publish may still be under way. */
+export const NO_MANIFEST = "MANIFEST missing";
+/** What a release gives as its one problem when it has had no MANIFEST for longer than a publish takes. */
+export const NEVER_MANIFEST = `MANIFEST missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Legacy publishes again, or deletes the release`;
 /** What a release whose signature fails gives as its one problem. */
 export const BAD_SIGNATURE = `${SIGNATURE} is not Legacy's signature of this release`;
 /** True for the problems of a folder that is not a release yet: a publish under way, with no MANIFEST or no signature. */
-export const unfinished = problems => problems.length === 1 && (problems[0] === "MANIFEST missing" || problems[0] === UNSIGNED);
+export const unfinished = problems => problems.length === 1 && (problems[0] === NO_MANIFEST || problems[0] === UNSIGNED);
 
 /** The paths a MANIFEST lists, each with its hash. Throws on an unreadable line. */
 export function manifestEntries(text) {
@@ -124,7 +130,7 @@ export function workflowPlugin(text) {
  */
 export function check(folder, bucket = RELEASES_BUCKET) {
   const manifest = join(folder, "MANIFEST");
-  if (!existsSync(manifest)) return ["MANIFEST missing"];
+  if (!existsSync(manifest)) return [NO_MANIFEST];
   const problems = [];
   for (const line of readFileSync(manifest, "utf8").split("\n")) {
     if (!line.trim()) continue;
@@ -253,7 +259,7 @@ async function each(items, work) {
  */
 export async function downloadRelease(access, name, folder, bucket = RELEASES_BUCKET) {
   const manifest = await downloadFile(access, bucket, `${name}/MANIFEST`);
-  if (!manifest.ok) return [manifest.missing ? "MANIFEST missing" : `MANIFEST could not be downloaded: ${manifest.problem}`];
+  if (!manifest.ok) return [manifest.missing ? (pastPublish(name) ? NEVER_MANIFEST : NO_MANIFEST) : `MANIFEST could not be downloaded: ${manifest.problem}`];
   const signature = await downloadFile(access, bucket, `${name}/${SIGNATURE}`);
   if (!signature.ok && !signature.missing) return [`${SIGNATURE} could not be downloaded: ${signature.problem}`];
   if (!signature.ok) return [pastPublish(name) ? NEVER_SIGNED : UNSIGNED];
