@@ -196,11 +196,17 @@ model() {
 have_model() { model >/dev/null; }
 install_model() { fetch "$MODEL_URL" "$OWN_MODEL" "$MODEL_SHA256"; }
 
-# Legacy needs macOS 14 or later: Homebrew has ready-built programs only for the macOS versions it supports, and
-# on an older Mac builds each from source, which takes hours and often fails. Nothing is installed on an older Mac.
-OLDEST_MACOS="${OLDEST_MACOS:-14}"
+# Legacy needs macOS 15 or later: Homebrew ships a ready-built Poppler only from macOS 15, and on an older Mac
+# builds it from source, which takes hours and often fails. Nothing is installed on an older Mac, or on one whose
+# version sw_vers does not give.
+OLDEST_MACOS="${OLDEST_MACOS:-15}"
 macos="$(sw_vers -productVersion 2>/dev/null)"
-if [ "${macos%%.*}" -lt "$OLDEST_MACOS" ] 2>/dev/null; then
+case "${macos%%.*}" in
+  '' | *[!0-9]*)
+    echo "install.sh could not read this Mac's macOS version with sw_vers. Check that this Mac runs macOS $OLDEST_MACOS or later, in the Apple menu, About This Mac, then run this line again."
+    exit 1 ;;
+esac
+if [ "${macos%%.*}" -lt "$OLDEST_MACOS" ]; then
   echo "Legacy needs macOS $OLDEST_MACOS or later, and this Mac has macOS $macos. Update macOS in System Settings, General, Software Update, then run this line again."
   exit 1
 fi

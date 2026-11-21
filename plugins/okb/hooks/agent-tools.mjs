@@ -57,17 +57,17 @@ export function chromeUrlAllowed(url) {
 // are held by their own rules above.
 export const REFUSED_SERVERS = [/supabase/i, /postgres|pgadmin|beekeeper/i, /^plugin_okb[-_]/, /^terminal$/, /^computer-use$/,
   /^Claude_Browser$/, /playwright/i, /^Claude_Code_iOS_Simulator$/, /^ccd_/, /^scheduled-tasks$/, /^rea$/];
-// Legacy's connector, the one that draws the home card, the Dashboard button and the approval card, known by its tools'
+// Legacy's connector, the one that draws the home card, the Dashboard button, the approval card and the graph reader card, known by its tools'
 // names on any server, since in the desktop app its server is an id. Both agents call them with no agreement asked, and a
 // call to one records no agreement for the rest of its server.
-export const LEGACY = ["show_home", "show_approval"];
+export const LEGACY = ["show_home", "show_approval", "show_graph_reader"];
 // The tools only a card calls, for its page and its own tools. Claude keeps them from the model, and a card's own calls
 // never pass this hook (seen in a live session: the hook saw show_home, and none of the card's card_page and card_call).
 // So both agents are refused them by name on any server, as a second layer to Claude's, whether a card's tool is
 // reached through card_call or called by its own name.
 // The list holds every tool the connector registers with appTool, in any file of workers/connector/src, and hook.test.mjs
 // checks it against that file.
-export const CARD_ONLY = ["card_page", "card_call", "card_state", "save_version", "home_state", "task_list", "task_save", "task_open", "task_state", "run_call", "card_find_records", "card_record"];
+export const CARD_ONLY = ["card_page", "card_call", "card_state", "save_version", "home_state", "task_list", "task_save", "task_open", "task_state", "run_call", "card_find_records", "card_record", "graph_reader_save", "graph_reader_off"];
 // Legacy's connector's record, file and routine tools and the records card, for claude.ai and the phone, which load
 // no plugins. This hook is the okb plugin's, so a session it runs in has the plugin's own server. Its rpc, list_files and
 // file tools reach the same records and files, and the workflow plugins okb sync installs hold the same routines. Both
