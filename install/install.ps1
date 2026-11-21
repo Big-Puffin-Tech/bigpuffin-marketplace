@@ -72,6 +72,20 @@ $WhisperSha256 = '6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816c
 $ModelUrl = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.bin'
 $ModelSha256 = '60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe'
 
+# Kinetik needs Windows 10 version 1809, build 17763, or later: the oldest Windows that runs winget. Nothing is installed
+# on an older Windows, or on one whose build this cannot read.
+$MinWindowsBuild = 17763
+$WindowsBuild = 0
+try { $WindowsBuild = [int][Environment]::OSVersion.Version.Build } catch {}
+if ($WindowsBuild -le 0) {
+  Write-Host "install.ps1 could not read this computer's Windows build. Check that it runs Windows 10 version 1809 or later, in Settings, System, About, then run this line again."
+  exit 1
+}
+if ($WindowsBuild -lt $MinWindowsBuild) {
+  Write-Host "Kinetik needs Windows 10 version 1809 or later, and this computer has Windows build $WindowsBuild. Update Windows in Settings, Windows Update, then run this line again."
+  exit 1
+}
+
 $WhisperDir = Join-Path $env:LOCALAPPDATA 'okb\whisper'
 $WhisperCli = Join-Path $WhisperDir 'Release\whisper-cli.exe'
 $Model = Join-Path $WhisperDir 'ggml-base.bin'

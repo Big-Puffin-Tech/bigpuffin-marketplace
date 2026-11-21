@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 import { accountEmail } from "../mcp/lib/session.mjs";
 import { readActor } from "../mcp/lib/actor-file.mjs";
 import { nodeMismatch } from "./node-version.mjs";
+import { osMismatch } from "./os-version.mjs";
 import { ownerSetup } from "./owner-setup.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -201,7 +202,7 @@ export function setup(argv, { home = homedir(), signInArgs, signInPath, syncArgs
   let o;
   try { o = parseSetup(argv); }
   catch (err) { fail(`${err.message}\n${SETUP_USAGE}`); return 2; }
-  const mismatch = nodeMismatch();
+  const mismatch = nodeMismatch() ?? osMismatch();
   if (mismatch) { fail(mismatch); return 1; }
   try {
     const agents = marketplaceAgents(marketplace);

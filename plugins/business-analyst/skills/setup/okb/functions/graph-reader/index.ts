@@ -299,16 +299,17 @@ async function serve(req: Request): Promise<Response> {
       .then(([row]) => !!row?.s && row.s === given);
     if (busy) throw refuse(503, "OKB is busy. Try again in a minute.", { busy: true });
     if (scheduled) {
-      if (!key()) throw refuse(503, "The graph reader is off: the business's Anthropic API key is not in the Vault. An administrator sets it with graph-reader's set_key, as the business analyst describes.", { key: "missing" });
+      if (!key()) throw refuse(503, "The graph reader is off: the business's Anthropic API key is not in the Vault. An administrator types it on the graph reader card in Kinetik's connector, as the business analyst describes.", { key: "missing" });
       return json(200, await run());
     }
     const user = given ? await seam.user(given, req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "") : null;
     if (!user) return json(401, { ok: false, problem: "Call this function with an administrator's sign-in." });
     confirmed(given);
-    const [admin] = await sql`select 1 from okb.actor a join okb.actor h on h.actor_id = a.accountable_human_id
-      where a.auth_user_id = ${user}::uuid and a.enabled and a.authority_class = 'administrator' and h.enabled and h.actor_kind = 'human'
-        and not okb_private.second_factor_missing(${user}::uuid, ${aal()})`;
+    const [admin] = await sql`select okb_private.second_factor_missing(${user}::uuid, ${aal()}) as missing
+      from okb.actor a join okb.actor h on h.actor_id = a.accountable_human_id
+      where a.auth_user_id = ${user}::uuid and a.enabled and a.authority_class = 'administrator' and h.enabled and h.actor_kind = 'human'`;
     if (!admin) throw refuse(403, "Only an administrator sets, removes or checks graph-reader's key.");
+    if (admin.missing) throw refuse(403, "Sign in with a code from your authenticator app, then try again.", { second_factor: true });
     if (args.action === "set_key") return json(200, await setKey(args.key));
     if (args.action === "remove_key") return json(200, await removeKey());
     if (args.action === "check") return json(200, await check());
