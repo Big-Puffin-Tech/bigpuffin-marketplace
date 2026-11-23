@@ -18,13 +18,13 @@ The owner is the person at the business who will own the Supabase account and be
 On macOS:
 
 ```sh
-cd ~ && curl -fsSLO https://raw.githubusercontent.com/Kinetik-Infotech/kinetik-marketplace/main/install/install.sh && bash install.sh Kinetik-Infotech/kinetik-marketplace --owner
+cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --owner
 ```
 
 On Windows:
 
 ```powershell
-cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Kinetik-Infotech/kinetik-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Kinetik-Infotech/kinetik-marketplace --owner
+cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --owner
 ```
 
 The script installs the programs and the plugins, as section 3 says. It then makes the folder `kinetik` in your home folder, and makes the business analyst that folder's agent. It does not sign you in, since there is no project to sign in to yet. Give `--folder <folder>` for another folder, outside any Git repository.
@@ -49,13 +49,13 @@ Once setup has finished, the business's administrator adds each member of staff 
 The command, with those values in place of the angle brackets, on macOS:
 
 ```sh
-cd ~ && curl -fsSLO https://raw.githubusercontent.com/Kinetik-Infotech/kinetik-marketplace/main/install/install.sh && bash install.sh Kinetik-Infotech/kinetik-marketplace --email <email> --url <project address> --key <publishable key> --join
+cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
 ```
 
 On Windows:
 
 ```powershell
-cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Kinetik-Infotech/kinetik-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Kinetik-Infotech/kinetik-marketplace --email <email> --url <project address> --key <publishable key> --join
+cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
 ```
 
 The script installs the programs and the plugins, then sets up the folder `kinetik` in your home folder with `okb setup`. The sign-in asks for your invitation code. Then it asks you to choose a password, twice. The password stays hidden as you type it, and goes only to your business's Supabase project. Save it in your password manager. A wrong code, or one that has run out, is refused, and after five wrong tries the code stops working. Ask your administrator for a new one.
@@ -112,7 +112,7 @@ The `animator` plugin is free and open source, under the [MIT licence](plugins/a
 In Claude Code, type:
 
 ```
-/plugin marketplace add Kinetik-Infotech/kinetik-marketplace
+/plugin marketplace add Big-Puffin-Tech/bigpuffin-marketplace
 /plugin install animator@kinetik
 ```
 
