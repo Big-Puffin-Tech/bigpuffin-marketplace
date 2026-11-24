@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Big Puffin's plugins for small and medium-sized businesses: the Big Puffin knowledge base each business keeps in its own Supabase project, its organisational knowledge base (OKB), and the agents that work in it.",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {

@@ -4,7 +4,7 @@
 --   scopes        the six scopes are there, each enabled, with a sessions scope for each person with a sign-in; a
 --                 person invited with a code gets theirs when they spend it;
 --   administrator the first administrator is there, enabled;
---   bigpuffin    Big Puffin's staff actors, each with the kinetik template's grants;
+--   bigpuffin    Big Puffin's staff actors, each with the bigpuffin template's grants;
 --   data_api      the Data API serves okb;
 --   schedule      file search's schedule and both its secrets are there;
 --   searchable    file search covers every scope's bucket but the plugins scopes'.

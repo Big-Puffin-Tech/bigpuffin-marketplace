@@ -1,13 +1,13 @@
 -- 0003-guides-scope
 -- base: new
--- Plan 1's decision 2.30 for a project built before it. The Guides scope, guides, keeps Kinetik's guides,
--- docs/support/, which scripts/load-guides.mjs loads there as Kinetik's actor. Every actor reads it: the basic
--- and kinetik templates gain a grant there, unless an administrator has changed the template, and an
+-- Plan 1's decision 2.30 for a project built before it. The Guides scope, guides, keeps Big Puffin's guides,
+-- docs/support/, which scripts/load-guides.mjs loads there as Big Puffin's actor. Every actor reads it: the basic
+-- and bigpuffin templates gain a grant there, unless an administrator has changed the template, and an
 -- administrator reads it with their authority. Its files change only with an actor's own grant there, as the
--- plugins scope's do, and only the kinetik template creates, edits and deletes there. okb_delete_scope does
+-- plugins scope's do, and only the bigpuffin template creates, edits and deletes there. okb_delete_scope does
 -- not delete it, nor the Administration scope, as the database admin's text already said. File search indexes it, as file-search-scopes.sql's trigger does each new scope. The scope is
 -- made in an enabled administrator's name; a project with no administrator yet gets it at bootstrap.sql's step 2.
--- Each person made from basic or kinetik gets the grant when the template is applied to them again.
+-- Each person made from basic or bigpuffin gets the grant when the template is applied to them again.
 -- Safe to run twice. Run as the postgres login.
 
 -- The plugins scope's storage rules, for the guides scope too.
@@ -51,7 +51,7 @@ set role okb_owner;
 revoke create on schema okb_private from okb_writer;
 reset role;
 
--- Only the kinetik template changes the guides scope.
+-- Only the bigpuffin template changes the guides scope.
 set role okb_owner;
 create or replace function okb_private.save_access_template(p_code text, p_grants jsonb, p_description text, p_authority_class text, p_reason text) returns jsonb
 language plpgsql volatile security definer set search_path=pg_catalog set "TimeZone" to 'UTC' as $$
@@ -77,15 +77,15 @@ begin
  n.description:=coalesce(nullif(btrim(coalesce(p_description,'')),''),o.description);
  n.authority_class:=coalesce(p_authority_class,o.authority_class);
  n.grants:=case when p_grants is null then o.grants else okb_private.template_grants(p_grants) end;
- -- Only Kinetik's template changes the plugins scope's files; every other template only reads them.
- if c<>'kinetik' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
-  raise exception 'Only the kinetik template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
- -- Kinetik's guides change only with Kinetik's template; every other template only reads them.
- if c<>'kinetik' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='guides' and x->'actions'<>'["read"]'::jsonb) then
-  raise exception 'Only the kinetik template changes the guides scope; the % template only reads it',c using errcode='22023'; end if;
- -- The setup and access records in Administration are read by the client's administrators and Kinetik alone.
- if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'kinetik' or x->'actions'<>'["read"]'::jsonb)) then
-  raise exception 'Only administrators and Kinetik read the administration scope; the kinetik template reads it, and no template changes it' using errcode='22023'; end if;
+ -- Only Big Puffin's template changes the plugins scope's files; every other template only reads them.
+ if c<>'bigpuffin' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
+  raise exception 'Only the bigpuffin template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
+ -- Big Puffin's guides change only with Big Puffin's template; every other template only reads them.
+ if c<>'bigpuffin' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='guides' and x->'actions'<>'["read"]'::jsonb) then
+  raise exception 'Only the bigpuffin template changes the guides scope; the % template only reads it',c using errcode='22023'; end if;
+ -- The setup and access records in Administration are read by the client's administrators and Big Puffin alone.
+ if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'bigpuffin' or x->'actions'<>'["read"]'::jsonb)) then
+  raise exception 'Only administrators and Big Puffin read the administration scope; the bigpuffin template reads it, and no template changes it' using errcode='22023'; end if;
  if n.description is null or length(n.description)>4000 then raise exception 'A template''s description is 1 to 4000 characters' using errcode='22023'; end if;
  if n.authority_class not in ('restricted','administrator') then raise exception 'A template''s authority class is restricted or administrator' using errcode='22023'; end if;
  if n.authority_class='administrator' and jsonb_array_length(n.grants)>0 then
@@ -104,13 +104,13 @@ reset role;
 -- The templates' grants in Guides, unless an administrator has changed the template.
 update okb.access_template
 set grants=grants||'[{"scope":"guides","record_kinds":["activity","decision","model","evidence"],"actions":["read"],"own_records":false}]'::jsonb,
- description='A member of staff: works in General, writes down routines and proposes terms, and reads the plugins scope and Kinetik''s guides.'
+ description='A member of staff: works in General, writes down routines and proposes terms, and reads the plugins scope and Big Puffin''s guides.'
 where code='basic' and changed_by_actor_id is null
  and not exists(select 1 from jsonb_array_elements(grants) x where x->>'scope'='guides');
 update okb.access_template
 set grants=grants||'[{"scope":"guides","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit","delete"],"own_records":false}]'::jsonb,
- description='Kinetik''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins and Kinetik''s guides, the one template that changes the plugins and guides scopes'' files, and reads the setup and access records in Administration.'
-where code='kinetik' and changed_by_actor_id is null
+ description='Big Puffin''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins and Big Puffin''s guides, the one template that changes the plugins and guides scopes'' files, and reads the setup and access records in Administration.'
+where code='bigpuffin' and changed_by_actor_id is null
  and not exists(select 1 from jsonb_array_elements(grants) x where x->>'scope'='guides');
 update okb.access_template
 set description='The client''s administrator: administrator authority, which reads and changes every scope''s records with no grant, and keeps scopes and staff. Reads the plugins and guides scopes'' files and changes none.'
@@ -119,7 +119,7 @@ where code='administrator' and changed_by_actor_id is null;
 -- The Guides scope, made in an enabled administrator's name, with its private bucket.
 insert into okb.scope(code, display_name, description, created_by)
 select 'guides', 'Guides',
- 'Kinetik''s guides to installing, updating, printing, support and leaving, which everyone reads and only Kinetik changes.',
+ 'Big Puffin''s guides to installing, updating, printing, support and leaving, which everyone reads and only Big Puffin changes.',
  a.actor_id
 from okb.actor a
 where a.actor_kind='human' and a.authority_class='administrator' and a.enabled

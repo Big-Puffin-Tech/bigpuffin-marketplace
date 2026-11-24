@@ -99,7 +99,7 @@ export function approve({ ref, folder, firm, slug, reset = false }, { here = HER
 revoke all on schema okb_setup from public, anon, authenticated;
 create table if not exists okb_setup.approved (sha256 text primary key, name text not null, approved_at timestamptz not null default now());
 create table if not exists okb_setup.owner_code (sha256 text primary key, expires_at timestamptz not null);
-create table if not exists okb_setup.person (auth_user_id uuid primary key, name text not null, email text not null, role text not null check (role in ('owner', 'kinetik')));
+create table if not exists okb_setup.person (auth_user_id uuid primary key, name text not null, email text not null, role text not null check (role in ('owner', 'bigpuffin')));
 create table if not exists okb_setup.open_task (position int primary key, title text not null, description text not null, completion_requirements text not null);
 create table if not exists okb_setup.staff_code (email text primary key, name text not null, code_sha256 text not null, expires_at timestamptz not null);
 create table if not exists okb_setup.firm (one_row boolean primary key default true check (one_row), name text not null);

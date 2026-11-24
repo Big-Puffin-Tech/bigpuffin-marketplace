@@ -1,4 +1,4 @@
--- okb_tests 1.8.0
+-- okb_tests 1.9.0
 -- OKB: setup tests, installed as stored functions in their own schema, okb_tests.
 -- Install this file once, as the postgres login, then run the checks part by part, in order:
 --   select okb_tests.parts();
@@ -4145,7 +4145,7 @@ end $refusals$;
 -- Access templates live in OKB. Every signed-in actor reads them. A restricted person's change is
 -- refused and logged; an administrator's is saved and logged, and the audit log gives it as
 -- access_template_changed with the old and new grants. A grant naming a scope that does not exist is
--- refused, and so is a template other than kinetik that changes the plugins scope. Applying basic
+-- refused, and so is a template other than bigpuffin that changes the plugins scope. Applying basic
 -- to a new person gives exactly its grants, and applying it again issues none. A basic person saves a
 -- new decision in General.
 create function okb_tests.suite_36_access_templates() returns void language plpgsql set search_path = pg_catalog, public, extensions, okb, okb_private, okb_storage, storage, auth, file_search, okb_tests as $templates$
@@ -4160,14 +4160,14 @@ begin
   perform okb_tests.approve_fixture(h);
   insert into okb.actor(actor_id,auth_user_id,display_name,actor_kind,accountable_human_id,authority_class,enabled)
    values(rs,rs,'Template test person','human',rs,'restricted',true),(np,np,'Template test newcomer','human',np,'restricted',true),
-    (op,op,'Template test Kinetik','human',op,'restricted',true);
+    (op,op,'Template test Big Puffin','human',op,'restricted',true);
   perform set_config('okb.provisioning_actor','',true);
   insert into okb.scope(scope_id,code,display_name,description,created_by) values(sc,'auth_test_template','Template test scope','Rolled-back fixture',h);
-  -- Each scope basic and kinetik name, made for the run where this OKB lacks it.
+  -- Each scope basic and bigpuffin name, made for the run where this OKB lacks it.
   insert into okb.scope(code,display_name,description,created_by)
   select distinct g->>'scope','Template test '||(g->>'scope'),'Rolled-back fixture',h
   from okb.access_template t, jsonb_array_elements(t.grants) g
-  where t.code in ('basic','kinetik') and not exists(select 1 from okb.scope s where s.code=g->>'scope');
+  where t.code in ('basic','bigpuffin') and not exists(select 1 from okb.scope s where s.code=g->>'scope');
 
   -- Every signed-in actor reads the templates, each grant naming its scope.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',rs,'role','authenticated')::text,true);
@@ -4176,7 +4176,7 @@ begin
   msg:=null;
   begin perform 1 from okb.access_template; exception when insufficient_privilege then msg:='refused'; end;
   execute 'reset role';
-  if not (select array_agg(x->>'code') from jsonb_array_elements(r->'items') x) @> array['administrator','basic','kinetik'] then
+  if not (select array_agg(x->>'code') from jsonb_array_elements(r->'items') x) @> array['administrator','basic','bigpuffin'] then
    raise exception 'FAIL access templates: a restricted person reads %',r; end if;
   select x->'grants' into basic from jsonb_array_elements(r->'items') x where x->>'code'='basic';
   if exists(select 1 from jsonb_array_elements(basic) g where g->>'scope_name' is null) then raise exception 'FAIL access templates: a grant names no scope: %',basic; end if;
@@ -4203,12 +4203,12 @@ begin
    '[{"scope":"auth_test_missing","record_kinds":["decision"],"actions":["read"],"own_records":false}]','Template test','restricted','Rolled-back fixture'));
   exception when sqlstate '22023' then msg:=sqlerrm; end;
   if msg is distinct from 'There is no scope with the code auth_test_missing' then raise exception 'FAIL access templates: a missing scope is not refused: %',msg; end if;
-  -- Only the kinetik template changes the plugins scope.
+  -- Only the bigpuffin template changes the plugins scope.
   msg:=null;
   begin perform pg_temp.raised(okb.okb_save_access_template('basic',
    '[{"scope":"plugins","record_kinds":["evidence"],"actions":["read","create"],"own_records":false}]',null,null,'Rolled-back fixture'));
   exception when sqlstate '22023' then msg:=sqlerrm; end;
-  if msg is distinct from 'Only the kinetik template changes the plugins scope; the basic template only reads it' then
+  if msg is distinct from 'Only the bigpuffin template changes the plugins scope; the basic template only reads it' then
    raise exception 'FAIL access templates: basic may change the plugins scope: %',msg; end if;
   r:=pg_temp.raised(okb.okb_save_access_template('auth_test_template',
    '[{"scope":"auth_test_template","record_kinds":["evidence","decision"],"actions":["create","read"],"own_records":true}]','Template test','restricted','Rolled-back fixture'));
@@ -4270,12 +4270,12 @@ begin
   execute 'reset role';
   if msg is not null or r->>'record_id' is null then raise exception 'FAIL access templates: a basic person was refused a decision in General: %',coalesce(msg,r::text); end if;
 
-  -- As the postgres login, bootstrap.sql step 3f's statement issues kinetik's grants in the
+  -- As the postgres login, bootstrap.sql step 3f's statement issues bigpuffin's grants in the
   -- administrator's name. A template that does not exist is refused.
   perform set_config('request.jwt.claims','{}',true);
-  r:=okb_private.apply_access_template(h,op,'kinetik');
-  select count(*) into n from okb.authorisation where executor_actor_id=op and issued_by_actor_id=h and reason='The kinetik access template.';
-  if n<>(select jsonb_array_length(grants) from okb.access_template where code='kinetik') or jsonb_array_length(r->'issued')<>n then
+  r:=okb_private.apply_access_template(h,op,'bigpuffin');
+  select count(*) into n from okb.authorisation where executor_actor_id=op and issued_by_actor_id=h and reason='The bigpuffin access template.';
+  if n<>(select jsonb_array_length(grants) from okb.access_template where code='bigpuffin') or jsonb_array_length(r->'issued')<>n then
    raise exception 'FAIL access templates: step 3f issued %, answering %',n,r; end if;
   msg:=null;
   begin perform okb_private.apply_access_template(h,op,'auth_test_none'); exception when sqlstate '22023' then msg:=sqlerrm; end;
@@ -4288,12 +4288,12 @@ begin
 end $templates$;
 
 -- The Administration scope keeps the setup record and each access record. A project with an enabled
--- administrator who is a person has it. Only administrators, with their authority, and Kinetik, with the
--- kinetik template's read grant, work in it: no other template names it, every live grant there is read
--- alone, an administrator keeps a file and a record there with no grant, Kinetik's actor lists the file and
+-- administrator who is a person has it. Only administrators, with their authority, and Big Puffin, with the
+-- bigpuffin template's read grant, work in it: no other template names it, every live grant there is read
+-- alone, an administrator keeps a file and a record there with no grant, Big Puffin's actor lists the file and
 -- writes none, and a basic person neither lists nor writes there, nor reads the record. A workflow plugin's
 -- scope, plugins_<workflow>, keeps its files as the plugins scope does: an administrator's authority reads them
--- and writes none, Kinetik's actor writes them with its own grant, a person granted read lists them, and a
+-- and writes none, Big Puffin's actor writes them with its own grant, a person granted read lists them, and a
 -- person without the grant sees none.
 create function okb_tests.suite_37_administration_and_plugin_scopes() returns void language plpgsql set search_path = pg_catalog, public, extensions, okb, okb_private, okb_storage, storage, auth, file_search, okb_tests as $administration$
 declare h uuid:=gen_random_uuid(); ra uuid:=gen_random_uuid(); p uuid:=gen_random_uuid(); rd uuid:=gen_random_uuid();
@@ -4307,8 +4307,8 @@ begin
    where z.scope_id=sc and x.authority_class<>'administrator' and z.allowed_actions<>array['read'] and okb_private.authority_live(z.authorisation_id);
   if n<>0 then raise exception 'FAIL administration: % grant(s) in the Administration scope carry more than read',n; end if;
  end if;
- if exists(select 1 from okb.access_template t, jsonb_array_elements(t.grants) g where g->>'scope'='administration' and (t.code<>'kinetik' or g->'actions'<>'["read"]'::jsonb)) then
-  raise exception 'FAIL administration: a template other than kinetik names the Administration scope, or kinetik changes it'; end if;
+ if exists(select 1 from okb.access_template t, jsonb_array_elements(t.grants) g where g->>'scope'='administration' and (t.code<>'bigpuffin' or g->'actions'<>'["read"]'::jsonb)) then
+  raise exception 'FAIL administration: a template other than bigpuffin names the Administration scope, or bigpuffin changes it'; end if;
  select count(*) into original_actors from okb.actor;
  begin
   insert into auth.users(id) values(h),(ra),(p),(rd);
@@ -4317,23 +4317,23 @@ begin
    values(h,h,'Administration test administrator','human',h,'administrator',true);
   perform okb_tests.approve_fixture(h);
   insert into okb.actor(actor_id,auth_user_id,display_name,actor_kind,accountable_human_id,authority_class,enabled)
-   values(ra,ra,'Administration test Kinetik','human',ra,'restricted',true),(p,p,'Administration test person','human',p,'restricted',true),
+   values(ra,ra,'Administration test Big Puffin','human',ra,'restricted',true),(p,p,'Administration test person','human',p,'restricted',true),
     (rd,rd,'Administration test reader','human',rd,'restricted',true);
   perform set_config('okb.provisioning_actor','',true);
-  -- Each scope basic and kinetik name, made for the run where this OKB lacks it.
+  -- Each scope basic and bigpuffin name, made for the run where this OKB lacks it.
   insert into okb.scope(code,display_name,description,created_by)
   select distinct g->>'scope','Administration test '||(g->>'scope'),'Rolled-back fixture',h
   from okb.access_template t, jsonb_array_elements(t.grants) g
-  where t.code in ('basic','kinetik') and not exists(select 1 from okb.scope s where s.code=g->>'scope');
+  where t.code in ('basic','bigpuffin') and not exists(select 1 from okb.scope s where s.code=g->>'scope');
   select scope_id into sc from okb.scope where code='administration';
   insert into okb.scope(code,display_name,description,created_by) values('plugins_auth_test','Administration test plugins','Rolled-back fixture',h) returning scope_id into ps;
-  perform okb_private.apply_access_template(h,ra,'kinetik');
+  perform okb_private.apply_access_template(h,ra,'bigpuffin');
   perform okb_private.apply_access_template(h,p,'basic');
   perform okb_private.apply_access_template(h,rd,'basic');
   perform okb_private.provision_grant(h,gen_random_uuid(),ra,ps,array['evidence'],null,array['read','create','edit','delete'],null::timestamptz,'Administration test publisher');
   perform okb_private.provision_grant(h,gen_random_uuid(),rd,ps,array['evidence'],null,array['read'],null::timestamptz,'Administration test reader');
   if not exists(select 1 from okb.authorisation where executor_actor_id=ra and scope_id=sc and allowed_actions=array['read']) then
-   raise exception 'FAIL administration: the kinetik template gives no read grant in Administration'; end if;
+   raise exception 'FAIL administration: the bigpuffin template gives no read grant in Administration'; end if;
   if exists(select 1 from okb.authorisation where executor_actor_id=p and scope_id=sc) then
    raise exception 'FAIL administration: the basic template gives a grant in Administration'; end if;
   perform set_config('storage.allow_delete_query','true',true);
@@ -4349,17 +4349,17 @@ begin
   execute 'reset role';
   if n<>1 or record_id is null then raise exception 'FAIL administration: an administrator does not keep a file and a record there: %, %',n,r; end if;
 
-  -- Kinetik's actor lists the file and reads the record, and writes no file.
+  -- Big Puffin's actor lists the file and reads the record, and writes no file.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',ra,'role','authenticated')::text,true);
   execute 'set local role authenticated';
   select count(*) into n from storage.objects where bucket_id='administration';
   r:=okb.okb_show_record(record_id);
   denied:=false;
-  begin insert into storage.objects(bucket_id,name,owner_id) values('administration','administration-test/by-kinetik.md',ra::text);
+  begin insert into storage.objects(bucket_id,name,owner_id) values('administration','administration-test/by-bigpuffin.md',ra::text);
   exception when insufficient_privilege then denied:=true; end;
   execute 'reset role';
   if n<>1 or r->>'record_id' is distinct from record_id or not denied then
-   raise exception 'FAIL administration: Kinetik''s actor lists %, reads %, and its write was refused: %',n,r,denied; end if;
+   raise exception 'FAIL administration: Big Puffin''s actor lists %, reads %, and its write was refused: %',n,r,denied; end if;
 
   -- A basic person neither lists nor writes there, nor reads the record.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',p,'role','authenticated')::text,true);
@@ -4373,9 +4373,9 @@ begin
   execute 'reset role';
   if n<>0 or not denied then raise exception 'FAIL administration: a basic person lists % file(s) there, or wrote one',n; end if;
   if msg is null and r->>'record_id' is not null then raise exception 'FAIL administration: a basic person reads the record: %',r; end if;
-  raise notice 'ok - the Administration scope: an administrator keeps a file and a record there, Kinetik''s actor reads them and writes none, and a basic person sees neither';
+  raise notice 'ok - the Administration scope: an administrator keeps a file and a record there, Big Puffin''s actor reads them and writes none, and a basic person sees neither';
 
-  -- A workflow plugin's scope: Kinetik's actor writes with its own grant, the administrator's authority writes nothing.
+  -- A workflow plugin's scope: Big Puffin's actor writes with its own grant, the administrator's authority writes nothing.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',ra,'role','authenticated')::text,true);
   execute 'set local role authenticated';
   insert into storage.objects(bucket_id,name,owner_id) values('plugins_auth_test','20261024-000000-0000000/MANIFEST',ra::text);
@@ -4398,9 +4398,9 @@ begin
   select count(*) into n from storage.objects where bucket_id='plugins_auth_test';
   execute 'reset role';
   if n<>0 then raise exception 'FAIL plugin scopes: a person without the grant lists % file(s) in a workflow plugin''s scope',n; end if;
-  raise notice 'ok - a workflow plugin''s scope: Kinetik''s actor writes with its own grant, the administrator reads and writes nothing, a reader lists, and a person without the grant sees nothing';
+  raise notice 'ok - a workflow plugin''s scope: Big Puffin''s actor writes with its own grant, the administrator reads and writes nothing, a reader lists, and a person without the grant sees nothing';
 
-  -- No scope takes the code of one of Kinetik's own plugins' scopes: okb_add_scope refuses it with its sentence, and
+  -- No scope takes the code of one of Big Puffin's own plugins' scopes: okb_add_scope refuses it with its sentence, and
   -- the table refuses it to the postgres login too.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',h,'role','authenticated')::text,true);
   execute 'set local role authenticated';
@@ -4408,30 +4408,30 @@ begin
   begin perform pg_temp.raised(okb.okb_add_scope('plugins_okb','Plugins: okb','Rolled-back fixture','Rolled-back fixture'));
   exception when sqlstate '22023' then msg:=sqlerrm; end;
   execute 'reset role';
-  if msg is distinct from 'The code plugins_okb names one of Kinetik''s own plugins, which only the plugins scope keeps' then
+  if msg is distinct from 'The code plugins_okb names one of Big Puffin''s own plugins, which only the plugins scope keeps' then
    raise exception 'FAIL plugin scopes: okb_add_scope made, or refused another way, plugins_okb: %',msg; end if;
   msg:=null;
-  begin insert into okb.scope(code,display_name,description,created_by) values('plugins_kinetik','Plugins: kinetik','Rolled-back fixture',h);
+  begin insert into okb.scope(code,display_name,description,created_by) values('plugins_bigpuffin','Plugins: bigpuffin','Rolled-back fixture',h);
   exception when check_violation then msg:=sqlerrm; end;
-  if msg is null then raise exception 'FAIL plugin scopes: the postgres login made plugins_kinetik'; end if;
-  raise notice 'ok - no scope takes the code of one of Kinetik''s own plugins'' scopes, such as plugins_okb';
+  if msg is null then raise exception 'FAIL plugin scopes: the postgres login made plugins_bigpuffin'; end if;
+  raise notice 'ok - no scope takes the code of one of Big Puffin''s own plugins'' scopes, such as plugins_okb';
 
-  -- No template but kinetik names Administration, and kinetik only reads it.
+  -- No template but bigpuffin names Administration, and bigpuffin only reads it.
   perform set_config('request.jwt.claims',jsonb_build_object('sub',h,'role','authenticated')::text,true);
   execute 'set local role authenticated';
   msg:=null;
   begin perform pg_temp.raised(okb.okb_save_access_template('basic',
    '[{"scope":"administration","record_kinds":["evidence"],"actions":["read"],"own_records":false}]',null,null,'Rolled-back fixture'));
   exception when sqlstate '22023' then msg:=sqlerrm; end;
-  if msg is distinct from 'Only administrators and Kinetik read the administration scope; the kinetik template reads it, and no template changes it' then
+  if msg is distinct from 'Only administrators and Big Puffin read the administration scope; the bigpuffin template reads it, and no template changes it' then
    execute 'reset role'; raise exception 'FAIL administration: basic may name the Administration scope: %',msg; end if;
   msg:=null;
-  begin perform pg_temp.raised(okb.okb_save_access_template('kinetik',
+  begin perform pg_temp.raised(okb.okb_save_access_template('bigpuffin',
    '[{"scope":"administration","record_kinds":["evidence"],"actions":["read","create"],"own_records":false}]',null,null,'Rolled-back fixture'));
   exception when sqlstate '22023' then msg:=sqlerrm; end;
   execute 'reset role';
-  if msg is distinct from 'Only administrators and Kinetik read the administration scope; the kinetik template reads it, and no template changes it' then
-   raise exception 'FAIL administration: kinetik may change the Administration scope: %',msg; end if;
+  if msg is distinct from 'Only administrators and Big Puffin read the administration scope; the bigpuffin template reads it, and no template changes it' then
+   raise exception 'FAIL administration: bigpuffin may change the Administration scope: %',msg; end if;
 
   perform set_config('request.jwt.claims','{}',true);
   raise exception using errcode='PHT37',message='Rollback administration fixtures';
@@ -4946,4 +4946,4 @@ end $run$;
 
 revoke execute on all functions in schema okb_tests from public, anon, authenticated, service_role;
 
-comment on function okb_tests.run() is 'okb_tests 1.8.0';
+comment on function okb_tests.run() is 'okb_tests 1.9.0';

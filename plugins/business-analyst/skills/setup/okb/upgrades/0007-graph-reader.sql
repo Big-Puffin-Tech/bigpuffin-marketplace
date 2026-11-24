@@ -206,7 +206,7 @@ begin
   raise exception 'Scope unavailable: no scope has the id, code or name "%"',p_scope using errcode='42501';
  end if;
  if to_regprocedure('file_search.file_parts(text,text,integer,integer)') is null then
-  raise exception 'File search''s graph reader is not set up yet: ask Kinetik to apply file search''s upgrade 0003-graph-reader' using errcode='55000';
+  raise exception 'File search''s graph reader is not set up yet: ask Big Puffin to apply file search''s upgrade 0003-graph-reader' using errcode='55000';
  end if;
  return jsonb_build_object('scope',sc.display_name,'code',sc.code)||file_search.file_parts(sc.code,p_file,p_from,p_limit);
 end $$;

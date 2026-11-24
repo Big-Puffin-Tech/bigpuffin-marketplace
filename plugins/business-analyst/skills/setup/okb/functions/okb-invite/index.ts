@@ -11,11 +11,11 @@
 // code for the email, kept in okb_private.invitation as its SHA-256 alone. The code is three groups of four from an
 // alphabet with no look-alike letters or digits, about 59 bits, valid for 7 days, spent once, and locked after 5 wrong
 // tries. Inviting the email again replaces an unused code. The person spends it with okb-join, which makes their Auth
-// user with the password they choose and their sessions scope. The actor is "<name> (Big Puffin)" for the kinetik
+// user with the password they choose and their sessions scope. The actor is "<name> (Big Puffin)" for the bigpuffin
 // template. It gives the template's grants, or for a workflow role the basic template's, the role's grants from the
 // newest release of the workflow's access.json in its plugins_<workflow> scope, and read of that scope for a role
 // plugin_readers names, each approved by the caller. A person already in OKB keeps their actor and gets only the grants
-// they lack. It saves the access record in the Administration scope as the caller. With the kinetik template, it
+// they lack. It saves the access record in the Administration scope as the caller. With the bigpuffin template, it
 // completes the open "Add Big Puffin" tasks setup left in Administration, with the access record linked as the evidence
 // that supports each. One transaction: a failure keeps nothing in OKB.
 //
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
       const basic = await templateGrants(tx, template || "basic");
       const grants: Grant[] = [...basic.grants];
       if (!template) grants.push(...await roleGrants(tx, caller, workflow, role));
-      const bigpuffin = template === "kinetik";
+      const bigpuffin = template === "bigpuffin";
       const display = bigpuffin && !/\(Big Puffin\)$/.test(name) ? `${name} (Big Puffin)` : name;
       const authority = template ? basic.authority_class : "restricted";
 

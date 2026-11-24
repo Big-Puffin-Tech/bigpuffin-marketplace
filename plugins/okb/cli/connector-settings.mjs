@@ -7,7 +7,7 @@
 //
 // The five settings: the project signs its tokens with an asymmetric key, ES256 or RS256. The OAuth server is
 // on, with dynamic OAuth apps. Its authorization path is /oauth/consent. The Site URL is
-// https://mcp.kinetik.it.com/<slug>/sign-in/. Public sign-up is off.
+// https://mcp.bigpuffin.dev/<slug>/sign-in/. Public sign-up is off.
 //
 // The signing key is switched in two runs, as Supabase's guide "JWT Signing Keys" gives a safe rotation.
 // Supabase throttles a key's state changes for about 5 minutes, and caches a project's published keys for up
@@ -33,7 +33,7 @@ on that page once every line says done.
 The signing key takes two runs, 20 minutes apart. The first run says when to run it again, and exits 3.
 
 --url is your project's address, https://<project reference>.supabase.co.
---slug is your business's short name in Big Puffin's connector's address, https://mcp.kinetik.it.com/<slug>.`;
+--slug is your business's short name in Big Puffin's connector's address, https://mcp.bigpuffin.dev/<slug>.`;
 
 export const TOKEN_PAGE = "https://supabase.com/dashboard/account/tokens";
 /** The options every prompt for the token gives: the token is made for one run, in the organisation that holds the project. */
@@ -42,7 +42,7 @@ const PROJECT_URL = /^https:\/\/([a-z]{20})\.supabase\.co\/?$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ASYMMETRIC = ["ES256", "RS256"];
 export const AUTHORIZATION_PATH = "/oauth/consent";
-export const siteUrl = slug => `https://mcp.kinetik.it.com/${slug}/sign-in/`;
+export const siteUrl = slug => `https://mcp.bigpuffin.dev/${slug}/sign-in/`;
 
 /** The command line's --url and --slug, checked. Throws a plain sentence for anything else. */
 export function options(argv) {

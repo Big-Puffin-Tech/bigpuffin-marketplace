@@ -107,7 +107,7 @@ A workflow role gives the `basic` template's grants and the role's grants from t
 
 1. **Confirm the name, email and role.**
    - **Person:** decides the person's name, their work email address, and their access template or workflow role.
-   - **Business analyst agent:** asks for whatever the administrator has not given, one question at a time. For an access template, it reads `okb_get_access_templates` and names the template's grants in plain words. Big Puffin is the `kinetik` template, and its name is the staff member's name, such as Support. It then asks once, in one line, such as "Shall I add Sam Lee, sam@firm.example, as basic staff?" An administrator's folder works with the business analyst, and every other person's with the database operator: `invite_person` puts the agent in the person's commands.
+   - **Business analyst agent:** asks for whatever the administrator has not given, one question at a time. For an access template, it reads `okb_get_access_templates` and names the template's grants in plain words. Big Puffin is the `bigpuffin` template, and its name is the staff member's name, such as Support. It then asks once, in one line, such as "Shall I add Sam Lee, sam@firm.example, as basic staff?" An administrator's folder works with the business analyst, and every other person's with the database operator: `invite_person` puts the agent in the person's commands.
 2. **Add them.**
    - **Person:** in their folder, runs `okb invite_person name="<name>" email=<email> template=<template>`, or `workflow=<workflow> role=<role>` in place of the template. It prints the code, its last day, and the person's commands.
    - **Business analyst agent:** after the administrator's yes, calls `invite_person` once, with `name`, `email` and either `template` or `workflow` and `role`. Its answer gives `code`, `code_expires_at`, and the person's `command`, `install_command` and `install_command_windows`. The reply is plain sentences, with each command alone in a fenced code block tagged `bash`, as given:
@@ -189,7 +189,7 @@ Each person's access is saved as evidence in the Administration scope. It names 
 
 ## When the person changes something
 
-- **Big Puffin's staff:** setup made Big Puffin's actor and its code. When that code is lost or has run out, or Big Puffin names another member of staff, use section 3 with the `kinetik` template. The name is the staff member's own, such as Support, with the email Big Puffin gives.
+- **Big Puffin's staff:** setup made Big Puffin's actor and its code. When that code is lost or has run out, or Big Puffin names another member of staff, use section 3 with the `bigpuffin` template. The name is the staff member's own, such as Support, with the email Big Puffin gives.
 - **Another role for someone already in the workflow:** run section 5 with the new role. The grants of the old role in the workflow's scope are revoked first.
 - **A person leaving the business:** this skill adds people. Disable their actor with step 5 of `bootstrap.sql`, as the records skill's "Problems with moves, scopes and grants" names it, and revoke their grants.
 - **A role missing from access.json:** Big Puffin adds it to the workflow's plugin and publishes a new release. Ask Big Puffin with the `bigpuffin:support` skill.

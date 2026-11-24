@@ -6,7 +6,7 @@
 // scripts/sign-upgrade.mjs writes: series "okb" for the upgrades/ folder or "file_search" for file-search-upgrades/,
 // the upgrade's four-digit number and name, as its file is named, the file's whole text, and an Ed25519 signature over
 // the text's exact UTF-8 bytes, in base64. It confirms who the caller is with Supabase Auth, then asks OKB, as the
-// caller, with okb_get_actor: only an enabled person who holds every grant of the kinetik access template, as
+// caller, with okb_get_actor: only an enabled person who holds every grant of the bigpuffin access template, as
 // apply_access_template reads a grant as held, goes on. An administrator holds no template's grants, so is refused.
 // Nothing the caller sends says who they are.
 //
@@ -93,8 +93,8 @@ Deno.serve(async (req) => {
             and z.allowed_actions @> array(select jsonb_array_elements_text(g->'actions'))
             and ((g->>'own_records')::boolean or not z.own_records)
             and okb_private.authority_live(z.authorisation_id))) as "bigpuffin"
-        from okb.actor a left join okb.access_template t on t.code = 'kinetik' where a.actor_id = ${me.actor_id}`;
-      if (!bigpuffin) throw new Refused(403, "Only Big Puffin's own actor, with the kinetik access template, applies an upgrade.");
+        from okb.actor a left join okb.access_template t on t.code = 'bigpuffin' where a.actor_id = ${me.actor_id}`;
+      if (!bigpuffin) throw new Refused(403, "Only Big Puffin's own actor, with the bigpuffin access template, applies an upgrade.");
 
       // The upgrade, as Big Puffin signed it.
       const series = typeof body?.series === "string" ? body.series : "okb";

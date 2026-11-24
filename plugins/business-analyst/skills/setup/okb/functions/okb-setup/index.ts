@@ -160,7 +160,7 @@ async function owner(db: any, body: Record<string, unknown>, apikey: string | nu
   for (const one of STAFF) {
     const address = one.email.toLowerCase();
     const [found] = await db`select id from auth.users where lower(email) = ${address}`;
-    if (found) { people.push({ auth_user_id: found.id, name: one.name, email: address, role: "kinetik" }); continue; }
+    if (found) { people.push({ auth_user_id: found.id, name: one.name, email: address, role: "bigpuffin" }); continue; }
     const code = newCode();
     coded.push({ name: one.name, email: address, code, sha256: await codeHash(code), expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString() });
   }
@@ -184,7 +184,7 @@ async function owner(db: any, body: Record<string, unknown>, apikey: string | nu
       await tx`insert into okb_setup.open_task(position, title, description, completion_requirements) values (${i + 1}, ${t.title}, ${t.description}, ${t.completion_requirements})`;
     await tx`delete from okb_setup.owner_code`;
   });
-  return json(200, { ok: true, email, bigpuffin: [...people.filter(p => p.role === "kinetik").map(p => p.name), ...coded.map(c => c.name)],
+  return json(200, { ok: true, email, bigpuffin: [...people.filter(p => p.role === "bigpuffin").map(p => p.name), ...coded.map(c => c.name)],
     bigpuffin_codes: unsent.map(c => ({ name: `${c.name} (Big Puffin)`, email: c.email, code: c.code, expires_at: c.expires_at })), open_tasks: tasks.map(t => t.title) });
 }
 

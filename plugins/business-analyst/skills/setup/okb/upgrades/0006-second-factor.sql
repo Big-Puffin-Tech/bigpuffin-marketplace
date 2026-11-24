@@ -12,7 +12,7 @@
 -- ===================================================================
 -- One setting: off or administrators. Under administrators, a call signed in with a password alone is refused to each
 -- actor whose authority class is administrator: request_auth_uid() gives no caller for it, so each OKB function, Storage
--- policy and file search policy refuses it. Every other actor, Kinetik's included, keeps its password sign-in. The
+-- policy and file search policy refuses it. Every other actor, Big Puffin's included, keeps its password sign-in. The
 -- level of a sign-in is the access token's aal claim: aal2 once the sign-in gave a code from an authenticator app.
 set role okb_owner;
 create table if not exists okb_private.sign_in_setting (
