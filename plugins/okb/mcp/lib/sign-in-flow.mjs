@@ -9,8 +9,8 @@ export const OWNER_USAGE = "Usage: node sign-in.mjs --owner --url <project URL> 
 export const JOIN_USAGE = "Usage: node sign-in.mjs --join --url <project URL> --key <publishable key> [--email <email>] [--folder <session folder>]";
 /** The file in the owner's setup folder that holds the sign-in code setup's build.mjs wrote. */
 export const OWNER_CODE_FILE = ".okb-owner-code";
-/** The file in the owner's setup folder where the sign-in saves Legacy's invitation codes, for setup's summary. */
-export const LEGACY_CODE_FILE = ".okb-legacy-code";
+/** The file in the owner's setup folder where the sign-in saves Big Puffin's invitation codes, for setup's summary. */
+export const BIGPUFFIN_CODE_FILE = ".okb-bigpuffin-code";
 
 export function options(args) {
   const out = { project: undefined, email: undefined, url: undefined, key: undefined, newPassword: false, secondFactor: false, folder: undefined, owner: false, join: false };
@@ -47,7 +47,7 @@ export function options(args) {
 }
 
 /** The name the account's authenticator app is kept under in Supabase Auth, and shows in the app. */
-export const FACTOR_NAME = "Legacy";
+export const FACTOR_NAME = "Big Puffin";
 
 /**
  * The second factor's step, after the password. With an authenticator app on the account, it asks for the app's code
@@ -70,7 +70,7 @@ export async function secondFactor(url, key, session, ask, say, enrol = false) {
     if (!started.ok) throw new Error(`Supabase refused the authenticator app: ${started.problem}`);
     factor = { id: started.body.id };
     adding = true;
-    say("Add Legacy to your authenticator app. Scan a QR code made from the address, or type the secret into the app.");
+    say("Add Big Puffin to your authenticator app. Scan a QR code made from the address, or type the secret into the app.");
     say(`Secret: ${started.body.totp?.secret}`);
     say(`Address: ${started.body.totp?.uri}`);
   }
@@ -182,7 +182,7 @@ export async function ownerSignIn({ url: knownUrl, key, folder, inSetup = false 
   if (!code) throw new Error(`${folder} holds no sign-in code. Ask your business analyst to carry on with setup.`);
   const ref = refFromUrl(url) ?? await ask("Project reference: ");
   if (!PROJECT_REF.test(ref)) throw new Error(`${ref} is not a project reference.`);
-  say("Choose your own sign-in to your business's Legacy knowledge base. Your password goes only to your business's Supabase project.");
+  say("Choose your own sign-in to your business's Big Puffin knowledge base. Your password goes only to your business's Supabase project.");
   const name = (await ask("Your name: ")).trim();
   if (!name) throw new Error("your name is needed. Nothing was changed.");
   const email = accountEmail(await ask("Your email: "));
@@ -206,11 +206,11 @@ export async function ownerSignIn({ url: knownUrl, key, folder, inSetup = false 
   writeSession(ref, email, { projectRef: ref, url, publishableKey: key, email, refreshToken: session.body.refresh_token });
   writeActorFile(folder, { projectRef: ref, email });
   rmSync(codeFile, { force: true });
-  // Legacy's one-time codes that okb-setup could not send to Legacy, for the business analyst's summary to give
-  // the owner, readable by the owner alone. An empty list is saved too: every code reached Legacy.
-  if (Array.isArray(made.legacy_codes)) {
-    const file = join(folder, LEGACY_CODE_FILE);
-    writeFileSync(file, `${JSON.stringify(made.legacy_codes)}\n`, { mode: 0o600 });
+  // Big Puffin's one-time codes that okb-setup could not send to Big Puffin, for the business analyst's summary to give
+  // the owner, readable by the owner alone. An empty list is saved too: every code reached Big Puffin.
+  if (Array.isArray(made.bigpuffin_codes)) {
+    const file = join(folder, BIGPUFFIN_CODE_FILE);
+    writeFileSync(file, `${JSON.stringify(made.bigpuffin_codes)}\n`, { mode: 0o600 });
     try { chmodSync(file, 0o600); } catch {}
   }
   // Run by okb setup --owner, setup goes on in the same run, so the owner is not sent back yet.
@@ -228,7 +228,7 @@ export async function joinSignIn({ url: knownUrl, key, email: given, folder }, a
   const url = projectUrl(knownUrl);
   const ref = refFromUrl(url) ?? await ask("Project reference: ");
   if (!PROJECT_REF.test(ref)) throw new Error(`${ref} is not a project reference.`);
-  say("Join your business's Legacy knowledge base with the invitation code your administrator gave you. Your password goes only to your business's Supabase project.");
+  say("Join your business's Big Puffin knowledge base with the invitation code your administrator gave you. Your password goes only to your business's Supabase project.");
   const email = accountEmail(given ?? await ask("Your email: "));
   if (!email) throw new Error("that is not an email address. Nothing was changed.");
   if (given) say(`Joining as ${email}.`);

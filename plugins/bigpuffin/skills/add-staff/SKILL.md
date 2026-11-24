@@ -7,11 +7,11 @@ description: Use when a business's administrator adds a member of staff to a wor
 
 Each member of staff works in the business's organisational knowledge base (OKB) as their own actor, with their own sign-in. OKB is the business's own Supabase project. In each workflow a person holds one role, such as adviser or manager. The role sets what they may read and change there. So the audit log names who did what, and each person sees only what their role allows.
 
-This skill adds one person to one workflow. A workflow is one plugin, such as `orders`, delivered by Legacy. Each workflow plugin holds an `access.json` file. It names the workflow's own scope and each role in it, with the role's grants. It also names the roles whose people install the plugin. Section 1 sets out the file.
+This skill adds one person to one workflow. A workflow is one plugin, such as `orders`, delivered by Big Puffin. Each workflow plugin holds an `access.json` file. It names the workflow's own scope and each role in it, with the role's grants. It also names the roles whose people install the plugin. Section 1 sets out the file.
 
-Each workflow plugin's releases are kept in a scope of their own, `plugins_<workflow>`: the plugin's name, each hyphen an underscore, such as `plugins_orders`. Only a person whose grants reach that scope gets the plugin from `okb sync`. Section 2 makes the scope before Legacy first publishes the workflow.
+Each workflow plugin's releases are kept in a scope of their own, `plugins_<workflow>`: the plugin's name, each hyphen an underscore, such as `plugins_orders`. Only a person whose grants reach that scope gets the plugin from `okb sync`. Section 2 makes the scope before Big Puffin first publishes the workflow.
 
-Each person's access is written down in the **Administration** scope, which only the business's administrators and Legacy's staff read. Section 7 saves that access record.
+Each person's access is written down in the **Administration** scope, which only the business's administrators and Big Puffin's staff read. Section 7 saves that access record.
 
 The business analyst, `@business-analyst:business-analyst`, the agent of the business's owner and administrators, runs this skill with the business's administrator. It adds a person with one call to the okb plugin's `invite_person` tool, once the administrator has confirmed the person's name, email and role. The tool calls the `okb-invite` hosted function as the administrator.
 
@@ -66,7 +66,7 @@ The rules for the file:
 
 1. **Find the newest release.**
    - **Person:** in their folder, runs `okb list_files bucket=plugins_<workflow>`. The newest release is the folder with the latest name, such as `20261015-120000-1a2b3c4`, whose own list holds `MANIFEST`. `okb list_files bucket=plugins_<workflow> prefix=<release>` shows it.
-   - **Business analyst agent:** calls `list_files` with the workflow's plugin scope, `plugins_<workflow>`, as the bucket. It takes the folder with the latest name, and calls `list_files` with that folder as `prefix`. A folder without `MANIFEST` or `MANIFEST.sig` is a release still being published, so it takes the next older one. When the scope is missing or holds no release, it runs section 2 first, and asks Legacy to publish.
+   - **Business analyst agent:** calls `list_files` with the workflow's plugin scope, `plugins_<workflow>`, as the bucket. It takes the folder with the latest name, and calls `list_files` with that folder as `prefix`. A folder without `MANIFEST` or `MANIFEST.sig` is a release still being published, so it takes the next older one. When the scope is missing or holds no release, it runs section 2 first, and asks Big Puffin to publish.
 2. **Read the workflow's access.json.**
    - **Person:** runs `okb download_file bucket=plugins_<workflow> path=<release>/plugins/<workflow>/access.json file=access-<workflow>.json`, and opens the file.
    - **Business analyst agent:** calls `download_file` with that path, into a new file in the agent folder, and reads it with `read_file`. When the release has no such file, it says the workflow is not in the business's plugins yet, and stops.
@@ -78,14 +78,14 @@ The rules for the file:
 
 ## 2. The workflow's scopes
 
-A workflow has two scopes. Its plugin scope, `plugins_<workflow>`, keeps the plugin's releases. Its own scope, from `access.json`, keeps its records. OKB lets only an administrator add a scope, so Legacy asks the administrator for the plugin scope before the first publish. `publish-plugin.mjs` refuses until it is there, and prints the two commands of steps 1 and 2.
+A workflow has two scopes. Its plugin scope, `plugins_<workflow>`, keeps the plugin's releases. Its own scope, from `access.json`, keeps its records. OKB lets only an administrator add a scope, so Big Puffin asks the administrator for the plugin scope before the first publish. `publish-plugin.mjs` refuses until it is there, and prints the two commands of steps 1 and 2.
 
 1. **Add the plugin scope when it is missing.**
-   - **Person:** runs `okb okb_get_scopes`, and looks for `plugins_<workflow>`. When it is missing, runs `okb okb_add_scope p_code=plugins_<workflow> p_display_name="Plugins: <workflow>" p_description="Releases of the <workflow> workflow plugin. Read by the roles its access.json names; Legacy publishes to it." p_reason="The <workflow> workflow plugin's own scope, for its releases."`
-   - **Business analyst agent:** calls `okb_get_scopes`. When the plugin scope is missing, it shows the code, name and description above. Once the person agrees, it calls `okb_add_scope`. OKB refuses a code named for one of Legacy's own plugins, such as `plugins_okb`. File search leaves every `plugins_` scope out.
-2. **Let Legacy publish there.**
-   - **Person:** runs `okb okb_find_actors p_name="(Legacy)"` for Legacy's actor id. Then runs `okb okb_grant_permission p_issuance_request_id="<new UUID>" p_executor_id="<Legacy's actor id>" p_scope_id="<plugins_<workflow>'s scope id>" p_record_kinds='["evidence"]' p_record_id=null p_actions='["read","create","edit","delete"]' p_expires_at=null p_reason="Legacy publishes the <workflow> workflow plugin's releases." p_own_records=false`.
-   - **Business analyst agent:** finds Legacy's actor by the name ending "(Legacy)", and checks with `okb_get_authorisations` that it holds no live grant there yet. Once the person agrees, it calls `okb_grant_permission` with those values. The storage rules then let Legacy's actor alone change the scope's files. The administrator's own authority reads them and changes none.
+   - **Person:** runs `okb okb_get_scopes`, and looks for `plugins_<workflow>`. When it is missing, runs `okb okb_add_scope p_code=plugins_<workflow> p_display_name="Plugins: <workflow>" p_description="Releases of the <workflow> workflow plugin. Read by the roles its access.json names; Big Puffin publishes to it." p_reason="The <workflow> workflow plugin's own scope, for its releases."`
+   - **Business analyst agent:** calls `okb_get_scopes`. When the plugin scope is missing, it shows the code, name and description above. Once the person agrees, it calls `okb_add_scope`. OKB refuses a code named for one of Big Puffin's own plugins, such as `plugins_okb`. File search leaves every `plugins_` scope out.
+2. **Let Big Puffin publish there.**
+   - **Person:** runs `okb okb_find_actors p_name="(Big Puffin)"` for Big Puffin's actor id. Then runs `okb okb_grant_permission p_issuance_request_id="<new UUID>" p_executor_id="<Big Puffin's actor id>" p_scope_id="<plugins_<workflow>'s scope id>" p_record_kinds='["evidence"]' p_record_id=null p_actions='["read","create","edit","delete"]' p_expires_at=null p_reason="Big Puffin publishes the <workflow> workflow plugin's releases." p_own_records=false`.
+   - **Business analyst agent:** finds Big Puffin's actor by the name ending "(Big Puffin)", and checks with `okb_get_authorisations` that it holds no live grant there yet. Once the person agrees, it calls `okb_grant_permission` with those values. The storage rules then let Big Puffin's actor alone change the scope's files. The administrator's own authority reads them and changes none.
 3. **Check the workflow's own scope is there.**
    - **Person:** looks in `okb okb_get_scopes` for the code `access.json` gives.
    - **Business analyst agent:** finds it in the same answer. When it is there, it goes on to section 3.
@@ -93,7 +93,7 @@ A workflow has two scopes. Its plugin scope, `plugins_<workflow>`, keeps the plu
    - **Person:** runs `okb okb_add_scope p_code="<code>" p_display_name="<name>" p_description="<description>" p_reason="The <workflow> workflow's own scope, from its access.json."`
    - **Business analyst agent:** shows the code, name and description from `access.json`. Once the person agrees, it calls `okb_add_scope`, as the records skill's section 13 says.
 
-**AI guided:** the business analyst gives the person the workflow's two scopes and Legacy's grant, and waits for their approval.
+**AI guided:** the business analyst gives the person the workflow's two scopes and Big Puffin's grant, and waits for their approval.
 
 ## 3. Invite the person
 
@@ -101,19 +101,19 @@ One call adds the person: their actor, their grants and a one-time invitation co
 
 The code is three groups of four letters and digits, such as `K7QM-3XRD-W9PA`. It works once, for 7 days. Five wrong tries lock it. Inviting the same email again replaces an unused code with a new one. OKB keeps only the code's SHA-256, so the code is in the tool's answer once, and nowhere else.
 
-It makes their actor. Legacy's staff get the name "<name> (Legacy)". It gives the access template's grants, or a workflow role's grants. It saves the access record in Administration, as the administrator. The person's sessions scope is made when they first sign in.
+It makes their actor. Big Puffin's staff get the name "<name> (Big Puffin)". It gives the access template's grants, or a workflow role's grants. It saves the access record in Administration, as the administrator. The person's sessions scope is made when they first sign in.
 
 A workflow role gives the `basic` template's grants and the role's grants from the newest release of the workflow's `access.json`. It also gives read of `plugins_<workflow>` for a role `plugin_readers` names. A person already in OKB keeps their actor, and gets only the grants they lack.
 
 1. **Confirm the name, email and role.**
    - **Person:** decides the person's name, their work email address, and their access template or workflow role.
-   - **Business analyst agent:** asks for whatever the administrator has not given, one question at a time. For an access template, it reads `okb_get_access_templates` and names the template's grants in plain words. Legacy is the `legacy` template, and its name is the staff member's name, such as Support. It then asks once, in one line, such as "Shall I add Sam Lee, sam@firm.example, as basic staff?" An administrator's folder works with the business analyst, and every other person's with the database operator: `invite_person` puts the agent in the person's commands.
+   - **Business analyst agent:** asks for whatever the administrator has not given, one question at a time. For an access template, it reads `okb_get_access_templates` and names the template's grants in plain words. Big Puffin is the `legacy` template, and its name is the staff member's name, such as Support. It then asks once, in one line, such as "Shall I add Sam Lee, sam@firm.example, as basic staff?" An administrator's folder works with the business analyst, and every other person's with the database operator: `invite_person` puts the agent in the person's commands.
 2. **Add them.**
    - **Person:** in their folder, runs `okb invite_person name="<name>" email=<email> template=<template>`, or `workflow=<workflow> role=<role>` in place of the template. It prints the code, its last day, and the person's commands.
    - **Business analyst agent:** after the administrator's yes, calls `invite_person` once, with `name`, `email` and either `template` or `workflow` and `role`. Its answer gives `code`, `code_expires_at`, and the person's `command`, `install_command` and `install_command_windows`. The reply is plain sentences, with each command alone in a fenced code block tagged `bash`, as given:
-     - With `sign_in` "code": "I've added <name> as <role>. Their one-time invitation code is <code>, and it works until <day>. Please give <first name> the code yourself, in person or by phone. If Legacy is already on their computer, they run this line in the Terminal:" Then `command`. Then "If not, they run this line instead, which installs Legacy first:" Then `install_command`. When the administrator says the person uses Windows, the second line is `install_command_windows`, in a block tagged `powershell`.
+     - With `sign_in` "code": "I've added <name> as <role>. Their one-time invitation code is <code>, and it works until <day>. Please give <first name> the code yourself, in person or by phone. If Big Puffin is already on their computer, they run this line in the Terminal:" Then `command`. Then "If not, they run this line instead, which installs Big Puffin first:" Then `install_command`. When the administrator says the person uses Windows, the second line is `install_command_windows`, in a block tagged `powershell`.
      - With `sign_in` "existing": "<name> already had a sign-in, so there is no code. Their role is ready. They run this line in the Terminal:" Then `command`.
-     - For Legacy: "I've added Legacy as <name>. Please email its one-time code to <email>: <code>. It works once, until <day>." With no command: Legacy's staff know it.
+     - For Big Puffin: "I've added Big Puffin as <name>. Please email its one-time code to <email>: <code>. It works once, until <day>." With no command: Big Puffin's staff know it.
      - `<role>` is the template or role in plain words, such as "basic staff" or "a adviser in orders". `<day>` is `code_expires_at` as a day, such as 1 November 2026.
 3. **When it is refused.**
    - **Person:** reads the problem the command prints.
@@ -161,7 +161,7 @@ Section 3 gives a new person their role. This section changes the role of someon
 ## 6. The person signs in
 
 1. **Set up the person's folder.**
-   - **Person:** the member of staff runs the line the administrator gave them on their own computer. With Legacy installed, it is `okb setup` with `--join`. Without it, it is Legacy's install script, from the public marketplace's README, which runs `okb setup --join` itself. Each takes their email, and the project's address and publishable key. The sign-in asks for the code, and a password they choose, twice. A person made by hand in section 4 leaves out `--join` and adds `--new-password`, to replace their first password. The setup's last step is `okb sync`. It installs the business's own release of its plugins, and adds the workflow's plugin to their copy when their role reads its plugin scope. They install it with the command `okb sync` gives.
+   - **Person:** the member of staff runs the line the administrator gave them on their own computer. With Big Puffin installed, it is `okb setup` with `--join`. Without it, it is Big Puffin's install script, from the public marketplace's README, which runs `okb setup --join` itself. Each takes their email, and the project's address and publishable key. The sign-in asks for the code, and a password they choose, twice. A person made by hand in section 4 leaves out `--join` and adds `--new-password`, to replace their first password. The setup's last step is `okb sync`. It installs the business's own release of its plugins, and adds the workflow's plugin to their copy when their role reads its plugin scope. They install it with the command `okb sync` gives.
    - **Business analyst agent:** gave the administrator the person's lines in section 3, with every value filled in. When the code is lost or has run out, it adds the person again, as section 3 says, which gives a new code.
 2. **Check what the person sees.**
    - **Person:** the member of staff, in their folder, runs `okb okb_get_authorisations` and `okb okb_find_records p_scope_id=<scope id>`, and sends both results to the administrator.
@@ -174,7 +174,7 @@ Section 3 gives a new person their role. This section changes the role of someon
 
 ## 7. The access record
 
-Each person's access is saved as evidence in the Administration scope. It names who was added, to which workflow and role, each grant given and why, and who approved it. Only the business's administrators and Legacy's staff read it.
+Each person's access is saved as evidence in the Administration scope. It names who was added, to which workflow and role, each grant given and why, and who approved it. Only the business's administrators and Big Puffin's staff read it.
 
 `okb-invite` saves the access record for each person section 3 adds, and gives its id as `access_record_id`. The business analyst reads it back with `okb_show_record`, and saves none of its own for that person.
 
@@ -189,7 +189,7 @@ Each person's access is saved as evidence in the Administration scope. It names 
 
 ## When the person changes something
 
-- **Legacy's staff:** setup made Legacy's actor and its code. When that code is lost or has run out, or Legacy names another member of staff, use section 3 with the `legacy` template. The name is the staff member's own, such as Support, with the email Legacy gives.
+- **Big Puffin's staff:** setup made Big Puffin's actor and its code. When that code is lost or has run out, or Big Puffin names another member of staff, use section 3 with the `legacy` template. The name is the staff member's own, such as Support, with the email Big Puffin gives.
 - **Another role for someone already in the workflow:** run section 5 with the new role. The grants of the old role in the workflow's scope are revoked first.
 - **A person leaving the business:** this skill adds people. Disable their actor with step 5 of `bootstrap.sql`, as the records skill's "Problems with moves, scopes and grants" names it, and revoke their grants.
-- **A role missing from access.json:** Legacy adds it to the workflow's plugin and publishes a new release. Ask Legacy with the `legacy:support` skill.
+- **A role missing from access.json:** Big Puffin adds it to the workflow's plugin and publishes a new release. Ask Big Puffin with the `bigpuffin:support` skill.

@@ -1,6 +1,6 @@
 -- OKB setup: takes an earlier, unfinished attempt back off a project, so setup can build it again from the start.
 -- Run as postgres, through okb-setup or the SQL Editor. It refuses, and changes nothing, once OKB holds a record or
--- a file in a scope's bucket: from then on the project holds the business's work, and only Legacy's staff decide.
+-- a file in a scope's bucket: from then on the project holds the business's work, and only Big Puffin's staff decide.
 -- It removes OKB's and file search's schemas with everything in them, their four roles, the empty buckets of OKB's
 -- scopes, file search's schedule and its two secrets, and the Data API's okb schema. The Auth users an earlier
 -- attempt made stay: the owner's first sign-in gives the owner's a new password. The okb_setup schema and the

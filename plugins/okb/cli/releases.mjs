@@ -1,11 +1,11 @@
 // A client's plugins in their own OKB: the Plugins scope's bucket, `plugins`, holds one folder per
-// release, laid out as Legacy's marketplace is, with its MANIFEST and MANIFEST.sig, and holds Legacy's own plugins
+// release, laid out as Big Puffin's marketplace is, with its MANIFEST and MANIFEST.sig, and holds Big Puffin's own plugins
 // alone. Each workflow plugin's releases are in a scope of its own, plugins_<workflow>, the plugin's name with
 // each hyphen an underscore: each release folder there holds plugins/<name> and its MANIFEST, and only a person
 // whose grants reach that scope sees it. A release counts only once its MANIFEST and MANIFEST.sig are there, when
-// MANIFEST.sig is Legacy's signature of the release's scope, name and MANIFEST by a key in RELEASE_KEYS, and when
-// every file the MANIFEST lists matches. okb sync downloads releases from them, and Legacy's publish-plugin.mjs
-// uploads and signs them. Nobody at the client holds Legacy's key, so nobody there can make a release that counts.
+// MANIFEST.sig is Big Puffin's signature of the release's scope, name and MANIFEST by a key in RELEASE_KEYS, and when
+// every file the MANIFEST lists matches. okb sync downloads releases from them, and Big Puffin's publish-plugin.mjs
+// uploads and signs them. Nobody at the client holds Big Puffin's key, so nobody there can make a release that counts.
 //
 // It needs Node alone. Each call takes `access`, `{ url, key, token }`: the project's address, its
 // publishable key and a signed-in person's access token. Storage's rules, from the person's grants in
@@ -17,8 +17,8 @@ import { dirname, join } from "node:path";
 /** A release folder's name: the second it was made, in UTC, and the start of a hash of its files. */
 export const RELEASE_NAME = /^\d{8}-\d{6}-[0-9a-f]{7,40}$/;
 export const RELEASES_BUCKET = "plugins";
-/** Legacy's own plugins, which okb sync takes only from the Plugins scope, never from a workflow plugin's scope. */
-export const OWN_PLUGIN_NAMES = ["legacy", "okb", "business-analyst", "legacy-project"];
+/** Big Puffin's own plugins, which okb sync takes only from the Plugins scope, never from a workflow plugin's scope. */
+export const OWN_PLUGIN_NAMES = ["bigpuffin", "okb", "business-analyst", "bigpuffin-project"];
 /** The start of the code of each workflow plugin's own scope. */
 export const PLUGIN_SCOPE_PREFIX = "plugins_";
 /** A workflow plugin's own scope: plugins_ and its name, each hyphen an underscore. */
@@ -26,7 +26,7 @@ export const pluginScope = name => `${PLUGIN_SCOPE_PREFIX}${String(name).replace
 /** True for a workflow plugin's own scope's code. */
 export const isPluginScope = code => typeof code === "string" && code.startsWith(PLUGIN_SCOPE_PREFIX) && code.length > PLUGIN_SCOPE_PREFIX.length;
 /** The marketplace's name, which every release's marketplace.json carries, and every plugin id ends with. */
-export const MARKETPLACE_NAME = "legacy";
+export const MARKETPLACE_NAME = "bigpuffin";
 const PAGE = 1000;
 // Storage refuses a burst of requests on a small project, with "Too many connections issued to the database".
 // A few at a time, and each failure that is not a refusal or a missing file tried again after a wait.
@@ -39,8 +39,8 @@ export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 /** A release's signature, beside its MANIFEST: the Ed25519 signature of signedBytes(), in base64. */
 export const SIGNATURE = "MANIFEST.sig";
 /**
- * Legacy's release signing keys: each public key, its 32 raw bytes in base64, as scripts/sign-upgrade.mjs --new-key
- * prints it. The private key is kept by Legacy's staff outside the repository, ~/.config/legacy/release-signing.key.
+ * Big Puffin's release signing keys: each public key, its 32 raw bytes in base64, as scripts/sign-upgrade.mjs --new-key
+ * prints it. The private key is kept by Big Puffin's staff outside the repository, ~/.config/bigpuffin/release-signing.key.
  * A release counts when its signature verifies against one of these. A new key goes in beside the old one, and the old
  * one leaves once every client's newest release is signed with the new one.
  */
@@ -91,13 +91,13 @@ export function pastPublish(name, now = Date.now()) {
 /** What a release with no signature gives as its one problem, while its publish may still be under way. */
 export const UNSIGNED = `${SIGNATURE} missing`;
 /** What a release gives as its one problem when it has had no signature for longer than a publish takes. */
-export const NEVER_SIGNED = `${SIGNATURE} missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Legacy publishes again, or deletes the release`;
+export const NEVER_SIGNED = `${SIGNATURE} missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Big Puffin publishes again, or deletes the release`;
 /** What a release with no MANIFEST gives as its one problem, while its publish may still be under way. */
 export const NO_MANIFEST = "MANIFEST missing";
 /** What a release gives as its one problem when it has had no MANIFEST for longer than a publish takes. */
-export const NEVER_MANIFEST = `MANIFEST missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Legacy publishes again, or deletes the release`;
+export const NEVER_MANIFEST = `MANIFEST missing, more than ${PUBLISH_MINUTES} minutes after its publish began. Big Puffin publishes again, or deletes the release`;
 /** What a release whose signature fails gives as its one problem. */
-export const BAD_SIGNATURE = `${SIGNATURE} is not Legacy's signature of this release`;
+export const BAD_SIGNATURE = `${SIGNATURE} is not Big Puffin's signature of this release`;
 /** True for the problems of a folder that is not a release yet: a publish under way, with no MANIFEST or no signature. */
 export const unfinished = problems => problems.length === 1 && (problems[0] === NO_MANIFEST || problems[0] === UNSIGNED);
 
@@ -125,7 +125,7 @@ export function workflowPlugin(text) {
 
 /**
  * Each manifest line that does not match the copy in folder, as "<path> missing" or "<path> changed". A release
- * in the Plugins scope must name the legacy marketplace; one in a workflow plugin's scope, bucket, must hold
+ * in the Plugins scope must name the bigpuffin marketplace; one in a workflow plugin's scope, bucket, must hold
  * that one plugin alone, with its plugin.json.
  */
 export function check(folder, bucket = RELEASES_BUCKET) {
@@ -254,7 +254,7 @@ async function each(items, work) {
 
 /**
  * Downloads one release, from the Plugins scope or the bucket given, into folder: its MANIFEST and MANIFEST.sig, then
- * each file the MANIFEST lists. The signature is checked against Legacy's keys before any file is downloaded. Returns
+ * each file the MANIFEST lists. The signature is checked against Big Puffin's keys before any file is downloaded. Returns
  * the problems found, as check() words them, and [] when the signature verifies and every file is there and matches.
  */
 export async function downloadRelease(access, name, folder, bucket = RELEASES_BUCKET) {

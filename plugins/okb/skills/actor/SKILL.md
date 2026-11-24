@@ -11,7 +11,7 @@ through the okb plugin's tools. OKB is the `okb` schema in the business's own Su
 operation stored in the project's database, such as `okb_get_scopes`, and `rpc` calls one through
 Supabase's REST API.
 
-Changes go through the database operator, `@legacy:database-operator`, or for an administrator
+Changes go through the database operator, `@bigpuffin:database-operator`, or for an administrator
 the business analyst, `@business-analyst:business-analyst`. Each asks before each change. A session that is
 neither does not make changes itself with these tools.
 
@@ -30,37 +30,37 @@ The person puts files there for the agent, and the agent uploads files directly 
 The agent also reads a call's JSON arguments there and writes its result there. It draws and
 prints pages there, and reads the files the person gives it.
 
-The okb plugin is normally installed as a dependency of the `legacy` plugin. On its own, it is
+The okb plugin is normally installed as a dependency of the `bigpuffin` plugin. On its own, it is
 installed with:
 
 ```sh
-claude plugin install okb@legacy
+claude plugin install okb@bigpuffin
 ```
 
 **The okb command.** A person works without the agent, and sets up a folder, with the `okb` command.
 `okb` stands for this, on macOS and Linux:
 
 ```sh
-node ~/.claude/plugins/marketplaces/legacy/plugins/okb/cli/okb.mjs
+node ~/.claude/plugins/marketplaces/bigpuffin/plugins/okb/cli/okb.mjs
 ```
 
 On Windows, in PowerShell:
 
 ```powershell
-node "$env:USERPROFILE\.claude\plugins\marketplaces\legacy\plugins\okb\cli\okb.mjs"
+node "$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\okb\cli\okb.mjs"
 ```
 
 On macOS and Linux, this line, added to the shell's start-up file, such as `~/.zshrc`, lets the
 person type `okb`:
 
 ```sh
-alias okb="node ~/.claude/plugins/marketplaces/legacy/plugins/okb/cli/okb.mjs"
+alias okb="node ~/.claude/plugins/marketplaces/bigpuffin/plugins/okb/cli/okb.mjs"
 ```
 
 On Windows, this line, added to the PowerShell profile, does the same:
 
 ```powershell
-function okb { node "$env:USERPROFILE\.claude\plugins\marketplaces\legacy\plugins\okb\cli\okb.mjs" @args }
+function okb { node "$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\okb\cli\okb.mjs" @args }
 ```
 
 - **Responsible:** the person the agent works for; for an autonomous agent, whoever runs it.
@@ -73,7 +73,7 @@ function okb { node "$env:USERPROFILE\.claude\plugins\marketplaces\legacy\plugin
 
   It makes the folder, and sets the folder's agent, the database operator
   unless `--agent <plugin>:<agent>` names another. It installs that agent's plugin from the
-  legacy marketplace, and signs the person in, which writes the actor file. The project URL and
+  bigpuffin marketplace, and signs the person in, which writes the actor file. The project URL and
   publishable key come from the project administrator; without `--url` and `--key`, the sign-in asks
   for them. The first time, with a password an administrator created, the person adds
   `--new-password` and then chooses their own. Running it again is safe: each step says what it did,
@@ -176,7 +176,7 @@ own. The actor's permissions, and the person's yes before each upload, decide wh
 | `download_file` | downloads one file from a Storage bucket into a new file directly in the agent folder, as "Downloading a file" describes |
 | `read_file` | reads one file in the agent folder or in a folder within it, and gives the agent its content, or lists a folder there, as "Reading a file" describes |
 | `copy_to_agent_folder` | copies one file from a folder added to the session when it started into a new file directly in the agent folder, for an upload or a page tool, as "A folder added to the session" describes |
-| `check_plugins` | at the start of a session: each plugin installed from the legacy marketplace that is behind the newest release in the Plugins scope, and what the session's folder holds, as "Connect a folder again" describes. It changes nothing |
+| `check_plugins` | at the start of a session: each plugin installed from the bigpuffin marketplace that is behind the newest release in the Plugins scope, and what the session's folder holds, as "Connect a folder again" describes. It changes nothing |
 | `update_plugins` | runs `okb sync` as the person, only when they ask to update their plugins |
 
 The plugin's page tools draw and print pages in the agent folder from what OKB returns. The
@@ -302,7 +302,7 @@ told, with the line that adds it.
 | `tesseract` | `brew install tesseract` | `winget install UB-Mannheim.TesseractOCR` | `sudo apt install tesseract-ocr` |
 | `ffmpeg`, `ffprobe` | `brew install ffmpeg` | `winget install Gyan.FFmpeg` | `sudo apt install ffmpeg` |
 | `magick`, or `convert` and `identify` on Debian and Ubuntu | `brew install imagemagick` | `winget install ImageMagick.ImageMagick` | `sudo apt install imagemagick libheif-plugin-libde265` |
-| `whisper-cli` and its model | Legacy's install script: `brew install whisper-cpp`, and `ggml-base.bin` in `~/.local/share/okb/whisper` | Legacy's install script: whisper.cpp's `whisper-bin-x64.zip` and `ggml-base.bin` in `%LOCALAPPDATA%\okb\whisper` | whisper.cpp's `whisper-bin-ubuntu-x64.tar.gz`, and `ggml-base.bin` from its Hugging Face models |
+| `whisper-cli` and its model | Big Puffin's install script: `brew install whisper-cpp`, and `ggml-base.bin` in `~/.local/share/okb/whisper` | Big Puffin's install script: whisper.cpp's `whisper-bin-x64.zip` and `ggml-base.bin` in `%LOCALAPPDATA%\okb\whisper` | whisper.cpp's `whisper-bin-ubuntu-x64.tar.gz`, and `ggml-base.bin` from its Hugging Face models |
 
 The last column is for Debian 13 and Ubuntu 24.04, or later. Another Linux has the same programs in its own package manager.
 
@@ -340,7 +340,7 @@ folder, and the reply gives its full path, size, type and SHA-256. The agent can
 In a project with file search set up, an agent searches the files the actor may open by calling `call_function` with the name `file-search`. It takes `{"query": "...", "bucket": "<bucket>", "limit": 1-50, "explain": true}`, of which only `query` is needed. A search's reply holds each hit's whole section, and is often too long for the agent to be shown. The agent gives each search a `result_file`, a new file in the agent folder, and reads it with `read_file`. The search returns:
 
 - `hits`: each with its `bucket`, `file`, `place`, `snippet`, `found`, `fusion_score`, and `section`. `found` lists the ways that found it: `words`, `meaning` and `graph`. `section` is the position in `sections` of the section it falls in. `place` is a Markdown file's heading path, a page or a sheet, where the file has one. `ranks` gives the hit's rank in each of `words`, `meaning` and `graph`, null for a way that did not find it. `similarity` is its similarity to the question, 0 to 1, where the meaning search found it, and `graph_weight` its weight where the graph found it;
-- `reference_hits`: the top hits from the buckets the project ranks apart, ranked on their own, in a search that names no bucket. They have the same shape as `hits`. In OKB, the reference scope's bucket is ranked apart, so these are the hits in the files kept in the reference scope. The glossary itself is a table, not a file, and is read with `okb_get_reference`, as the `okb:reference` skill says. Each list holds up to the search's `limit`. A search that names a bucket returns an empty `reference_hits`. A search that names no bucket leaves out the buckets searched only by name. In OKB, those are each person's sessions scope. Legacy's guides are in the Guides scope's bucket, `guides`, which every actor reads. A search across every scope finds them among `hits`. A search naming `guides` finds them alone;
+- `reference_hits`: the top hits from the buckets the project ranks apart, ranked on their own, in a search that names no bucket. They have the same shape as `hits`. In OKB, the reference scope's bucket is ranked apart, so these are the hits in the files kept in the reference scope. The glossary itself is a table, not a file, and is read with `okb_get_reference`, as the `okb:reference` skill says. Each list holds up to the search's `limit`. A search that names a bucket returns an empty `reference_hits`. A search that names no bucket leaves out the buckets searched only by name. In OKB, those are each person's sessions scope. Big Puffin's guides are in the Guides scope's bucket, `guides`, which every actor reads. A search across every scope finds them among `hits`. A search naming `guides` finds them alone;
 - `graph` in a hit's `found`: the graph search found it. The hit then names its `entities` and `relations`. These are the things the hit's part names, and the links between them, that the search reached from the question. Each has its `steps` from the things nearest the question, and the part's own `description` of it;
 - `sections`: each section a hit in either list falls in, whole and once. The reference hits' sections come first, each in the order of its best hit. Each has its `bucket`, `file`, `place`, `text` and `truncated`. A section is a Markdown file's part under a heading, a PDF's page, a sheet, or the whole of any other file. `truncated` is true when the section was longer than a search returns, 8,000 characters. Its `text` is then the part of the section around its hits. A sheet's part starts with the sheet's first row, its column names, and holds whole rows. Any other part holds whole paragraphs. Such a section also has `start` and `end`, the part's place in the section, and `length`, the section's own. Its `before` and `after` count the characters left out on each side. The section's `text` is the passage to answer from; a hit's `snippet` shows where in it the search matched;
 - `stages`: how many chunks each search found, how many were merged and returned, and how many files and chunks are still waiting for, or have failed, their text or their vector. `graph_seeds` lists the things nearest the question that the graph search started from, each with its `entity_id`. `graph_walk` lists each link the graph search walked, in order. Each gives `from` and `from_name`, the thing it was walked from, and `relation` and its `keywords`. It gives `to` and `to_name`, the thing it reached, and its `step` and `weight`. Each of a hit's `entities` has its `entity_id` too. `awaiting_extraction` counts the parts waiting for an agent to read them for the graph. The agent names them and offers to read them, as the `okb:records` skill's section 18 says. `awaiting_entity_vector` counts the things still waiting for their vector. `unsupported` and `no_text` count the files search cannot read. `unreadable` lists up to 20 of them the actor may open, each with its `bucket`, `file`, `state` and `error`. The `error` is the reason to tell the person. As `failed_worker_runs`, how many of the worker's runs went wrong in the last day and left work unfinished. A file or chunk such a run took is still waiting, or it took none. A run drops out once its work is done. `worker_problems` lists those runs, newest first. Each has its `job`, `called_at`, `answered_at`, `status`, `problem` and `files`. `files` holds each file the run took that the actor may open, with its `bucket` and `file`. `in_flight` is true for the file the run was at when it stopped;

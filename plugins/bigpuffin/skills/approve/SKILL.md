@@ -7,14 +7,14 @@ description: Use when a person approves, or asks for changes to, a workflow mode
 
 A person approves one exact version of a model record in the business's OKB. The model is a **workflow**: how a whole piece of the business's work runs, such as taking a customer's enquiry through to a signed order. A workflow is made of **routines**. A routine is one part of the workflow that starts from one trigger and ends in one outcome. Each routine is approved on its own, with its own decision record. The model is one of two kinds:
 
-- **A current state**, a model whose `model_kind` is `observed_current`: how the business works today. Approving a routine confirms the business works this way. Legacy designs the new way of working from the approved routines.
-- **A proposed design**, a model whose `model_kind` is `proposed_target`: how the business will work. Approving a routine tells Legacy to build it, with its cards. It costs £250 plus VAT, then £25 a month plus VAT to keep it up to date. Nothing is built without its approval.
+- **A current state**, a model whose `model_kind` is `observed_current`: how the business works today. Approving a routine confirms the business works this way. Big Puffin designs the new way of working from the approved routines.
+- **A proposed design**, a model whose `model_kind` is `proposed_target`: how the business will work. Approving a routine tells Big Puffin to build it, with its cards. It costs £250 plus VAT, then £25 a month plus VAT to keep it up to date. Nothing is built without its approval.
 
 Each approval is a decision record, saved by the person who approves, signed in as themselves, so the audit log names them. It names its routine in its title and its fields. It links to the exact model version with `supports`. A request for changes to a routine is a decision too. It links to the version with `describes`, and holds the person's words.
 
 This skill belongs to no one agent. The person's own agent runs it in the session where the person asks, and never sends them to another session or another agent to approve.
 
-Every call goes through the okb plugin's `rpc` tool, as the `okb:records` skill says. Every save follows that skill's section 3: preview first, and save only what the person agrees to. Where the session has Legacy's connector, each decision is shown on its approval card, and the card's Yes saves it as the person. Drawing follows the `okb:graph` skill's section 3. Every sentence the person reads follows the `okb:writing` skill.
+Every call goes through the okb plugin's `rpc` tool, as the `okb:records` skill says. Every save follows that skill's section 3: preview first, and save only what the person agrees to. Where the session has Big Puffin's connector, each decision is shown on its approval card, and the card's Yes saves it as the person. Drawing follows the `okb:graph` skill's section 3. Every sentence the person reads follows the `okb:writing` skill.
 
 ## Choose the mode
 
@@ -32,7 +32,7 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 
 1. **Find the model the person means.**
    - **Person:** names the workflow, such as "the current routines" or "the proposed design". Without the agent, runs `okb okb_find_records p_kind=model`, adding `p_title="<words of the title>"` when they know them.
-   - **The agent:** calls `okb_find_records` with `p_kind` `model`, and `p_title` when the person's words name the title. It pages with `next_cursor`. It reads each record found with `okb_get_record`. The person's words pick the kind: "current", "today" or "how we work" mean `observed_current`, and "proposed", "design", "new" or "build" mean `proposed_target`. When one model fits, it goes on. When several fit, it lists each one's title, scope and when it was saved, and asks once which they mean. When none fits, it says that the person's Legacy knowledge base holds no workflow they can read by that name, and stops.
+   - **The agent:** calls `okb_find_records` with `p_kind` `model`, and `p_title` when the person's words name the title. It pages with `next_cursor`. It reads each record found with `okb_get_record`. The person's words pick the kind: "current", "today" or "how we work" mean `observed_current`, and "proposed", "design", "new" or "build" mean `proposed_target`. When one model fits, it goes on. When several fit, it lists each one's title, scope and when it was saved, and asks once which they mean. When none fits, it says that the person's Big Puffin knowledge base holds no workflow they can read by that name, and stops.
 2. **Check the person may approve.**
    - **Person:** runs `okb okb_get_actor` and `okb okb_get_authorisations`.
    - **The agent:** calls `okb_get_actor`. An administrator who is a person may approve in any scope that is not private. Anyone else needs a live grant in the model's scope whose record kinds include `decision` and whose actions include `create` and `decide`, from `okb_get_authorisations`. Without one, it says in one sentence that their role does not let them make decisions in that scope. Their administrator can give them that. Then it stops.
@@ -51,7 +51,7 @@ With the agent, the person's own instruction replaces a rule of this skill, such
      - A routine's id is its `reference` attribute, such as `0.1`, and its name is its `label`. Routines run in the order of the outline's `## Routine:` headings.
      - A routine's states are the nodes with a `part_of` edge to it, in the outline's order. Its trigger is its `start` state, or its first state when it has none. Its outcome is its `end` states, or its last state when it has none.
      - A model with no `routine` or `route_group` node has no routine grouping. The agent takes the whole model as one routine, named by the model's title, with no id.
-     - A proposed design's description names each routine's cards, under the routine's id. Each card has its name, what it shows, and each button with what it saves. Legacy's systems designer uploads a mock-up page of each card to the model's scope, at `cards/<version id>/<routine id> <card name>.html`. A routine the description names no card for has none.
+     - A proposed design's description names each routine's cards, under the routine's id. Each card has its name, what it shows, and each button with what it saves. Big Puffin's systems designer uploads a mock-up page of each card to the model's scope, at `cards/<version id>/<routine id> <card name>.html`. A routine the description names no card for has none.
 3. **Find the routines already decided.** A routine is decided when a made decision in the model's scope links to this `version_id` and names the routine in its title.
    - **Person:** runs `okb okb_find_records p_kind=decision p_title="<model title> version <n>"`, and reads each with `okb okb_get_record`.
    - **The agent:** calls `okb_find_records` with `p_kind` `decision` and `p_title` the model's title, and reads each with `okb_get_record`. It keeps those whose `links` hold this `version_id`. Each routine they name is left out of the routines still to decide.
@@ -66,7 +66,7 @@ One reply deals with one routine, and asks one question. The first reply also ho
    - **Person:** reads the page and the list of routines.
    - **The agent:** writes the page's full path, then the list, filled in: "<title>, version <n>, is a workflow of <k> routines. Each routine is approved on its own. The routines are:" with one line per routine, such as "0.1 Booking" or "0.7 Media billing, a supporting routine". For a model with no routine grouping, the list is instead: "<title>, version <n>, has no routines marked in it, so I'll take it as one routine." Routines already decided are named once: "<ids and names> are already decided." Then it adds the sentence for the model's kind:
      - Current state: "Approving a routine confirms this is how you work today."
-     - Proposed design: "Approving a routine tells Legacy to build it. Each routine costs £250 plus VAT to build, then £25 a month plus VAT to keep up to date."
+     - Proposed design: "Approving a routine tells Big Puffin to build it. Each routine costs £250 plus VAT to build, then £25 a month plus VAT to keep up to date."
      Then it gives the first routine still to decide, as the next step says.
 2. **Show one routine, and ask about it.**
    - **Person:** reads the routine, opens each card's mock-up, and says "approve" or names each change, in their own words. Without the agent, downloads each mock-up with `okb download_file`.
@@ -87,7 +87,7 @@ One reply deals with one routine, and asks one question. The first reply also ho
      - `decision`: "Approved: routine <id> <name> is how we work today" for a current state, "Approved: routine <id> <name>, £250 plus VAT, then £25 a month plus VAT" for a proposed design, or "Changes asked for: routine <id> <name>".
      - `rationale`: the person's own words, as they said them. `decided_on`: today's date.
      It sets the preview's `request` `links` to one link to the `version_id`: `supports` for an approval, `describes` for changes. For changes, it shows the decision first, asks "Shall I save this change request for routine <id> <name>?", and saves it once the person agrees.
-   - **With Legacy's connector:** the agent shows the request on the approval card with `show_approval`, as the `okb:records` skill's "The approval card" says, and ends the turn. The person's own yes to the routine's question comes first, and the card's Yes saves it. Several routines approved at once go on one card, titled for the model and its version. At the next turn, the agent reads the card's outcome, and goes on only for each decision the card saved.
+   - **With Big Puffin's connector:** the agent shows the request on the approval card with `show_approval`, as the `okb:records` skill's "The approval card" says, and ends the turn. The person's own yes to the routine's question comes first, and the card's Yes saves it. Several routines approved at once go on one card, titled for the model and its version. At the next turn, the agent reads the card's outcome, and goes on only for each decision the card saved.
    - **Without the connector:** it calls `okb_save_version` with that request and the preview's `authorisation_id`.
 2. **Go on to the next routine.**
    - **Person:** reads that the routine is saved, and the next one.
@@ -100,10 +100,10 @@ One reply deals with one routine, and asks one question. The first reply also ho
 1. **Tell the person, after the last routine, in one or two sentences.**
    - **Person:** reads what happens next.
    - **The agent:** says one of these, filled in. <a> is the number of routines approved in this version, and <c> the number with changes asked for.
-     - A current state, with no proposed design yet: "That was the last of the <k> routines. You approved <a> of them. Legacy designs the new way of working next, and asks you to approve each of its routines."
+     - A current state, with no proposed design yet: "That was the last of the <k> routines. You approved <a> of them. Big Puffin designs the new way of working next, and asks you to approve each of its routines."
      - A current state, with a proposed design already saved: "That was the last of the <k> routines. You approved <a> of them. The proposed design, <title>, is ready for you to approve next, one routine at a time." A proposed design is a `proposed_target` model in the same scope that links to this model with `describes`, or whose title names the same workflow.
-     - A proposed design: "That was the last of the <k> routines. You approved <a> of them, for £<a × 250> plus VAT to build, then £<a × 25> a month plus VAT to keep them up to date. Legacy builds them next."
-     - With changes asked for, it adds: "Legacy revises <the ids and names of those routines>, and asks you to approve the new version."
+     - A proposed design: "That was the last of the <k> routines. You approved <a> of them, for £<a × 250> plus VAT to build, then £<a × 25> a month plus VAT to keep them up to date. Big Puffin builds them next."
+     - With changes asked for, it adds: "Big Puffin revises <the ids and names of those routines>, and asks you to approve the new version."
 
 - **Evidence:** the page's path, the model's `version_id`, each decision's `record_id` and `version_id` with its routine, and the person's words. The audit log, the `okb:records` skill's section 8, lists each save under the person.
 

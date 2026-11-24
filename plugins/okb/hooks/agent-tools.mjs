@@ -57,10 +57,10 @@ export function chromeUrlAllowed(url) {
 // are held by their own rules above.
 export const REFUSED_SERVERS = [/supabase/i, /postgres|pgadmin|beekeeper/i, /^plugin_okb[-_]/, /^terminal$/, /^computer-use$/,
   /^Claude_Browser$/, /playwright/i, /^Claude_Code_iOS_Simulator$/, /^ccd_/, /^scheduled-tasks$/, /^rea$/];
-// Legacy's connector, the one that draws the home card, the Dashboard button, the approval card and the graph reader card, known by its tools'
+// Big Puffin's connector, the one that draws the home card, the Dashboard button, the approval card and the graph reader card, known by its tools'
 // names on any server, since in the desktop app its server is an id. Both agents call them with no agreement asked, and a
 // call to one records no agreement for the rest of its server.
-export const LEGACY = ["show_home", "show_approval", "show_graph_reader"];
+export const BIGPUFFIN = ["show_home", "show_approval", "show_graph_reader"];
 // The tools only a card calls, for its page and its own tools. Claude keeps them from the model, and a card's own calls
 // never pass this hook (seen in a live session: the hook saw show_home, and none of the card's card_page and card_call).
 // So both agents are refused them by name on any server, as a second layer to Claude's, whether a card's tool is
@@ -68,20 +68,20 @@ export const LEGACY = ["show_home", "show_approval", "show_graph_reader"];
 // The list holds every tool the connector registers with appTool, in any file of workers/connector/src, and hook.test.mjs
 // checks it against that file.
 export const CARD_ONLY = ["card_page", "card_call", "card_state", "save_version", "home_state", "task_list", "task_save", "task_open", "task_state", "run_call", "card_find_records", "card_record", "graph_reader_save", "graph_reader_off"];
-// Legacy's connector's record, file and routine tools and the records card, for claude.ai and the phone, which load
+// Big Puffin's connector's record, file and routine tools and the records card, for claude.ai and the phone, which load
 // no plugins. This hook is the okb plugin's, so a session it runs in has the plugin's own server. Its rpc, list_files and
 // file tools reach the same records and files, and the workflow plugins okb sync installs hold the same routines. Both
 // agents are refused these names on any server but the okb plugin's own, so they keep to the plugin's tools in Claude
 // Code. Each name starts okb, so another connector's guide, list_files or show_records is never refused.
 export const CONNECTOR_RECORDS = ["okb", "okb_list_files", "okb_file_search", "okb_file_link", "okb_file_upload_link", "okb_guide", "okb_help", "okb_routines", "okb_routine", "okb_show_records"];
 
-/** Whether the tool is one of Legacy's connector's record, file or routine tools, on a server other than the okb plugin's. */
+/** Whether the tool is one of Big Puffin's connector's record, file or routine tools, on a server other than the okb plugin's. */
 export const connectorRecord = (server, tool) => server !== SERVER && CONNECTOR_RECORDS.includes(tool);
 
-/** Whether the tool, exactly mcp__<server>__<tool>, is one of Legacy's connector's, by its tool's name. */
-export function legacyTool(toolName) {
+/** Whether the tool, exactly mcp__<server>__<tool>, is one of Big Puffin's connector's, by its tool's name. */
+export function bigpuffinTool(toolName) {
   const parts = String(toolName).split("__");
-  return parts.length === 3 && parts[0] === "mcp" && parts[1] !== "" && LEGACY.includes(parts[2]);
+  return parts.length === 3 && parts[0] === "mcp" && parts[1] !== "" && BIGPUFFIN.includes(parts[2]);
 }
 
 // The Supabase connector's tools, refused on any server, since in the desktop app the connector's server is an id. Each
@@ -123,7 +123,7 @@ export function connectorOf(server, tool, marked = {}) {
   if (REFUSED_SERVERS.some(r => r.test(server)) || SUPABASE_TOOLS.includes(tool) || (marked.supabase ?? []).includes(server)) return null;
   // Code runs only in the okb plugin's own run_code, which reads only the agent folder and the folders added to the session.
   if (tool === "run_code") return null;
-  if (LEGACY.includes(tool)) return null;
+  if (BIGPUFFIN.includes(tool)) return null;
   return server;
 }
 
@@ -145,7 +145,7 @@ export function connectorState(session, dir = tmpdir()) {
 // The agent_type Claude Code gives each agent, and what its refusals call it.
 // The database operator alone uses the person's connectors and plugins, as decision 2.34 gives it.
 export const AGENTS = {
-  "legacy:database-operator": { name: "database operator", connectors: true },
+  "bigpuffin:database-operator": { name: "database operator", connectors: true },
   "business-analyst:business-analyst": { name: "business analyst", connectors: false },
 };
 
@@ -154,8 +154,8 @@ export const AGENTS = {
 // Artifact publishes a checked page on the person's own Claude account, private until they share it.
 const BUILT_IN = ["Skill", "Write", "Edit", "WebSearch", "WebFetch", "ToolSearch", "ListPlugins", "Read", "Glob", "Grep", "Artifact"];
 
-// The installed plugins' folder: ~/.claude/plugins/cache/legacy, three folders above this hook in
-// cache/legacy/okb/<version>/hooks. A skill's own files, such as its references, are there.
+// The installed plugins' folder: ~/.claude/plugins/cache/bigpuffin, three folders above this hook in
+// cache/bigpuffin/okb/<version>/hooks. A skill's own files, such as its references, are there.
 export const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 /** The folders added to the session, from the first environment attachment in its transcript, which Claude Code writes
@@ -223,18 +223,18 @@ export function allowed(agentType, toolName, marked = {}, input = {}) {
   if (connectorRecord(server, tool)) return false;
   if (server === SERVER && agentType !== ADMIN_ONLY.agent
     && (ADMIN_ONLY.tools.includes(tool) || (tool === "call_function" && ADMIN_ONLY.functions.includes(String(input?.name ?? "").trim())))) return false;
-  // Legacy's connector's tools, on a server that is neither refused nor marked as Supabase's.
-  if (legacyTool(toolName) && !REFUSED_SERVERS.some(r => r.test(server)) && !(marked?.supabase ?? []).includes(server)) return true;
+  // Big Puffin's connector's tools, on a server that is neither refused nor marked as Supabase's.
+  if (bigpuffinTool(toolName) && !REFUSED_SERVERS.some(r => r.test(server)) && !(marked?.supabase ?? []).includes(server)) return true;
   return (server === SERVER && OKB.includes(tool)) || (server === CHROME && CHROME_READ.includes(tool))
     || (AGENTS[agentType].connectors && connectorOf(server, tool, marked) !== null);
 }
 
-/** Why the agent is refused one of Legacy's connector's record, file or routine tools, named in full as tool, and what
+/** Why the agent is refused one of Big Puffin's connector's record, file or routine tools, named in full as tool, and what
  * it uses in Claude Code. */
 export function connectorRefusal(who, name, tool) {
   if (name === "okb_routines" || name === "okb_routine")
     return `The ${who} follows a routine with its workflow plugin's own skill, which okb sync installs in Claude Code, not ${tool}.`;
-  if (name === "okb_help") return `The ${who} answers how-to questions with the legacy:support skill, not ${tool}.`;
+  if (name === "okb_help") return `The ${who} answers how-to questions with the bigpuffin:support skill, not ${tool}.`;
   return `The ${who} reaches records and files with the okb plugin's own tools, such as rpc, list_files and read_file, not ${tool}.`;
 }
 

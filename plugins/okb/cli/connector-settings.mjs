@@ -1,4 +1,4 @@
-// Makes the five settings Legacy's connector needs in a business's Supabase project, through Supabase's
+// Makes the five settings Big Puffin's connector needs in a business's Supabase project, through Supabase's
 // Management API, with a personal access token the owner pastes at a hidden prompt. The token is used for
 // this run only: it never goes on a command line, into an environment variable, a file or a log, and is
 // never printed.
@@ -25,7 +25,7 @@ export { API, apiBase };
 
 export const CONNECTOR_SETTINGS_USAGE = `Usage: node okb.mjs connector-settings --url <project URL> --slug <slug>
 
-connector-settings makes the five settings Legacy's connector needs in your business's Supabase project.
+connector-settings makes the five settings Big Puffin's connector needs in your business's Supabase project.
 It asks for a Supabase access token, which you make at https://supabase.com/dashboard/account/tokens.
 Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it
 on that page once every line says done.
@@ -33,7 +33,7 @@ on that page once every line says done.
 The signing key takes two runs, 20 minutes apart. The first run says when to run it again, and exits 3.
 
 --url is your project's address, https://<project reference>.supabase.co.
---slug is your business's short name in Legacy's connector's address, https://mcp.legacy.it.com/<slug>.`;
+--slug is your business's short name in Big Puffin's connector's address, https://mcp.legacy.it.com/<slug>.`;
 
 export const TOKEN_PAGE = "https://supabase.com/dashboard/account/tokens";
 /** The options every prompt for the token gives: the token is made for one run, in the organisation that holds the project. */

@@ -1,9 +1,9 @@
-// okb.mjs uninstall: takes Legacy's install back off a computer, and keeps the person's work.
+// okb.mjs uninstall: takes Big Puffin's install back off a computer, and keeps the person's work.
 //
 //   node okb.mjs uninstall [--yes] [--remove-work]
 //
 // It lists what it removes, what it keeps and what it leaves, and asks the person to type yes. --yes answers it.
-// It removes each plugin from the legacy marketplace and the marketplace itself, with Claude Code's own commands,
+// It removes each plugin from the bigpuffin marketplace and the marketplace itself, with Claude Code's own commands,
 // then what Claude Code leaves of them in its settings and plugin folders. It removes each copy of the business's
 // marketplace okb sync made, okb-marketplace in the home folder and the copy Claude Code's settings name, with the
 // files beside it, the whisper folder the install script fills and the install script's files in the temporary
@@ -12,8 +12,8 @@
 // resolves, as once the project is deleted, when only the file goes. Without a working claude command, the
 // plugins, the marketplace and their settings stay. It keeps each folder the okb plugin's settings name, and each
 // folder in the home folder or a folder in it that okb setup made: one holding an actor file, with any upload folder
-// an older setup named, or one whose .claude/settings.json names an agent of Legacy's plugins or of a plugin from
-// the legacy marketplace, signed in or not; it deletes the actor file and the agent setting in each. --remove-work also deletes those folders, once the person
+// an older setup named, or one whose .claude/settings.json names an agent of Big Puffin's plugins or of a plugin from
+// the bigpuffin marketplace, signed in or not; it deletes the actor file and the agent setting in each. --remove-work also deletes those folders, once the person
 // types delete, which --yes does not answer. It leaves the programs the install added, and every other marketplace,
 // and names the uninstall guide, which gives their commands. It prints one line per item, and exits 1 when an item
 // could not be removed.
@@ -31,7 +31,7 @@ import { MARKETPLACE_NAME } from "./releases.mjs";
 
 export const UNINSTALL_USAGE = `Usage: node okb.mjs uninstall [--yes] [--remove-work]
 
-uninstall takes Legacy's install off this computer: the plugins from the ${MARKETPLACE_NAME} marketplace and the
+uninstall takes Big Puffin's install off this computer: the plugins from the ${MARKETPLACE_NAME} marketplace and the
 marketplace itself, your copy of your business's plugins, the whisper folder the install script fills, and your sign-ins
 to your business's OKB. It keeps your folders. It lists each first, and asks you to type yes. --yes answers yes.
 --remove-work also deletes your folders, once you type delete.`;
@@ -97,9 +97,9 @@ async function signOut(file) {
   }
 }
 
-/** Legacy's own plugins, whose agents a folder okb setup made names. A business's workflow plugins are the others
- * installed from the legacy marketplace. */
-export const LEGACY_PLUGINS = ["business-analyst", "legacy", "okb"];
+/** Big Puffin's own plugins, whose agents a folder okb setup made names. A business's workflow plugins are the others
+ * installed from the bigpuffin marketplace. */
+export const BIGPUFFIN_PLUGINS = ["business-analyst", "bigpuffin", "okb"];
 
 /** The local folder a file:// git source names, or null. */
 function sourceFolder(url) {
@@ -137,9 +137,9 @@ export function survey({ home, configDir, temp, platform, claude, localAppData =
   keep(options.upload_folder, "upload");
   if (PROJECT_REF.test(String(options.project_ref ?? ""))) refs.add(options.project_ref);
   const folders = under => { try { return readdirSync(under, { withFileTypes: true }).filter(e => e.isDirectory() && !e.name.startsWith(".")).map(e => join(under, e.name)); } catch { return []; } };
-  // A folder okb setup made names one of Legacy's agents in its .claude/settings.json, signed in or not, such as
+  // A folder okb setup made names one of Big Puffin's agents in its .claude/settings.json, signed in or not, such as
   // the owner's setup folder before its first sign-in.
-  const ours = new Set([...LEGACY_PLUGINS, ...plugins.map(p => p.id.slice(0, -`@${MARKETPLACE_NAME}`.length))]);
+  const ours = new Set([...BIGPUFFIN_PLUGINS, ...plugins.map(p => p.id.slice(0, -`@${MARKETPLACE_NAME}`.length))]);
   const namesOurAgent = folder => {
     const agent = readJson(join(folder, ".claude", "settings.json"))?.agent;
     return typeof agent === "string" && ours.has(agent.split(":")[0]) && agent.includes(":");
@@ -156,7 +156,7 @@ export function survey({ home, configDir, temp, platform, claude, localAppData =
   }
 
   // The copies of the business's marketplace: okb-marketplace in the home folder, a copy for each project, and the copy
-  // Claude Code's settings name as the legacy marketplace's source, with the files okb sync keeps beside it.
+  // Claude Code's settings name as the bigpuffin marketplace's source, with the files okb sync keeps beside it.
   const copies = join(home, "okb-marketplace");
   for (const ref of (() => { try { return readdirSync(copies); } catch { return []; } })()) {
     const ref0 = ref.replace(/\.(incoming|old|lock|workflows)$/, "");
@@ -201,7 +201,7 @@ function dropKeys(file, objects, drop) {
 }
 
 /**
- * Deletes what Claude Code left of the legacy marketplace and its plugins: their keys in settings.json, in
+ * Deletes what Claude Code left of the bigpuffin marketplace and its plugins: their keys in settings.json, in
  * known_marketplaces.json and in installed_plugins.json, the marketplace's clone and plugin cache, and the okb plugin's
  * data folder. Returns one line per item deleted.
  */
@@ -263,7 +263,7 @@ export async function uninstall(argv, {
   say(removeWork ? "This deletes your work, once you type delete:" : "This keeps your work:");
   for (const w of s.work) say(`  ${w.folder}`);
   if (!s.work.length) say("  no folder of yours is on this computer");
-  if (!yes && await ask("Type yes to uninstall Legacy from this computer: ") !== "yes") { say("Nothing was removed."); return 0; }
+  if (!yes && await ask("Type yes to uninstall Big Puffin from this computer: ") !== "yes") { say("Nothing was removed."); return 0; }
   let deleteWork = false;
   if (removeWork && s.work.length) {
     deleteWork = await ask(`Type delete to delete ${s.work.map(w => w.folder).join(", ")} and every file in them: `) === "delete";
@@ -325,7 +325,7 @@ export async function uninstall(argv, {
     } else say(`Kept ${w.folder}.`);
   }
 
-  say("Your other plugins and the programs the install added stay. The uninstall guide, uninstall.md in Legacy's support guides, gives the command that removes each.");
+  say("Your other plugins and the programs the install added stay. The uninstall guide, uninstall.md in Big Puffin's support guides, gives the command that removes each.");
   say("Your account and grants stay in your business's OKB. Your administrator removes them.");
   if (failed) fail(`${failed} item${failed === 1 ? "" : "s"} could not be removed. Each is named above.`);
   return failed ? 1 : 0;

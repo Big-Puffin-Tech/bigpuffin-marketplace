@@ -5,9 +5,9 @@ description: Use when a person asks to update their plugins. Runs okb sync, whic
 
 # Plugins
 
-The business's plugins come from its own organisational knowledge base (OKB), the business's own Supabase project. Legacy publishes each release of them to the Plugins scope: the `legacy` and `okb` plugins, and each workflow plugin the business has bought. A release counts only once it carries Legacy's signature, `MANIFEST.sig`, and every file in it matches its list, the release's `MANIFEST`. Nobody at the business can sign a release.
+The business's plugins come from its own organisational knowledge base (OKB), the business's own Supabase project. Big Puffin publishes each release of them to the Plugins scope: the `bigpuffin` and `okb` plugins, and each workflow plugin the business has bought. A release counts only once it carries Big Puffin's signature, `MANIFEST.sig`, and every file in it matches its list, the release's `MANIFEST`. Nobody at the business can sign a release.
 
-`okb sync` brings this computer up to date, signed in as the person. It downloads the newest release and checks Legacy's signature and every file. A release that fails the check is passed over for the next older one. It keeps the release as a copy on this computer, and Claude Code installs from that copy as the `legacy` marketplace. Then it updates each plugin installed from it. The person's first `okb sync` replaces the copy installed from Legacy's public marketplace.
+`okb sync` brings this computer up to date, signed in as the person. It downloads the newest release and checks Big Puffin's signature and every file. A release that fails the check is passed over for the next older one. It keeps the release as a copy on this computer, and Claude Code installs from that copy as the `bigpuffin` marketplace. Then it updates each plugin installed from it. The person's first `okb sync` replaces the copy installed from Big Puffin's public marketplace.
 
 This skill sets the order, the wording and the checks. It belongs to no one agent: any agent can run it. The okb plugin's `check_plugins` tool compares the installed plugins with the newest release, and changes nothing. Its `update_plugins` tool runs `okb sync` as the person signed in. It uses the `okb:writing` skill for what it tells the person.
 
@@ -27,9 +27,9 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 
 1. **See what is behind.**
    - **Person:** in Terminal or PowerShell, runs `claude plugin list`, and notes each plugin's version.
-   - **The agent:** calls `check_plugins`. Its `behind` gives each plugin installed from the `legacy` marketplace whose version is lower than the newest release's, with both versions, and `release` names that release. The agent gives one line for each plugin behind, such as "okb 0.3.0 is installed, and 0.4.0 is released." With `behind` empty, it says only that no plugin is behind, since the person asked. A problem in its result is given in one line.
+   - **The agent:** calls `check_plugins`. Its `behind` gives each plugin installed from the `bigpuffin` marketplace whose version is lower than the newest release's, with both versions, and `release` names that release. The agent gives one line for each plugin behind, such as "okb 0.3.0 is installed, and 0.4.0 is released." With `behind` empty, it says only that no plugin is behind, since the person asked. A problem in its result is given in one line.
 2. **Run okb sync.**
-   - **Person:** in their folder, runs `okb sync`. On macOS and Linux, that is `node ~/.claude/plugins/marketplaces/legacy/plugins/okb/cli/okb.mjs sync`. On Windows, in PowerShell, it is `node "$env:USERPROFILE\.claude\plugins\marketplaces\legacy\plugins\okb\cli\okb.mjs" sync`.
+   - **Person:** in their folder, runs `okb sync`. On macOS and Linux, that is `node ~/.claude/plugins/marketplaces/bigpuffin/plugins/okb/cli/okb.mjs sync`. On Windows, in PowerShell, it is `node "$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\okb\cli\okb.mjs" sync`.
    - **The agent:** calls `update_plugins` with no arguments, once the person has asked for the update. It never runs it unasked. The result's `output` is what `okb sync` printed. When the tool is refused, the agent gives the person the Person line to run, and asks for what it printed.
 3. **Read what it did.** `okb sync` prints one line for each step:
    - "Your copy in ... is now release ..., from ...": the release it installed, and the one before it.
@@ -38,7 +38,7 @@ With the agent, the person's own instruction replaces a rule of this skill, such
    - "<plugin>: updated from <old> to <new>": the plugin's old and new version.
    - "<plugin>: already up to date, at <version>".
    - "<plugin>: in the release, and not installed": a plugin the business has, which this computer does not have yet. The line gives the command that installs it.
-   - "OKB's Plugins scope shows ... no release yet": Legacy has not published the business's plugins yet, or the person cannot read the Plugins scope.
+   - "OKB's Plugins scope shows ... no release yet": Big Puffin has not published the business's plugins yet, or the person cannot read the Plugins scope.
    - "Your agent no longer reads ... Move any file you want uploaded into ...": a folder an earlier setup made for uploads holds files. The line comes once for each such folder.
    - **Person:** reads the lines.
    - **The agent:** gives the person each plugin's name with its old and new version, in a short list. It names any release passed over, and any plugin not installed with its install command. It names any folder `okb sync` named, with the folder to move its files into.
@@ -56,7 +56,7 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 ## Problems
 
 - **"is not signed in" or "ended ...'s sign-in":** the person signs in again in their folder with `okb sign-in`, as the `okb:actor` skill describes, and runs this skill again.
-- **"No release in OKB's Plugins scope has all its files in place":** every release failed its check. The person asks Legacy with the `legacy:support` skill, quoting the lines.
+- **"No release in OKB's Plugins scope has all its files in place":** every release failed its check. The person asks Big Puffin with the `bigpuffin:support` skill, quoting the lines.
 - **"Another okb sync is still copying":** another run is under way. The person waits a minute and runs it again.
 - **"Git was not found" or "The claude command was not found":** the line gives the command that installs it. The person installs it, opens a new terminal and runs `okb sync` again.
-- **"the update failed. Claude Code said: ...":** the person quotes the line to Legacy with the `legacy:support` skill.
+- **"the update failed. Claude Code said: ...":** the person quotes the line to Big Puffin with the `bigpuffin:support` skill.

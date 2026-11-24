@@ -16,7 +16,7 @@ The glossary and the data dictionary are kept only in OKB, in the `reference` sc
 
 Each save is a new version of a model record in the `reference` scope, titled "Glossary: <term>" or "Data dictionary: <record kind>". The old version is kept in the record's history, and the audit log names who saved it.
 
-The agent, such as the database operator, `@legacy:database-operator`, reads and saves through the okb plugin's `rpc` tool, signed in as the person, within that person's grants. It proposes each new or changed term, class, relationship or record kind to the person, and saves it only once that person approves.
+The agent, such as the database operator, `@bigpuffin:database-operator`, reads and saves through the okb plugin's `rpc` tool, signed in as the person, within that person's grants. It proposes each new or changed term, class, relationship or record kind to the person, and saves it only once that person approves.
 
 ## Choose the mode
 

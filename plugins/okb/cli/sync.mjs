@@ -2,10 +2,10 @@
 //
 //   node okb.mjs sync [--project <ref> --email <email>] [--into <local folder>]
 //
-// Legacy publishes each release of the client's plugins to the Plugins scope's bucket. sync lists
+// Big Puffin publishes each release of the client's plugins to the Plugins scope's bucket. sync lists
 // and downloads them signed in as the person: the sign-in --project and --email name, else the one the
 // current folder's actor file names, else the only one saved. It downloads the newest release newer than
-// the local copy's RELEASE, checks the release's MANIFEST.sig against Legacy's keys and every file against the
+// the local copy's RELEASE, checks the release's MANIFEST.sig against Big Puffin's keys and every file against the
 // release's MANIFEST, and swaps the copy in only when both hold. A folder with no MANIFEST, or no MANIFEST.sig yet,
 // is a publish under way and is passed over; a release that fails its check, its signature included, is reported and
 // passed over, and the next older one is taken. It then reads every
@@ -14,9 +14,9 @@
 // plugin.json names another plugin is passed over, with its own line. A workflow plugin whose scope the person no
 // longer reaches is taken out of the copy. The copy, by default
 // okb-marketplace/<project reference> in the home folder, is a Git repository, and each release is
-// committed to it. sync then registers the copy as the legacy marketplace in Claude Code's settings,
-// as a git source with a file:// URL, in place of Legacy's public copy. It runs
-// `claude plugin marketplace update legacy`, and `claude plugin update` for each plugin installed
+// committed to it. sync then registers the copy as the bigpuffin marketplace in Claude Code's settings,
+// as a git source with a file:// URL, in place of Big Puffin's public copy. It runs
+// `claude plugin marketplace update bigpuffin`, and `claude plugin update` for each plugin installed
 // from it, and prints each one's old and new version, and each plugin of the release not installed.
 // It then prints, once, each old upload folder holding files, with the folder to move them into. A folder whose agent
 // setting names the database admin, which the business analyst replaced, is moved to the business analyst, whose
@@ -259,8 +259,8 @@ export async function syncWorkflows(access, local, { remove = folder => removeFo
           continue;
         }
         const name = workflowPlugin(readFileSync(join(into, "MANIFEST"), "utf8"));
-        // A workflow plugin's scope never replaces one of Legacy's own plugins, nor one the Plugins scope lists.
-        const refused = OWN_PLUGIN_NAMES.includes(name) ? `it holds ${name}, one of Legacy's own plugins, which come only from the Plugins scope`
+        // A workflow plugin's scope never replaces one of Big Puffin's own plugins, nor one the Plugins scope lists.
+        const refused = OWN_PLUGIN_NAMES.includes(name) ? `it holds ${name}, one of Big Puffin's own plugins, which come only from the Plugins scope`
           : fromPlugins.has(name) ? `it holds ${name}, which the Plugins scope's release already gives`
           : pluginScope(name) !== scope ? `it holds ${name}, and the ${scope} scope keeps only the plugin it is named for` : null;
         if (refused) { remove(into); failed.push([scope, release, [refused]]); continue; }
@@ -324,8 +324,8 @@ export function sourceUrl(local) {
   return `file://${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
-/** Sets the legacy marketplace's source to local's git source, in known_marketplaces.json and in
- * extraKnownMarketplaces in settings.json, in place of Legacy's public copy. Keeps each entry's other
+/** Sets the bigpuffin marketplace's source to local's git source, in known_marketplaces.json and in
+ * extraKnownMarketplaces in settings.json, in place of Big Puffin's public copy. Keeps each entry's other
  * keys and every other entry. Returns true when it wrote a file. Throws when a file is there but is not
  * JSON, and leaves it as it is. */
 export function registerSource(configDir, local) {
@@ -375,7 +375,7 @@ export function listedPlugins(local) {
   catch { return []; }
 }
 
-/** Runs `claude plugin update` for each plugin installed from the legacy marketplace, and names each plugin
+/** Runs `claude plugin update` for each plugin installed from the bigpuffin marketplace, and names each plugin
  * the copy lists that is not installed. Returns { lines, failed, missing }: one line per plugin, the number
  * that failed, and true when there is no claude command. Each plugin's old and new version come from
  * `claude plugin list --json`, before and after, which every Claude Code build gives; some builds have no --json on
@@ -538,11 +538,11 @@ export async function runSync(argv, { cwd = process.cwd(), home = homedir(), say
   if (warning) say(`The copy is updated, but its earlier version stays behind. ${warning}`);
   for (const [name, problems] of failed) say(`Release ${name} is incomplete in OKB, and was passed over:\n${problems.map(p => `  ${p}`).join("\n")}`);
   if (!to && !from && failed.length) {
-    say("No release in OKB's Plugins scope has all its files in place. Ask Legacy to publish again, with the support skill.");
+    say("No release in OKB's Plugins scope has all its files in place. Ask Big Puffin to publish again, with the support skill.");
     return 1;
   }
   if (!to && !from) {
-    say(`OKB's Plugins scope shows ${session.email} no release yet, so your plugins stay as installed from Legacy's public marketplace. If Legacy has published your business's plugins, ask your administrator for read in the Plugins scope.`);
+    say(`OKB's Plugins scope shows ${session.email} no release yet, so your plugins stay as installed from Big Puffin's public marketplace. If Big Puffin has published your business's plugins, ask your administrator for read in the Plugins scope.`);
     // With no release, a folder still set to the database admin moves to the business analyst all the same.
     for (const line of moveAdminFolders(home, run)) say(line);
     return 0;

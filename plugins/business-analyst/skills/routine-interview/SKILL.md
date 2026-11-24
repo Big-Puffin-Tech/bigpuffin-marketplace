@@ -11,11 +11,11 @@ A **workflow** is a whole piece of the business's work as staff see it, such as 
 
 OKB is the business's organisational knowledge base: the `okb` schema in the business's own Supabase project. Each thing the person says is saved in OKB as evidence, in the Routines scope, `routines`. The workflow they confirm is saved there as a model of the current state, with its routines. The model is linked to that evidence, and drawn as a state machine page. The interview writes down what happens today, and suggests no change.
 
-The business analyst works signed in as the person running the interview. It saves through the okb plugin, or through Legacy's connector's approval card. That person is the business's own member of staff, or a member of Legacy's staff on a video call with them. The **speaker** is whoever describes the workflow.
+The business analyst works signed in as the person running the interview. It saves through the okb plugin, or through Big Puffin's connector's approval card. That person is the business's own member of staff, or a member of Big Puffin's staff on a video call with them. The **speaker** is whoever describes the workflow.
 
 This skill sets the order, the wording and the checks. It uses the `okb:records`, `okb:reference`, `okb:graph` and `okb:writing` skills. Every save is a task function from the `okb:records` skill's section 11, previewed first and then saved with `okb_save_version`, as its section 3 describes.
 
-Where the session has Legacy's connector, the business analyst shows each save on its approval card with `show_approval`, and the card's Yes saves it. That section's "The approval card" says how. The consent is one card. The statements of a natural pause are one card of up to 20. The model is one card.
+Where the session has Big Puffin's connector, the business analyst shows each save on its approval card with `show_approval`, and the card's Yes saves it. That section's "The approval card" says how. The consent is one card. The statements of a natural pause are one card of up to 20. The model is one card.
 
 After each card, the business analyst ends the turn, and reads the card's outcome at the next. It goes on from the outcome: each record saved, OKB's refusal, or No. For a No, it asks once what to change.
 
@@ -104,7 +104,7 @@ Each statement is an `evidence` record:
 - `source_date`: today.
 - `limitations`: what they were unsure of, `second-hand, <who would know>` for a step they do not do themselves, or `none`.
 
-The business analyst saves each statement with `okb_add_record`, with `p_preview` true, then `okb_save_version` with the preview's `request` and `authorisation_id`. Several statements are saved together at a natural pause, as separate records, on one approval card where the session has Legacy's connector. It keeps each saved `record_id` and `version_id` for section 7.
+The business analyst saves each statement with `okb_add_record`, with `p_preview` true, then `okb_save_version` with the preview's `request` and `authorisation_id`. Several statements are saved together at a natural pause, as separate records, on one approval card where the session has Big Puffin's connector. It keeps each saved `record_id` and `version_id` for section 7.
 
 **AI guided:** the business analyst gives the person each batch of saved statements at a natural pause, and waits for their approval to carry on.
 
@@ -141,7 +141,7 @@ The business analyst saves each statement with `okb_add_record`, with `p_preview
   3. When the speaker says it does, saves the model at once, with no other question. The speaker's agreement to each step, and their answer to that question, are the confirmation.
   4. Writes the workflow as a model payload in a new agent folder file, such as `<workflow>.payload.json`. It uses the model format of the `okb:records` skill's section 3. `model_kind` is `observed_current`, and `source_status` is `stated, confirmed by <speaker>`. `description` names the part of the business, the basis and what starts the workflow.
   5. Builds the graph from the node and edge types in the `okb:graph` skill's "The state machine model". Each routine of the workflow is a `routine` node, from one trigger to one outcome as the speaker described it. Its id is its `reference`, such as `1`. A workflow the speaker described as one run from start to finish is one `routine` node. Each `routine` node carries `operation` and `basis` in its attributes. Each step is an `activity` in order, with its number as `reference`, who does it, the tools and data it uses, and how long it takes. Every state, the start and each end included, has a `part_of` edge to its routine. A rule, an exception, a gap and each end are their own nodes. A neighbouring workflow is a `related_machine` node at its handover. A disputed step carries each account in its attributes, under each speaker's name.
-  6. Calls `okb_add_record` with `p_scope` `routines`, `p_kind` `model`, the workflow's name as `p_title`, `p_preview` true, and `file_args` `{"/p_fields": "<payload file>"}`. Sets the preview request's `links` to a `supports` link to each evidence version saved for the workflow, each speaker's consent included. Then calls `okb_save_version` with that request, the preview's `authorisation_id`, and `result_file`. With Legacy's connector, it shows that request on the approval card instead, and draws the model once the card's Yes has saved it.
+  6. Calls `okb_add_record` with `p_scope` `routines`, `p_kind` `model`, the workflow's name as `p_title`, `p_preview` true, and `file_args` `{"/p_fields": "<payload file>"}`. Sets the preview request's `links` to a `supports` link to each evidence version saved for the workflow, each speaker's consent included. Then calls `okb_save_version` with that request, the preview's `authorisation_id`, and `result_file`. With Big Puffin's connector, it shows that request on the approval card instead, and draws the model once the card's Yes has saved it.
   7. Draws the saved model, as the `okb:graph` skill's section 3 says: `okb_get_record` with `result_file`, then `draw_state_machine`. It checks the page, and gives the person the page's full path.
   8. Tells the person the workflow is saved, and asks the next question: another workflow, or the end of the interview.
 

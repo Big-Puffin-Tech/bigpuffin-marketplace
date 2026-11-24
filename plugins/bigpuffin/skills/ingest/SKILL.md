@@ -5,11 +5,11 @@ description: Use when a person asks to add their email, files, chat or other con
 
 # Ingest
 
-The business's knowledge is spread across the person's email, calendar, files, chat and other systems. Ingest brings what is worth keeping into the business's Legacy knowledge base, its organisational knowledge base (OKB). It runs only when the person asks, or says yes to the offer at a session's start. It never saves anything the person has not agreed to.
+The business's knowledge is spread across the person's email, calendar, files, chat and other systems. Ingest brings what is worth keeping into the business's Big Puffin knowledge base, its organisational knowledge base (OKB). It runs only when the person asks, or says yes to the offer at a session's start. It never saves anything the person has not agreed to.
 
 The sources are the connectors and plugins the person has in Claude, such as Gmail, Google Drive, Slack, Microsoft 365 or a CRM. The person can point a source at one part of it, such as a Gmail label, a Drive folder or a Slack channel. Each source remembers where it got to, so each run reads only what is new.
 
-This skill belongs to the database operator, `@legacy:database-operator`. It saves records as the `okb:records` skill's section 3 describes, and uploads files as the `okb:actor` skill describes. It uses the `okb:writing` skill for what it tells the person.
+This skill belongs to the database operator, `@bigpuffin:database-operator`. It saves records as the `okb:records` skill's section 3 describes, and uploads files as the `okb:actor` skill describes. It uses the `okb:writing` skill for what it tells the person.
 
 ## Choose the mode
 
