@@ -1969,11 +1969,11 @@ create policy "OKB: replace with edit permission" on storage.objects
 create policy "OKB: delete with delete permission" on storage.objects
  for delete to authenticated using (bucket_id in (select okb_storage.usable_buckets('delete')));
 
--- The plugins scope keeps each release of Legacy's own plugins, each scope whose code starts plugins_
--- keeps one workflow plugin's releases, and the guides scope keeps Legacy's guides. Their files change
+-- The plugins scope keeps each release of Big Puffin's own plugins, each scope whose code starts plugins_
+-- keeps one workflow plugin's releases, and the guides scope keeps Big Puffin's guides. Their files change
 -- only for an actor whose own live grant there carries the action: an administrator's authority alone reads
--- them and changes none. Of the access templates, only Legacy's grants create, edit and delete in plugins
--- and guides, and the administrator's business analyst gives Legacy's actor the same grant in each workflow plugin's scope.
+-- them and changes none. Of the access templates, only Big Puffin's grants create, edit and delete in plugins
+-- and guides, and the administrator's business analyst gives Big Puffin's actor the same grant in each workflow plugin's scope.
 set role okb_owner;
 grant create on schema okb_storage to okb_identity;
 reset role;
@@ -4400,10 +4400,10 @@ alter table okb.scope add column if not exists is_private boolean not null defau
 alter table okb.scope add column if not exists owner_actor_id uuid references okb.actor(actor_id);
 alter table okb.scope drop constraint if exists scope_private_owner_check;
 alter table okb.scope add constraint scope_private_owner_check check (not is_private or owner_actor_id is not null);
--- A workflow plugin's scope, plugins_<workflow>, never takes the name of one of Legacy's own plugins, which okb
+-- A workflow plugin's scope, plugins_<workflow>, never takes the name of one of Big Puffin's own plugins, which okb
 -- sync takes only from the plugins scope.
 alter table okb.scope drop constraint if exists scope_code_not_own_plugin;
-alter table okb.scope add constraint scope_code_not_own_plugin check (code not in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project'));
+alter table okb.scope add constraint scope_code_not_own_plugin check (code not in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project'));
 create index if not exists scope_owner_idx on okb.scope(owner_actor_id);
 alter table okb.scope_change drop constraint if exists scope_change_field_check;
 alter table okb.scope_change add constraint scope_change_field_check check (field in ('display_name','description','owner_actor_id'));
@@ -5424,8 +5424,8 @@ begin
  if private and (c in ('general','routines','reference','plugins') or starts_with(c,'plugins_') or starts_with(c,'sessions_')) then
   raise exception 'The code % is kept for OKB''s own scopes',c using errcode='22023';
  end if;
- if c in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project') then
-  raise exception 'The code % names one of Legacy''s own plugins, which only the plugins scope keeps',c using errcode='22023';
+ if c in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project') then
+  raise exception 'The code % names one of Big Puffin''s own plugins, which only the plugins scope keeps',c using errcode='22023';
  end if;
  if n='' or length(n)>200 then raise exception 'Give the scope''s name, at most 200 characters, as p_display_name' using errcode='22023'; end if;
  if d='' or length(d)>4000 then raise exception 'Give what the scope covers, at most 4000 characters, as p_description' using errcode='22023'; end if;
@@ -6094,20 +6094,20 @@ drop trigger if exists access_template_change_no_truncate on okb.access_template
 create trigger access_template_change_no_truncate before truncate on okb.access_template_change
  for each statement execute function okb_private.guard_access_template_change();
 
--- The templates every OKB starts with: administrator, basic and legacy. A template an
--- administrator has already changed stays as it is. Only legacy names the administration scope,
--- where the setup and access records are kept, and only to read it. basic and legacy read the
--- guides scope, Legacy's guides, and only legacy changes its files.
+-- The templates every OKB starts with: administrator, basic and bigpuffin. A template an
+-- administrator has already changed stays as it is. Only bigpuffin names the administration scope,
+-- where the setup and access records are kept, and only to read it. basic and bigpuffin read the
+-- guides scope, Big Puffin's guides, and only bigpuffin changes its files.
 insert into okb.access_template(code,description,authority_class,grants) values
  ('administrator','The client''s administrator: administrator authority, which reads and changes every scope''s records with no grant, and keeps scopes and staff. Reads the plugins and guides scopes'' files and changes none.','administrator',
   '[]'),
- ('basic','A member of staff: works in General, writes down routines and proposes terms, and reads the plugins scope and Legacy''s guides.','restricted',
+ ('basic','A member of staff: works in General, writes down routines and proposes terms, and reads the plugins scope and Big Puffin''s guides.','restricted',
   '[{"scope":"general","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit","start","hold","complete","reopen","cancel","decide"],"own_records":false},
     {"scope":"routines","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit"],"own_records":false},
     {"scope":"reference","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit"],"own_records":false},
     {"scope":"plugins","record_kinds":["activity","decision","model","evidence"],"actions":["read"],"own_records":false},
     {"scope":"guides","record_kinds":["activity","decision","model","evidence"],"actions":["read"],"own_records":false}]'),
- ('legacy','Legacy''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins and Legacy''s guides, the one template that changes the plugins and guides scopes'' files, and reads the setup and access records in Administration.','restricted',
+ ('bigpuffin','Big Puffin''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins and Big Puffin''s guides, the one template that changes the plugins and guides scopes'' files, and reads the setup and access records in Administration.','restricted',
   '[{"scope":"general","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit","start","hold","complete","reopen","cancel","decide"],"own_records":false},
     {"scope":"routines","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit","start","hold","complete","reopen","cancel","decide"],"own_records":false},
     {"scope":"reference","record_kinds":["activity","decision","model","evidence"],"actions":["read","create","edit"],"own_records":false},
@@ -6166,7 +6166,7 @@ end $$;
 
 -- Adds a template, or changes one's grants, description or authority class, and logs the change. A
 -- null leaves that part as it is. Only a person who is an administrator changes a template, only
--- the legacy template changes the plugins and guides scopes, and only it names the administration
+-- the bigpuffin template changes the plugins and guides scopes, and only it names the administration
 -- scope, to read it.
 create or replace function okb_private.save_access_template(p_code text, p_grants jsonb, p_description text, p_authority_class text, p_reason text) returns jsonb
 language plpgsql volatile security definer set search_path=pg_catalog set "TimeZone" to 'UTC' as $$
@@ -6192,15 +6192,15 @@ begin
  n.description:=coalesce(nullif(btrim(coalesce(p_description,'')),''),o.description);
  n.authority_class:=coalesce(p_authority_class,o.authority_class);
  n.grants:=case when p_grants is null then o.grants else okb_private.template_grants(p_grants) end;
- -- Only Legacy's template changes the plugins scope's files; every other template only reads them.
- if c<>'legacy' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
-  raise exception 'Only the legacy template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
- -- Legacy's guides change only with Legacy's template; every other template only reads them.
- if c<>'legacy' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='guides' and x->'actions'<>'["read"]'::jsonb) then
-  raise exception 'Only the legacy template changes the guides scope; the % template only reads it',c using errcode='22023'; end if;
- -- The setup and access records in Administration are read by the client's administrators and Legacy alone.
- if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'legacy' or x->'actions'<>'["read"]'::jsonb)) then
-  raise exception 'Only administrators and Legacy read the administration scope; the legacy template reads it, and no template changes it' using errcode='22023'; end if;
+ -- Only Big Puffin's template changes the plugins scope's files; every other template only reads them.
+ if c<>'bigpuffin' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
+  raise exception 'Only the bigpuffin template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
+ -- Big Puffin's guides change only with Big Puffin's template; every other template only reads them.
+ if c<>'bigpuffin' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='guides' and x->'actions'<>'["read"]'::jsonb) then
+  raise exception 'Only the bigpuffin template changes the guides scope; the % template only reads it',c using errcode='22023'; end if;
+ -- The setup and access records in Administration are read by the client's administrators and Big Puffin alone.
+ if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'bigpuffin' or x->'actions'<>'["read"]'::jsonb)) then
+  raise exception 'Only administrators and Big Puffin read the administration scope; the bigpuffin template reads it, and no template changes it' using errcode='22023'; end if;
  if n.description is null or length(n.description)>4000 then raise exception 'A template''s description is 1 to 4000 characters' using errcode='22023'; end if;
  if n.authority_class not in ('restricted','administrator') then raise exception 'A template''s authority class is restricted or administrator' using errcode='22023'; end if;
  if n.authority_class='administrator' and jsonb_array_length(n.grants)>0 then
@@ -6582,7 +6582,7 @@ reset role;
 -- ===================================================================
 -- One setting: off or administrators. Under administrators, a call signed in with a password alone is refused to each
 -- actor whose authority class is administrator: request_auth_uid() gives no caller for it, so each OKB function, Storage
--- policy and file search policy refuses it. Every other actor, Legacy's included, keeps its password sign-in. The
+-- policy and file search policy refuses it. Every other actor, Big Puffin's included, keeps its password sign-in. The
 -- level of a sign-in is the access token's aal claim: aal2 once the sign-in gave a code from an authenticator app.
 set role okb_owner;
 create table if not exists okb_private.sign_in_setting (
@@ -7010,7 +7010,7 @@ begin
   raise exception 'Scope unavailable: no scope has the id, code or name "%"',p_scope using errcode='42501';
  end if;
  if to_regprocedure('file_search.file_parts(text,text,integer,integer)') is null then
-  raise exception 'File search''s graph reader is not set up yet: ask Legacy to apply file search''s upgrade 0003-graph-reader' using errcode='55000';
+  raise exception 'File search''s graph reader is not set up yet: ask Big Puffin to apply file search''s upgrade 0003-graph-reader' using errcode='55000';
  end if;
  return jsonb_build_object('scope',sc.display_name,'code',sc.code)||file_search.file_parts(sc.code,p_file,p_from,p_limit);
 end $$;
@@ -7456,8 +7456,8 @@ begin
  if private and (c in ('general','routines','reference','plugins') or starts_with(c,'plugins_')) then
   raise exception 'The code % is kept for OKB''s own scopes',c using errcode='22023';
  end if;
- if c in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project') then
-  raise exception 'The code % names one of Legacy''s own plugins, which only the plugins scope keeps',c using errcode='22023';
+ if c in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project') then
+  raise exception 'The code % names one of Big Puffin''s own plugins, which only the plugins scope keeps',c using errcode='22023';
  end if;
  if n='' or length(n)>200 then raise exception 'Give the scope''s name, at most 200 characters, as p_display_name' using errcode='22023'; end if;
  if d='' or length(d)>4000 then raise exception 'Give what the scope covers, at most 4000 characters, as p_description' using errcode='22023'; end if;
@@ -7694,7 +7694,7 @@ notify pgrst, 'reload schema';
 
 -- ===================================================================
 
-insert into okb_private.schema_upgrade(id) values ('0001-baseline'), ('0002-administration-and-plugin-scopes'), ('0003-guides-scope'), ('0004-invitation-codes'), ('0005-set-based-lookups'), ('0006-second-factor'), ('0007-graph-reader'), ('0008-private-sessions');
+insert into okb_private.schema_upgrade(id) values ('0001-baseline'), ('0002-administration-and-plugin-scopes'), ('0003-guides-scope'), ('0004-invitation-codes'), ('0005-set-based-lookups'), ('0006-second-factor'), ('0007-graph-reader'), ('0008-private-sessions'), ('0009-bigpuffin-template');
 
 -- ===================================================================
 -- Next: bootstrap.sql creates the first administrator, the first scope

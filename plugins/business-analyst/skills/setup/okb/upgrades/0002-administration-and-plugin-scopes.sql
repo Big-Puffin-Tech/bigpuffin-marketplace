@@ -2,14 +2,14 @@
 -- base: new
 -- Two of plan 1's decisions for a project built before them. The Administration scope, administration, keeps
 -- the setup record and each access record: who set the project up, each actor made, each grant given and why.
--- The client's administrators work in it with their authority, and Legacy's staff read it with the
--- legacy template's new grant; no other template names it. The scope is made in an enabled administrator's
--- name; a project with no administrator yet gets it at bootstrap.sql's step 2. The legacy template gains
+-- The client's administrators work in it with their authority, and Big Puffin's staff read it with the
+-- bigpuffin template's new grant; no other template names it. The scope is made in an enabled administrator's
+-- name; a project with no administrator yet gets it at bootstrap.sql's step 2. The bigpuffin template gains
 -- its read grant there, unless an administrator has changed the template. Each person made from it gets the
 -- grant when the template is applied to them again.
 -- Each scope whose code starts plugins_ keeps one workflow plugin's releases, and its files change only with
 -- an actor's own grant there, as the plugins scope's do: an administrator's authority alone reads them.
--- A workflow plugin's scope never takes the name of one of Legacy's own plugins, plugins_legacy, plugins_okb,
+-- A workflow plugin's scope never takes the name of one of Big Puffin's own plugins, plugins_bigpuffin, plugins_okb,
 -- plugins_business_analyst or plugins_project: okb sync takes those plugins only from the plugins scope. A project
 -- that holds such a scope stops this upgrade, naming the constraint; delete that scope, then run it again.
 -- Safe to run twice. Run as the postgres login.
@@ -26,10 +26,10 @@ create policy "OKB: plugins files only with a plugins grant (replace)" on storag
 create policy "OKB: plugins files only with a plugins grant (delete)" on storage.objects as restrictive
  for delete to authenticated using ((bucket_id<>'plugins' and not starts_with(bucket_id,'plugins_')) or bucket_id in (select okb_storage.granted_buckets('delete')));
 
--- No scope takes the name of one of Legacy's own plugins' scopes.
+-- No scope takes the name of one of Big Puffin's own plugins' scopes.
 set role okb_owner;
 alter table okb.scope drop constraint if exists scope_code_not_own_plugin;
-alter table okb.scope add constraint scope_code_not_own_plugin check (code not in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project'));
+alter table okb.scope add constraint scope_code_not_own_plugin check (code not in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project'));
 reset role;
 -- okb_add_scope refuses such a code with a sentence of its own.
 set role okb_owner;
@@ -55,8 +55,8 @@ begin
  if private and (c in ('general','routines','reference','plugins') or starts_with(c,'plugins_') or starts_with(c,'sessions_')) then
   raise exception 'The code % is kept for OKB''s own scopes',c using errcode='22023';
  end if;
- if c in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project') then
-  raise exception 'The code % names one of Legacy''s own plugins, which only the plugins scope keeps',c using errcode='22023';
+ if c in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project') then
+  raise exception 'The code % names one of Big Puffin''s own plugins, which only the plugins scope keeps',c using errcode='22023';
  end if;
  if n='' or length(n)>200 then raise exception 'Give the scope''s name, at most 200 characters, as p_display_name' using errcode='22023'; end if;
  if d='' or length(d)>4000 then raise exception 'Give what the scope covers, at most 4000 characters, as p_description' using errcode='22023'; end if;
@@ -83,7 +83,7 @@ reset role;
 set role okb_owner;
 revoke create on schema okb_private from okb_writer;
 reset role;
--- Only the legacy template names the administration scope, and only to read it.
+-- Only the bigpuffin template names the administration scope, and only to read it.
 set role okb_owner;
 create or replace function okb_private.save_access_template(p_code text, p_grants jsonb, p_description text, p_authority_class text, p_reason text) returns jsonb
 language plpgsql volatile security definer set search_path=pg_catalog set "TimeZone" to 'UTC' as $$
@@ -109,12 +109,12 @@ begin
  n.description:=coalesce(nullif(btrim(coalesce(p_description,'')),''),o.description);
  n.authority_class:=coalesce(p_authority_class,o.authority_class);
  n.grants:=case when p_grants is null then o.grants else okb_private.template_grants(p_grants) end;
- -- Only Legacy's template changes the plugins scope's files; every other template only reads them.
- if c<>'legacy' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
-  raise exception 'Only the legacy template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
- -- The setup and access records in Administration are read by the client's administrators and Legacy alone.
- if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'legacy' or x->'actions'<>'["read"]'::jsonb)) then
-  raise exception 'Only administrators and Legacy read the administration scope; the legacy template reads it, and no template changes it' using errcode='22023'; end if;
+ -- Only Big Puffin's template changes the plugins scope's files; every other template only reads them.
+ if c<>'bigpuffin' and exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='plugins' and x->'actions'<>'["read"]'::jsonb) then
+  raise exception 'Only the bigpuffin template changes the plugins scope; the % template only reads it',c using errcode='22023'; end if;
+ -- The setup and access records in Administration are read by the client's administrators and Big Puffin alone.
+ if exists(select 1 from jsonb_array_elements(n.grants) x where x->>'scope'='administration' and (c<>'bigpuffin' or x->'actions'<>'["read"]'::jsonb)) then
+  raise exception 'Only administrators and Big Puffin read the administration scope; the bigpuffin template reads it, and no template changes it' using errcode='22023'; end if;
  if n.description is null or length(n.description)>4000 then raise exception 'A template''s description is 1 to 4000 characters' using errcode='22023'; end if;
  if n.authority_class not in ('restricted','administrator') then raise exception 'A template''s authority class is restricted or administrator' using errcode='22023'; end if;
  if n.authority_class='administrator' and jsonb_array_length(n.grants)>0 then
@@ -130,17 +130,17 @@ begin
 end $$;
 reset role;
 
--- The legacy template's read grant in Administration, unless an administrator has changed the template.
+-- The bigpuffin template's read grant in Administration, unless an administrator has changed the template.
 update okb.access_template
 set grants=grants||'[{"scope":"administration","record_kinds":["activity","decision","model","evidence"],"actions":["read"],"own_records":false}]'::jsonb,
- description='Legacy''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins, the one template that changes the plugins scope''s files, and reads the setup and access records in Administration.'
-where code='legacy' and changed_by_actor_id is null
+ description='Big Puffin''s staff: interviews, designs and supports in General, Routines and Reference, publishes the client''s plugins, the one template that changes the plugins scope''s files, and reads the setup and access records in Administration.'
+where code='bigpuffin' and changed_by_actor_id is null
  and not exists(select 1 from jsonb_array_elements(grants) x where x->>'scope'='administration');
 
 -- The Administration scope, made in an enabled administrator's name, with its private bucket.
 insert into okb.scope(code, display_name, description, created_by)
 select 'administration', 'Administration',
- 'The setup record and each access record: who set the project up, each actor made, each grant given and why. Read only by the business''s administrators and Legacy.',
+ 'The setup record and each access record: who set the project up, each actor made, each grant given and why. Read only by the business''s administrators and Big Puffin.',
  a.actor_id
 from okb.actor a
 where a.actor_kind='human' and a.authority_class='administrator' and a.enabled

@@ -48,7 +48,7 @@ export const BUSINESS_FILE = ".okb-setup-business.json";
 export const REGION = "eu-west-2";
 /** Big Puffin's website, which keeps each business's slug. */
 export const SITE = "https://legacy.it.com";
-export const CONNECTOR = "https://mcp.legacy.it.com";
+export const CONNECTOR = "https://mcp.bigpuffin.dev";
 const LOOPBACK = /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):\d{1,5}$/;
 /** A slug: lower-case words and numbers joined by hyphens, 2 to 40 characters. */
 export const SLUG = /^(?=.{2,40}$)[a-z0-9]+(-[a-z0-9]+)*$/;

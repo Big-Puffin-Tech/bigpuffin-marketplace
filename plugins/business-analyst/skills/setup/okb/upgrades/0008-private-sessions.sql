@@ -265,8 +265,8 @@ begin
  if private and (c in ('general','routines','reference','plugins') or starts_with(c,'plugins_')) then
   raise exception 'The code % is kept for OKB''s own scopes',c using errcode='22023';
  end if;
- if c in ('plugins_legacy','plugins_okb','plugins_business_analyst','plugins_project') then
-  raise exception 'The code % names one of Legacy''s own plugins, which only the plugins scope keeps',c using errcode='22023';
+ if c in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project') then
+  raise exception 'The code % names one of Big Puffin''s own plugins, which only the plugins scope keeps',c using errcode='22023';
  end if;
  if n='' or length(n)>200 then raise exception 'Give the scope''s name, at most 200 characters, as p_display_name' using errcode='22023'; end if;
  if d='' or length(d)>4000 then raise exception 'Give what the scope covers, at most 4000 characters, as p_description' using errcode='22023'; end if;

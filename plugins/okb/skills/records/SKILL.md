@@ -842,8 +842,8 @@ The agent reports each of these as it came, with its message:
 - **`Only a person who is an administrator applies an access template`, or `Only a person who is an administrator changes an access template`:** the actor is an agent, or a person who is not an administrator. The agent says that an administrator's own agent can do it.
 - **`There is no access template <code>`:** the code names no template. The agent lists the templates with `okb_get_access_templates`, and asks which one.
 - **`The <code> access template names scopes this OKB lacks: <scopes>`:** a scope the template names is missing. An administrator adds it first, as section 13 describes.
-- **`Only the legacy template changes the plugins scope; the <code> template only reads it`:** a change gave another template more than read in `plugins`. The agent keeps that grant to read.
-- **`Only the legacy template changes the guides scope; the <code> template only reads it`:** a change gave another template more than read in `guides`, the Guides scope, where Big Puffin's guides are kept. The agent keeps that grant to read.
+- **`Only the bigpuffin template changes the plugins scope; the <code> template only reads it`:** a change gave another template more than read in `plugins`. The agent keeps that grant to read.
+- **`Only the bigpuffin template changes the guides scope; the <code> template only reads it`:** a change gave another template more than read in `guides`, the Guides scope, where Big Puffin's guides are kept. The agent keeps that grant to read.
 - **Any other message:** it names the field or rule that the request broke.
 
 ## Finish order

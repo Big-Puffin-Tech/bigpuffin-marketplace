@@ -3,7 +3,7 @@
 -- okb-setup or the SQL Editor, after the owner has signed in. It holds no name, email or id of its own.
 -- It does what bootstrap.sql's steps 1, 2, 3b, 3e and 3f do, filled in from okb_setup.person: the owner becomes
 -- the first administrator, with their sessions scope; the six scopes are made in their name; and each of Big Puffin's
--- staff with an Auth user becomes an actor named "<name> (Big Puffin)", with their sessions scope and the legacy
+-- staff with an Auth user becomes an actor named "<name> (Big Puffin)", with their sessions scope and the bigpuffin
 -- template's grants, each approved by the owner. Each of Big Puffin's staff okb-setup made a code for, in
 -- okb_setup.staff_code, becomes the same actor with no sign-in yet, with okb_private.provision_invited_actor, and the
 -- template's grants, and their code's SHA-256 becomes their open invitation in okb_private.invitation, which okb-join
@@ -42,7 +42,7 @@ begin
  where not exists(select 1 from okb.scope s where s.code = x.code);
 
  -- Step 3b for each of Big Puffin's staff, then step 3e for every person, then step 3f for Big Puffin's staff.
- for p in select * from okb_setup.person order by role = 'legacy', name loop
+ for p in select * from okb_setup.person order by role = 'bigpuffin', name loop
   if p.role = 'owner' then
    person_id := admin_id;
   else
@@ -63,15 +63,15 @@ begin
    array['read','create','edit','delete'],
    null::timestamptz,
    'Their agent keeps the text of each session with them here.');
-  if p.role = 'legacy' then
-   perform okb_private.apply_access_template(admin_id, person_id, 'legacy');
+  if p.role = 'bigpuffin' then
+   perform okb_private.apply_access_template(admin_id, person_id, 'bigpuffin');
   end if;
  end loop;
 
  -- Big Puffin's staff with a one-time code: the actor, the template's grants and the open invitation.
  for p in select * from okb_setup.staff_code order by name, email loop
   person_id := okb_private.provision_invited_actor(admin_id, p.name || ' (Big Puffin)', 'restricted');
-  perform okb_private.apply_access_template(admin_id, person_id, 'legacy');
+  perform okb_private.apply_access_template(admin_id, person_id, 'bigpuffin');
   insert into okb_private.invitation(actor_id, email, code_sha256, invited_by_actor_id, expires_at)
   values (person_id, p.email, p.code_sha256, admin_id, p.expires_at);
  end loop;

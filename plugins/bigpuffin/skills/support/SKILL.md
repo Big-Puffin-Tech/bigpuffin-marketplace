@@ -38,7 +38,7 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 
 ## 2. Find Big Puffin
 
-Big Puffin's staff work in the business's records as actors the business made with the `legacy` access template. A support request is assigned to one of them.
+Big Puffin's staff work in the business's records as actors the business made with the `bigpuffin` access template. A support request is assigned to one of them.
 
 1. **Find the General scope.**
    - **Person:** runs `okb okb_get_scopes`, and notes General's `scope_id`.
