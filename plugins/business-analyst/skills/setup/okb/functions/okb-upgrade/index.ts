@@ -1,6 +1,6 @@
-// okb-upgrade: applies one of Kinetik's signed upgrades to the business's OKB, for Kinetik's own actor. The setup command
+// okb-upgrade: applies one of Big Puffin's signed upgrades to the business's OKB, for Big Puffin's own actor. The setup command
 // deploys it through the Management API with verify_jwt on, with upgrade-key.ts beside it, and it stays deployed. It
-// is how Kinetik keeps a client's OKB current, with no role in the client's Supabase organisation.
+// is how Big Puffin keeps a client's OKB current, with no role in the client's Supabase organisation.
 //
 // POST .../okb-upgrade, with the caller's own sign-in, JSON { series, number, name, sql, signature }, which
 // scripts/sign-upgrade.mjs writes: series "okb" for the upgrades/ folder or "file_search" for file-search-upgrades/,
@@ -10,7 +10,7 @@
 // apply_access_template reads a grant as held, goes on. An administrator holds no template's grants, so is refused.
 // Nothing the caller sends says who they are.
 //
-// It verifies the signature with Kinetik's upgrade public key, in upgrade-key.ts, so only a file Kinetik signed
+// It verifies the signature with Big Puffin's upgrade public key, in upgrade-key.ts, so only a file Big Puffin signed
 // runs, unchanged. The file's first line must name the same upgrade, as "-- <number>-<name>". The series' ledger,
 // okb_private.schema_upgrade or file_search.schema_upgrade, must hold every earlier number and not this one: an upgrade
 // already applied, and one whose earlier upgrade is missing, are refused. It runs the file as the postgres login, as
@@ -54,8 +54,8 @@ async function signedIn(req: Request): Promise<{ id: string; aal: string } | nul
 
 const fromBase64 = (text: string) => Uint8Array.from(atob(text), c => c.charCodeAt(0));
 
-/** True when signature is Kinetik's Ed25519 signature over text's UTF-8 bytes. */
-export async function signedByKinetik(text: string, signature: string, publicKey = UPGRADE_PUBLIC_KEY): Promise<boolean> {
+/** True when signature is Big Puffin's Ed25519 signature over text's UTF-8 bytes. */
+export async function signedByBigPuffin(text: string, signature: string, publicKey = UPGRADE_PUBLIC_KEY): Promise<boolean> {
   let sig: Uint8Array, raw: Uint8Array;
   try { sig = fromBase64(signature); raw = fromBase64(publicKey); } catch { return false; }
   if (sig.length !== 64 || raw.length !== 32) return false;
@@ -82,21 +82,21 @@ Deno.serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       let me: any;
       try { [{ me }] = await tx`select okb.okb_get_actor() as me`; }
-      catch { throw new Refused(403, "Your sign-in has no actor in this Kinetik knowledge base, so it applies no upgrade."); }
+      catch { throw new Refused(403, "Your sign-in has no actor in this Big Puffin knowledge base, so it applies no upgrade."); }
       await tx`reset role`;
       await tx`select set_config('request.jwt.claims', '', true)`;
-      const [{ kinetik }] = await tx`select a.enabled and a.actor_kind = 'human' and t.code is not null and jsonb_array_length(t.grants) > 0
+      const [{ bigpuffin }] = await tx`select a.enabled and a.actor_kind = 'human' and t.code is not null and jsonb_array_length(t.grants) > 0
         and not exists(select 1 from jsonb_array_elements(t.grants) g where not exists(
           select 1 from okb.authorisation z join okb.scope s using (scope_id)
           where z.executor_actor_id = a.actor_id and s.code = g->>'scope' and z.record_id is null and z.mode = 'standing_permission'
             and z.record_kinds @> array(select jsonb_array_elements_text(g->'record_kinds'))
             and z.allowed_actions @> array(select jsonb_array_elements_text(g->'actions'))
             and ((g->>'own_records')::boolean or not z.own_records)
-            and okb_private.authority_live(z.authorisation_id))) as "kinetik"
+            and okb_private.authority_live(z.authorisation_id))) as "bigpuffin"
         from okb.actor a left join okb.access_template t on t.code = 'kinetik' where a.actor_id = ${me.actor_id}`;
-      if (!kinetik) throw new Refused(403, "Only Kinetik's own actor, with the kinetik access template, applies an upgrade.");
+      if (!bigpuffin) throw new Refused(403, "Only Big Puffin's own actor, with the kinetik access template, applies an upgrade.");
 
-      // The upgrade, as Kinetik signed it.
+      // The upgrade, as Big Puffin signed it.
       const series = typeof body?.series === "string" ? body.series : "okb";
       const ledger = LEDGERS[series];
       if (!ledger) throw new Refused(400, "The series is okb or file_search.");
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       if (!/^[0-9]{4}$/.test(number) || !/^[a-z0-9][a-z0-9-]*$/.test(name)) throw new Refused(400, "Give the upgrade's four-digit number and its name, as its file is named.");
       if (!text || text.length > MAX_TEXT) throw new Refused(400, "Give the upgrade's whole text, as its file holds it.");
       if (typeof body?.signature !== "string" || !body.signature) throw new Refused(403, "This upgrade is not signed, so it was not applied. Sign it with scripts/sign-upgrade.mjs.");
-      if (!await signedByKinetik(text, body.signature)) throw new Refused(403, "This upgrade's signature is not Kinetik's, or the file was changed after it was signed, so it was not applied.");
+      if (!await signedByBigPuffin(text, body.signature)) throw new Refused(403, "This upgrade's signature is not Big Puffin's, or the file was changed after it was signed, so it was not applied.");
       const id = `${number}-${name}`;
       const header = /^-- ([0-9]{4}-[a-z0-9-]+)(?::|\s*$)/.exec(text.split("\n", 1)[0]);
       if (header?.[1] !== id) throw new Refused(400, `The file's first line names ${header?.[1] ?? "no upgrade"}, not ${id}, so it was not applied.`);

@@ -1,18 +1,18 @@
-/* Kinetik's colours, from the site's stylesheet, for a card in the chat over the widget kit. Each value follows the
+/* Big Puffin's colours, from brand/bigpuffin.md, for a card in the chat over the widget kit. Each value follows the
    card's colour scheme, which the card takes from Claude's theme: the first in light, the second in dark. Square
-   corners, thin rules, and the green key on the one action. */
+   corners, thin rules, and the orange key on the one action. */
 :root {
-  --kinetik-plate: light-dark(#f5f5f3, #1a1a1a);
-  --kinetik-ink: light-dark(#0b0b0b, #f2f2f0);
-  --kinetik-muted: light-dark(#56595a, #a8aaa9);
-  --kinetik-rule: light-dark(#e3e4e2, #2c2c2c);
-  --kinetik-key: #2fe28a;
-  --kinetik-key-ink: #0b0b0b;
-  --text-secondary: var(--kinetik-muted);
-  --border: var(--kinetik-rule);
-  --surface-1: var(--kinetik-plate);
+  --bigpuffin-plate: light-dark(#E6E9EE, #131C2B);
+  --bigpuffin-ink: light-dark(#0D1420, #F1F3F5);
+  --bigpuffin-muted: light-dark(#5A6475, #8D98AB);
+  --bigpuffin-rule: light-dark(#D3D9E1, #223048);
+  --bigpuffin-key: #F2A21E;
+  --bigpuffin-key-ink: #0D1420;
+  --text-secondary: var(--bigpuffin-muted);
+  --border: var(--bigpuffin-rule);
+  --surface-1: var(--bigpuffin-plate);
   --radius: 0;
 }
-.wk-head { background: var(--kinetik-plate); color: var(--kinetik-ink); border-radius: 0; border-left: 3px solid var(--kinetik-key); }
-.wk h2 { color: var(--kinetik-ink); }
+.wk-head { background: var(--bigpuffin-plate); color: var(--bigpuffin-ink); border-radius: 0; border-left: 3px solid var(--bigpuffin-key); }
+.wk h2 { color: var(--bigpuffin-ink); }
 .wk-row { border-width: 1px; }

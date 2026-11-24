@@ -20,9 +20,9 @@ select okb_private.provision_first_administrator(
 -- -------------------------------------------------------------------
 -- Step 2. The six scopes every OKB project starts with, each with its private bucket for files:
 -- General, for the business's day-to-day records; Routines, for the routines its interviews write down;
--- Reference, for the glossary and the data dictionary; Plugins, for each release of Kinetik's plugins;
+-- Reference, for the glossary and the data dictionary; Plugins, for each release of Big Puffin's plugins;
 -- Administration, for the setup record and each access record, which only the business's administrators
--- and Kinetik read; and Guides, for Kinetik's guides, which everyone reads and only Kinetik
+-- and Big Puffin read; and Guides, for Big Puffin's guides, which everyone reads and only Big Puffin
 -- changes. created_by: the administrator's actor id from step 1. The database creates each
 -- private bucket itself, named after the scope's code. Returns the scope ids.
 -- -------------------------------------------------------------------
@@ -33,14 +33,14 @@ from (values
   ('routines', 'Routines', 'The business''s routines, as its interviews write them down, and their designs.'),
   ('reference', 'Reference', 'The glossary of the business''s words, and the data dictionary of where each fact is kept.'),
   ('plugins', 'Plugins', 'Each release of the business''s plugins, which each person''s okb sync installs.'),
-  ('administration', 'Administration', 'The setup record and each access record: who set the project up, each actor made, each grant given and why. Read only by the business''s administrators and Kinetik.'),
-  ('guides', 'Guides', 'Kinetik''s guides to installing, updating, printing, support and leaving, which everyone reads and only Kinetik changes.')
+  ('administration', 'Administration', 'The setup record and each access record: who set the project up, each actor made, each grant given and why. Read only by the business''s administrators and Big Puffin.'),
+  ('guides', 'Guides', 'Big Puffin''s guides to installing, updating, printing, support and leaving, which everyone reads and only Big Puffin changes.')
 ) as x(code, display_name, description)
 where not exists(select 1 from okb.scope s where s.code = x.code)
 returning code, scope_id;
 
 -- 2b. Any later scope. A workflow plugin's own scope, for its releases, is plugins_ and the plugin's name,
--- each hyphen an underscore, such as plugins_appraisal; Kinetik's actor then needs a grant there with
+-- each hyphen an underscore, such as plugins_appraisal; Big Puffin's actor then needs a grant there with
 -- read, create, edit and delete, from 3d, before it publishes the plugin.
 -- code: lower case letters, digits and underscores, starting with a letter (at most 63).
 insert into okb.scope(code, display_name, description, created_by)
@@ -127,7 +127,7 @@ select okb_private.provision_grant(
   'Their agent keeps the text of each session with them here.');
 
 -- 3f. The grants of an access template, which OKB holds, for a person from 3b, after 3e. Replace
--- <template code> with the template's code: basic for a member of staff, or kinetik for Real
+-- <template code> with the template's code: basic for a member of staff, or bigpuffin for Real
 -- Agent's staff, which also reads the Administration scope. A person made from the administrator template is made with 'administrator' in 3b
 -- and needs no grant here. It issues each grant of the template the person does not hold yet, and
 -- returns each grant it issued, so it can be run again. A scope the template names and the database

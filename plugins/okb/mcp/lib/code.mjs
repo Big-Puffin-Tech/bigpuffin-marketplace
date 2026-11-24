@@ -1,13 +1,13 @@
 // The okb plugin's `run_code` tool: Python or JavaScript, run in a new Node.js process under its permission model. A run
 // reads the agent folder and each folder added to the session, which the okb plugin's agent-tools hook names, and writes
 // only the new files the call names directly inside the agent folder. Python runs as Pyodide, from the runtime that
-// Kinetik's scripts/publish-runtime.mjs publishes to the client's Plugins scope, at runtime/<RUNTIME>. The first
+// Big Puffin's scripts/publish-runtime.mjs publishes to the client's Plugins scope, at runtime/<RUNTIME>. The first
 // Python run on a computer downloads it into ~/.cache/okb-runtime, signed in as the person, each file checked against
 // the runtime's MANIFEST. The MCP server makes the tool with createCodeTool.
 //
 // Node.js's permission model, as observed on 24 October 2026 with Node.js 26.11.1, refuses lstat and readdir of a folder
-// it was given when another path it was given starts with the folder's name, as ~/kinetik-notes starts with ~/kinetik. Pyodide
-// then cannot mount the folder. So the runtime is kept in ~/.cache, apart from the agent folder, ~/kinetik by default, and a
+// it was given when another path it was given starts with the folder's name, as ~/bigpuffin-notes starts with ~/bigpuffin. Pyodide
+// then cannot mount the folder. So the runtime is kept in ~/.cache, apart from the agent folder, ~/bigpuffin by default, and a
 // run whose folders name each other so is refused, naming both.
 import { execFile } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
@@ -69,7 +69,7 @@ export function firstLink(folder) {
   return null;
 }
 
-/** The first two paths of which one starts with the other's name but is not inside it, as ~/kinetik-notes and ~/kinetik, or null. */
+/** The first two paths of which one starts with the other's name but is not inside it, as ~/bigpuffin-notes and ~/bigpuffin, or null. */
 export function clashing(paths) {
   for (const one of paths) for (const other of paths)
     if (one !== other && other.startsWith(one) && other[one.length] !== sep) return [one, other];
@@ -194,7 +194,7 @@ export function createCodeTool({ ref = null, email = null, agentFolder = null, s
     const session = await openAccess({ project: ref, email, home });
     if (!session.ok) return { ok: false, problem: `The Python runtime could not be downloaded: ${session.problem}` };
     const got = await downloadFile(session.access, RELEASES_BUCKET, `${RUNTIME_ITEM}/MANIFEST`);
-    if (!got.ok) return { ok: false, problem: `The Python runtime in the Plugins scope, ${RUNTIME_ITEM}, could not be downloaded: ${got.missing ? "it is not there. Kinetik publishes it with scripts/publish-runtime.mjs" : got.problem}.` };
+    if (!got.ok) return { ok: false, problem: `The Python runtime in the Plugins scope, ${RUNTIME_ITEM}, could not be downloaded: ${got.missing ? "it is not there. Big Puffin publishes it with scripts/publish-runtime.mjs" : got.problem}.` };
     let entries;
     try { entries = manifestEntries(got.body.toString("utf8")); } catch (err) { return { ok: false, problem: `The Python runtime's MANIFEST is unreadable: ${err.message}` }; }
     mkdirSync(store, { recursive: true });

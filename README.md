@@ -1,9 +1,9 @@
-# Kinetik
+# Big Puffin
 
-Kinetik's plugins for small and medium-sized businesses. Each business keeps its Kinetik knowledge base in its own Supabase project. Supabase is the online database service that holds it. The knowledge base's technical name is OKB, short for organisational knowledge base. The plugins are:
+Big Puffin's plugins for small and medium-sized businesses. Each business keeps its Big Puffin knowledge base in its own Supabase project. Supabase is the online database service that holds it. The knowledge base's technical name is OKB, short for organisational knowledge base. The plugins are:
 
-- `business-analyst`: the business analyst, the agent of the business's owner and administrators. It sets up Kinetik with the owner, adds staff and gives them their roles, and interviews the business's people about their workflows.
-- `kinetik`: the database operator, every member of staff's agent, and the skills every business gets.
+- `business-analyst`: the business analyst, the agent of the business's owner and administrators. It sets up Big Puffin with the owner, adds staff and gives them their roles, and interviews the business's people about their workflows.
+- `bigpuffin`: the database operator, every member of staff's agent, and the skills every business gets.
 - `okb`: the sign-in, the `okb` command, and the tools each agent uses in the knowledge base.
 - `animator`: makes animated recipe videos, as described under [Animated recipes](#animated-recipes). It stands apart from the other three and needs no knowledge base.
 
@@ -13,7 +13,7 @@ Install the Claude desktop app, and sign in to it. In the app's **Code** tab, op
 
 ### 1. The business's owner, before setup
 
-The owner is the person at the business who will own the Supabase account and become Kinetik's first administrator. The owner runs this command first, before the business has a Supabase project.
+The owner is the person at the business who will own the Supabase account and become Big Puffin's first administrator. The owner runs this command first, before the business has a Supabase project.
 
 On macOS:
 
@@ -27,12 +27,12 @@ On Windows:
 cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --owner
 ```
 
-The script installs the programs and the plugins, as section 3 says. It then makes the folder `kinetik` in your home folder, and makes the business analyst that folder's agent. It does not sign you in, since there is no project to sign in to yet. Give `--folder <folder>` for another folder, outside any Git repository.
+The script installs the programs and the plugins, as section 3 says. It then makes the folder `bigpuffin` in your home folder, and makes the business analyst that folder's agent. It does not sign you in, since there is no project to sign in to yet. Give `--folder <folder>` for another folder, outside any Git repository.
 
-It ends with "Start a new Code session on" the folder. Quit and reopen the Claude desktop app. Start a new Code session on `~/kinetik`, and type:
+It ends with "Start a new Code session on" the folder. Quit and reopen the Claude desktop app. Start a new Code session on `~/bigpuffin`, and type:
 
 ```
-Set up Kinetik
+Set up Big Puffin
 ```
 
 Before you type it, create a free account at supabase.com. The business analyst then gives you one command.
@@ -58,9 +58,9 @@ On Windows:
 cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
 ```
 
-The script installs the programs and the plugins, then sets up the folder `kinetik` in your home folder with `okb setup`. The sign-in asks for your invitation code. Then it asks you to choose a password, twice. The password stays hidden as you type it, and goes only to your business's Supabase project. Save it in your password manager. A wrong code, or one that has run out, is refused, and after five wrong tries the code stops working. Ask your administrator for a new one.
+The script installs the programs and the plugins, then sets up the folder `bigpuffin` in your home folder with `okb setup`. The sign-in asks for your invitation code. Then it asks you to choose a password, twice. The password stays hidden as you type it, and goes only to your business's Supabase project. Save it in your password manager. A wrong code, or one that has run out, is refused, and after five wrong tries the code stops working. Ask your administrator for a new one.
 
-The last step, `okb sync`, installs your business's own release of the plugins from your business's knowledge base. Until Kinetik publishes the business's first release, it says there is no release yet, and the plugins from this marketplace stay.
+The last step, `okb sync`, installs your business's own release of the plugins from your business's knowledge base. Until Big Puffin publishes the business's first release, it says there is no release yet, and the plugins from this marketplace stay.
 
 It ends with "Start a new Code session on" your folder. Quit and reopen the Claude desktop app, start a new Code session on the folder, and type:
 
@@ -89,7 +89,7 @@ On macOS, it installs Homebrew first, and installs the programs with it. It asks
 
 It checks each file it downloads against the checksum it holds. On macOS, it downloads each installer it runs into a new folder that only you can open, and removes the folder when it ends. It writes each program's own output to a log in your temporary folder, and names the log when a step fails.
 
-It then adds this marketplace, and installs the `okb`, `kinetik` and `business-analyst` plugins from it, with one line for each. Last, it runs `okb setup`, which prints each step as it does it.
+It then adds this marketplace, and installs the `okb`, `bigpuffin` and `business-analyst` plugins from it, with one line for each. Last, it runs `okb setup`, which prints each step as it does it.
 
 The script never asks for or keeps a password. Only the sign-in asks, at its own prompt.
 
@@ -113,7 +113,7 @@ In Claude Code, type:
 
 ```
 /plugin marketplace add Big-Puffin-Tech/bigpuffin-marketplace
-/plugin install animator@kinetik
+/plugin install animator@bigpuffin
 ```
 
 ### Making a video

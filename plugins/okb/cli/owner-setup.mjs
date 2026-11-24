@@ -1,13 +1,13 @@
-// okb setup --owner: sets Kinetik up for a business in one run, on the owner's computer, through Supabase's
+// okb setup --owner: sets Big Puffin up for a business in one run, on the owner's computer, through Supabase's
 // Management API, with a personal access token the owner pastes at a hidden prompt. It does each step the business
 // analyst once did with the Supabase connector, in the order of the setup design's "How it works":
 //
 //   the token, checked with GET /v1/organizations; the organisation; the project, found or created in London, and
 //   healthy; where the project stands, read with state.sql; okb-setup deployed, the setup files approved and run;
 //   file search's functions and schedule; the Data API serving okb; the owner's own sign-in; the business's short
-//   name, its slug, kept with Kinetik's website; the administrator, the health check, the scopes and file search
+//   name, its slug, kept with Big Puffin's website; the administrator, the health check, the scopes and file search
 //   checked as the owner, the setup record and the open task saved, okb_setup dropped, setup ended in the folder;
-//   then the five settings of Kinetik's connector, public sign-up off among them, and the summary.
+//   then the five settings of Big Puffin's connector, public sign-up off among them, and the summary.
 //
 // The token, the owner's password and the database password the command makes stay in this process's memory. None
 // goes on a command line, into an environment variable, a file or a log, and none is printed.
@@ -20,7 +20,7 @@
 // Exit codes: 0 everything done, 1 a step failed or was refused, 2 bad options, 3 run again later, for the signing
 // key's second run.
 //
-// OKB_TEST_MANAGEMENT_API and OKB_TEST_KINETIK_SITE name loopback stand-ins for Supabase and Kinetik's website, for
+// OKB_TEST_MANAGEMENT_API and OKB_TEST_BIGPUFFIN_SITE name loopback stand-ins for Supabase and Big Puffin's website, for
 // the stand-in's tests. Each is used only when it is a loopback http address, and the run says so before any prompt.
 // With the Management API's stand-in, the project's own address is the stand-in's too, and OKB_TEST_HEALTH_WAIT_MS
 // may shorten the wait for a healthy project.
@@ -39,14 +39,14 @@ import { createTools } from "../mcp/lib/tools.mjs";
 import { readActor } from "../mcp/lib/actor-file.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-/** The setup skill's files, beside the okb plugin in Kinetik's marketplace. */
+/** The setup skill's files, beside the okb plugin in Big Puffin's marketplace. */
 export const SETUP_FOLDER = resolve(HERE, "../../business-analyst/skills/setup/okb");
 
 /** The file in the setup folder that keeps the business's name, slug and project between runs. */
 export const BUSINESS_FILE = ".okb-setup-business.json";
 /** Where a new project is made: London. */
 export const REGION = "eu-west-2";
-/** Kinetik's website, which keeps each business's slug. */
+/** Big Puffin's website, which keeps each business's slug. */
 export const SITE = "https://kinetik.it.com";
 export const CONNECTOR = "https://mcp.kinetik.it.com";
 const LOOPBACK = /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):\d{1,5}$/;
@@ -55,15 +55,15 @@ export const SLUG = /^(?=.{2,40}$)[a-z0-9]+(-[a-z0-9]+)*$/;
 /** The highest number a slug is tried with, after the slug itself: <slug>-2 up to <slug>-9. */
 const LAST_TRY = 9;
 const SCOPES = ["general", "routines", "reference", "plugins"];
-const TASK_TITLE = "Connect Kinetik's connector";
+const TASK_TITLE = "Connect Big Puffin's connector";
 
 /**
- * Kinetik's website's address: the real one, or a loopback stand-in named by OKB_TEST_KINETIK_SITE, which counts only
- * when the Management API is a stand-in too, so a real run never sends a business's slug anywhere but Kinetik.
+ * Big Puffin's website's address: the real one, or a loopback stand-in named by OKB_TEST_BIGPUFFIN_SITE, which counts only
+ * when the Management API is a stand-in too, so a real run never sends a business's slug anywhere but Big Puffin.
  */
 export function siteBase(base = apiBase(), env = process.env) {
   if (base === API) return SITE;
-  const given = env.OKB_TEST_KINETIK_SITE;
+  const given = env.OKB_TEST_BIGPUFFIN_SITE;
   return given && LOOPBACK.test(given) ? given : SITE;
 }
 
@@ -90,10 +90,10 @@ export const slugTry = (slug, n) => n === 1 ? slug : `${cutAt(slug, 38)}-${n}`;
 
 export const OWNER_SETUP_USAGE = `Usage: node okb.mjs setup --owner --folder <folder>
 
-setup --owner sets Kinetik up for your business in one run. It asks for a Supabase access token, which you make
+setup --owner sets Big Puffin up for your business in one run. It asks for a Supabase access token, which you make
 at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} You delete it on that page once setup is done. It then asks your business's name, finds or creates your Supabase project in London, builds your
-Kinetik knowledge base in it, asks your name, email and the password you choose, and makes the five settings of
-Kinetik's connector. Run it again after a stop, and it carries on from where it stopped.`;
+Big Puffin knowledge base in it, asks your name, email and the password you choose, and makes the five settings of
+Big Puffin's connector. Run it again after a stop, and it carries on from where it stopped.`;
 
 /** --folder, checked. */
 function options(argv) {
@@ -194,29 +194,29 @@ class Stop extends Error {}
 /** Supabase's own message for a failed call, as one line. */
 const said = err => (err instanceof Error ? err.message : String(err)).replace(/\s+/g, " ").trim().replace(/([^.!?…])$/, "$1.");
 
-/** Kinetik's support address, from kinetik.ts, or null. */
+/** Big Puffin's support address, from bigpuffin.ts, or null. */
 function supportEmail(setup) {
-  try { return /^export const SUPPORT_EMAIL: string \| null = "([^"]+)";$/m.exec(readFileSync(join(setup, "functions", "okb-setup", "kinetik.ts"), "utf8"))?.[1] ?? null; }
+  try { return /^export const SUPPORT_EMAIL: string \| null = "([^"]+)";$/m.exec(readFileSync(join(setup, "functions", "okb-setup", "bigpuffin.ts"), "utf8"))?.[1] ?? null; }
   catch { return null; }
 }
 
-/** Kinetik's website keeps slug for the project. Returns "held", "taken", or throws Stop. */
+/** Big Puffin's website keeps slug for the project. Returns "held", "taken", or throws Stop. */
 async function claimSlug(site, { projectUrl, slug, key }) {
   let res;
   try {
     res = await fetch(`${site}/api/slug`, { method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ project_url: projectUrl, slug, publishable_key: key }) });
   } catch (err) {
-    throw new Stop(`Keeping your short name with Kinetik: failed. Kinetik's website could not be reached: ${err?.cause?.code ?? err?.message ?? err}. Run this command again later.`);
+    throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's website could not be reached: ${err?.cause?.code ?? err?.message ?? err}. Run this command again later.`);
   }
   await res.arrayBuffer().catch(() => null);
   if (res.status === 204) return "held";
   if (res.status === 409) return "taken";
-  throw new Stop(`Keeping your short name with Kinetik: failed. Kinetik's website answered HTTP ${res.status}. Run this command again later.`);
+  throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's website answered HTTP ${res.status}. Run this command again later.`);
 }
 
 /**
- * Sets Kinetik up for the business in the folder. `ask(prompt, hidden)` answers each question, `askHidden(prompt)` the
+ * Sets Big Puffin up for the business in the folder. `ask(prompt, hidden)` answers each question, `askHidden(prompt)` the
  * token's, and `say` prints a line. `endFolder(folder)` ends setup in the folder once it has finished there. Returns
  * the exit code.
  */
@@ -231,12 +231,12 @@ export async function ownerSetup(argv, {
   const folder = o.folder;
   let build;
   try { build = await import(pathToFileURL(join(setup, "build.mjs")).href); }
-  catch { say(`The setup files are not beside the okb plugin, at ${setup}. Run this command from Kinetik's marketplace.`); return 1; }
+  catch { say(`The setup files are not beside the okb plugin, at ${setup}. Run this command from Big Puffin's marketplace.`); return 1; }
   const support = supportEmail(setup);
   const stand = base !== API;
   // Each stand-in is said before any prompt, so a token is never pasted for one unseen.
   if (stand) say(`This run talks to a test stand-in at ${base}, not to Supabase. Paste no real token.`);
-  if (site !== SITE) say(`This run talks to a test stand-in at ${site}, not to Kinetik's website.`);
+  if (site !== SITE) say(`This run talks to a test stand-in at ${site}, not to Big Puffin's website.`);
   const projectUrl = ref => stand ? base : `https://${ref}.supabase.co`;
   const waitMs = stand && Number(env.OKB_TEST_HEALTH_WAIT_MS) > 0 ? Number(env.OKB_TEST_HEALTH_WAIT_MS) : 600000;
 
@@ -271,7 +271,7 @@ export async function ownerSetup(argv, {
       }
       let slug = slugFor(name);
       while (!slug) {
-        say("Kinetik's address for your business uses Latin letters and numbers, and your business's name has none.");
+        say("Big Puffin's address for your business uses Latin letters and numbers, and your business's name has none.");
         slug = slugFor(await ask("A short name for your business, in Latin letters or numbers: "));
       }
       if (!orgs.length) throw new Stop("Your Supabase account has no organisation. Make one at https://supabase.com/dashboard, and run this again.");
@@ -291,7 +291,7 @@ export async function ownerSetup(argv, {
       while (found.length && !chosen) {
         say([...found.map((p, i) => `${i + 1}. ${p.name}`), `${found.length + 1}. A new project`].join("\n"));
         let pick = 0;
-        while (!(pick >= 1 && pick <= found.length + 1)) pick = Number(await ask("Which project is for Kinetik? Type its number: "));
+        while (!(pick >= 1 && pick <= found.length + 1)) pick = Number(await ask("Which project is for Big Puffin? Type its number: "));
         if (pick === found.length + 1) break;
         const picked = found[pick - 1];
         doing = "Waiting for your project to be ready";
@@ -341,8 +341,8 @@ export async function ownerSetup(argv, {
     let reset = false;
     if (state.okb_built && !state.setup_finished) {
       if (state.records || state.files)
-        throw new Stop(`${business.project} already holds Kinetik records from an earlier setup, so setup stopped. Kinetik needs to look at it${support ? `. Please email ${support}` : ""}.`);
-      const yes = (await ask(`An earlier setup in ${business.project} stopped part way. Type yes to clear it and set up Kinetik again: `)).trim().toLowerCase();
+        throw new Stop(`${business.project} already holds Big Puffin records from an earlier setup, so setup stopped. Big Puffin needs to look at it${support ? `. Please email ${support}` : ""}.`);
+      const yes = (await ask(`An earlier setup in ${business.project} stopped part way. Type yes to clear it and set up Big Puffin again: `)).trim().toLowerCase();
       if (yes !== "yes") throw new Stop("Nothing was changed.");
       reset = true;
     }
@@ -350,19 +350,19 @@ export async function ownerSetup(argv, {
     let email = readActor(folder)?.ok ? readActor(folder).value.auth_email : null;
 
     if (!state.setup_finished) {
-      // The slug, kept with Kinetik's website before approve: the saved one after a stop, or the first free try.
-      doing = "Keeping your short name with Kinetik";
+      // The slug, kept with Big Puffin's website before approve: the saved one after a stop, or the first free try.
+      doing = "Keeping your short name with Big Puffin";
       const tries = business.held ? [business.slug] : Array.from({ length: LAST_TRY }, (_, i) => slugTry(business.slug, i + 1));
       let held = null;
       for (const slug of tries) if (await claimSlug(site, { projectUrl: url, slug, key }) === "held") { held = slug; break; }
       if (!held) throw new Stop(business.held
-        ? `Kinetik's website says your short name, ${business.slug}, is no longer yours. Please email ${support ?? "Kinetik"}.`
-        : `Kinetik's website says ${business.slug} and each number after it up to ${slugTry(business.slug, LAST_TRY)} are taken. Please email ${support ?? "Kinetik"}.`);
+        ? `Big Puffin's website says your short name, ${business.slug}, is no longer yours. Please email ${support ?? "Big Puffin"}.`
+        : `Big Puffin's website says ${business.slug} and each number after it up to ${slugTry(business.slug, LAST_TRY)} are taken. Please email ${support ?? "Big Puffin"}.`);
       business = { ...business, slug: held, held: true };
       writeBusiness(folder, business);
-      say(`Keeping your short name, ${held}, with Kinetik: done.`);
+      say(`Keeping your short name, ${held}, with Big Puffin: done.`);
 
-      doing = "Building your Kinetik knowledge base";
+      doing = "Building your Big Puffin knowledge base";
       const all = build.functions(setup);
       const deploy = async f => deployFunction(c, ref, { name: f.name, entrypoint: f.entrypoint_path, verifyJwt: f.verify_jwt,
         files: f.files.map(x => ({ name: x.name, text: readFileSync(x.path, "utf8") })) });
@@ -375,7 +375,7 @@ export async function ownerSetup(argv, {
         }
       };
       await runFiles([...(reset ? ["reset.sql"] : []), "setup.sql", "file-search.sql", "file-search-scopes.sql"]);
-      say("Building your Kinetik knowledge base: done.");
+      say("Building your Big Puffin knowledge base: done.");
 
       doing = "Setting up file search";
       for (const f of all.slice(1)) await deploy(f);
@@ -398,14 +398,14 @@ export async function ownerSetup(argv, {
       await runFiles(["first-administrator.sql"]);
       say("Making you the administrator: done.");
     } else if (!state.runner_ready) {
-      say(`Kinetik is already set up in ${business.project}.`);
+      say(`Big Puffin is already set up in ${business.project}.`);
     }
 
     if (!email) throw new Stop(`${folder} is not signed in. Run node okb.mjs sign-in --folder "${folder}", then run this command again.`);
     const plan = business.organization ? (await organization(c, business.organization)).plan : null;
     let codes = [];
     if (state.runner_ready || !state.setup_finished) {
-      // The checks as the owner, the setup record and the open task, Kinetik's codes, and okb_setup dropped.
+      // The checks as the owner, the setup record and the open task, Big Puffin's codes, and okb_setup dropped.
       doing = "Checking everything works";
       const [health] = await query(c, ref, read("health.sql"));
       if (health?.ok !== true) throw new Stop(`${doing}: failed. The health check found: ${Object.entries(health ?? {}).filter(([k, v]) => k !== "ok" && v === false).map(([k]) => k).join(", ") || "nothing"}.`);
@@ -426,13 +426,13 @@ export async function ownerSetup(argv, {
 
       doing = "Saving the setup record";
       const [kept] = await query(c, ref, `select
-        exists(select 1 from okb.record_version v join okb.record r using (record_id) join okb.scope s on s.scope_id = r.scope_id where s.code = 'administration' and v.title = 'Kinetik setup') as record,
+        exists(select 1 from okb.record_version v join okb.record r using (record_id) join okb.scope s on s.scope_id = r.scope_id where s.code = 'administration' and v.title = 'Big Puffin setup') as record,
         exists(select 1 from okb.record_version v join okb.record r using (record_id) join okb.scope s on s.scope_id = r.scope_id where s.code = 'administration' and v.title = ${literal(TASK_TITLE)}) as task`);
       const today = new Date().toISOString().slice(0, 10);
       if (!kept.record) {
-        const saved = await rpc("okb_add_record", { p_scope: "administration", p_kind: "evidence", p_title: "Kinetik setup",
+        const saved = await rpc("okb_add_record", { p_scope: "administration", p_kind: "evidence", p_title: "Big Puffin setup",
           p_reason: "The setup command's record of who set the project up, and how.",
-          p_fields: { summary: `${email} set Kinetik up for ${business.name}, whose short name is ${business.slug}. OKB and file search were built, the hosted functions deployed and the Data API set, and the health check passed.`,
+          p_fields: { summary: `${email} set Big Puffin up for ${business.name}, whose short name is ${business.slug}. OKB and file search were built, the hosted functions deployed and the Data API set, and the health check passed.`,
             source_reference: "okb setup --owner", source_date: today, standing: "observed", limitations: "Written down by the setup command." } });
         if (!saved.record_id && !saved.result?.record_id) throw new Stop(`${doing}: failed. ${saved.problem ?? JSON.stringify(saved).slice(0, 200)}`);
       }
@@ -442,7 +442,7 @@ export async function ownerSetup(argv, {
         const due = new Date(Date.now() + 7 * 86_400_000).toISOString().replace(/\.\d{3}Z$/, "Z").replace(/:\d{2}Z$/, ":00Z");
         const saved = await rpc("okb_add_record", { p_scope: "administration", p_kind: "activity", p_title: TASK_TITLE,
           p_reason: "An open task setup left for the administrator.",
-          p_fields: { activity_kind: "task", description: "Add Kinetik's connector to Claude, once Kinetik confirms your business.",
+          p_fields: { activity_kind: "task", description: "Add Big Puffin's connector to Claude, once Big Puffin confirms your business.",
             completion_requirements: "The owner's home card shows in Claude.", assignee_actor_id: me?.actor_id, baseline_finish_at: due } });
         if (!saved.record_id && !saved.result?.record_id) throw new Stop(`${doing}: failed. ${saved.problem ?? JSON.stringify(saved).slice(0, 200)}`);
       }
@@ -454,25 +454,25 @@ export async function ownerSetup(argv, {
     doing = "Ending setup in your folder";
     await endFolder(folder);
 
-    // The five settings of Kinetik's connector, with the slug.
-    doing = "Kinetik's connector's settings";
-    if (!business.held || typeof business.slug !== "string" || !SLUG.test(business.slug)) throw new Stop(`${folder} holds no short name for ${business.name}. Once Kinetik gives you its address, run node okb.mjs connector-settings.`);
+    // The five settings of Big Puffin's connector, with the slug.
+    doing = "Big Puffin's connector's settings";
+    if (!business.held || typeof business.slug !== "string" || !SLUG.test(business.slug)) throw new Stop(`${folder} holds no short name for ${business.name}. Once Big Puffin gives you its address, run node okb.mjs connector-settings.`);
     const settings = await makeSettings({ ref, slug: business.slug }, null, base, c);
     for (const line of settings.lines) say(line);
     if (settings.code !== 0) return settings.code === AGAIN ? AGAIN : 1;
 
-    // The summary. Kinetik's codes the website did not take are read here, and their file deleted only once they are
+    // The summary. Big Puffin's codes the website did not take are read here, and their file deleted only once they are
     // shown, so a run that stops before this point keeps them for the next.
-    try { codes = build.kinetikCodes(folder, { keep: true }); } catch { codes = []; }
-    say(`Kinetik is set up in ${business.project}, and you are its administrator.`);
-    for (const line of codes) say(`Kinetik's website did not take its invitation code. Please email it to ${support ?? "Kinetik"}, so Kinetik can sign in: ${line}.`);
+    try { codes = build.bigpuffinCodes(folder, { keep: true }); } catch { codes = []; }
+    say(`Big Puffin is set up in ${business.project}, and you are its administrator.`);
+    for (const line of codes) say(`Big Puffin's website did not take its invitation code. Please email it to ${support ?? "Big Puffin"}, so Big Puffin can sign in: ${line}.`);
     if (plan === "free") say("Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running.");
-    say("One step is left. Once Kinetik confirms your business, the Owner of your Claude organisation adds Kinetik's connector at this address:");
+    say("One step is left. Once Big Puffin confirms your business, the Owner of your Claude organisation adds Big Puffin's connector at this address:");
     say(`${CONNECTOR}/${business.slug}`);
     say("When you connect it in Claude, sign in with the email and password you chose in this setup, not your Claude or Supabase login.");
     // The session the owner ran this from started before their sign-in, so its okb plugin cannot see it: a new one can.
     say(`Start a new Code session on ${folder}, and type done there.`);
-    rmSync(join(folder, build.KINETIK_CODE_FILE), { force: true });
+    rmSync(join(folder, build.BIGPUFFIN_CODE_FILE), { force: true });
     return 0;
   } catch (err) {
     if (err instanceof Stop) say(err.message);

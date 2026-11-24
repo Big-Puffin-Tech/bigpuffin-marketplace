@@ -11,12 +11,12 @@
 // code for the email, kept in okb_private.invitation as its SHA-256 alone. The code is three groups of four from an
 // alphabet with no look-alike letters or digits, about 59 bits, valid for 7 days, spent once, and locked after 5 wrong
 // tries. Inviting the email again replaces an unused code. The person spends it with okb-join, which makes their Auth
-// user with the password they choose and their sessions scope. The actor is "<name> (Kinetik)" for the kinetik
+// user with the password they choose and their sessions scope. The actor is "<name> (Big Puffin)" for the kinetik
 // template. It gives the template's grants, or for a workflow role the basic template's, the role's grants from the
 // newest release of the workflow's access.json in its plugins_<workflow> scope, and read of that scope for a role
 // plugin_readers names, each approved by the caller. A person already in OKB keeps their actor and gets only the grants
 // they lack. It saves the access record in the Administration scope as the caller. With the kinetik template, it
-// completes the open "Add Kinetik" tasks setup left in Administration, with the access record linked as the evidence
+// completes the open "Add Big Puffin" tasks setup left in Administration, with the access record linked as the evidence
 // that supports each. One transaction: a failure keeps nothing in OKB.
 //
 // Response: { ok: true, name, email, actor_id, sign_in: "code" | "existing", code and code_expires_at for "code",
@@ -29,8 +29,8 @@ const PROJECT = Deno.env.get("SUPABASE_URL")!;
 const CODE_DAYS = 7;
 // The code's letters and digits: no 0, 1, I, L, O or U, so none is mistaken for another when read aloud or typed.
 const ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
-// The open task setup saves when Kinetik is not added yet, as functions/okb-setup/index.ts titles it.
-const ADD_KINETIK = "Add Kinetik";
+// The open task setup saves when Big Puffin is not added yet, as functions/okb-setup/index.ts titles it.
+const ADD_BIGPUFFIN = "Add Big Puffin";
 
 const db = postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 1, prepare: false, idle_timeout: 1, onnotice: () => {}, connection: { application_name: "okb-invite" } });
 
@@ -104,7 +104,7 @@ async function roleGrants(tx: any, caller: { id: string; token: string; key: str
     file = await res.json().catch(() => null);
     if (file) break;
   }
-  if (!file) throw new Refused(400, `The ${workflow} workflow has no release in its scope, ${bucket}, so its roles are not known yet. Ask Kinetik to publish it.`);
+  if (!file) throw new Refused(400, `The ${workflow} workflow has no release in its scope, ${bucket}, so its roles are not known yet. Ask Big Puffin to publish it.`);
   const given = file.roles?.[role];
   if (!given || !Array.isArray(given.grants)) throw new Refused(400, `The ${workflow} workflow has no role ${role}. Its roles are ${Object.keys(file.roles ?? {}).join(", ")}.`);
   const grants: Grant[] = [...given.grants];
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
   const workflow = typeof body?.workflow === "string" ? body.workflow.trim().toLowerCase() : "";
   const role = typeof body?.role === "string" ? body.role.trim().toLowerCase() : "";
   // deno-lint-ignore no-control-regex
-  if (!name || name.length > 200 || /[\u0000-\u001f]/.test(name)) return json(400, { ok: false, problem: "Give the person's name, as Kinetik should show it, as name." });
+  if (!name || name.length > 200 || /[\u0000-\u001f]/.test(name)) return json(400, { ok: false, problem: "Give the person's name, as Big Puffin should show it, as name." });
   if (!EMAIL.test(email)) return json(400, { ok: false, problem: `${email || "That"} is not an email address.` });
   if (Boolean(template) === Boolean(workflow || role) || (!template && !(workflow && role)))
     return json(400, { ok: false, problem: "Give either an access template, as template, or a workflow and one of its roles, as workflow and role." });
@@ -165,17 +165,17 @@ Deno.serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       let me: any;
       try { [{ me }] = await tx`select okb.okb_get_actor() as me`; }
-      catch { throw new Refused(403, "Your sign-in has no actor in your business's Kinetik knowledge base, so it invites nobody."); }
+      catch { throw new Refused(403, "Your sign-in has no actor in your business's Big Puffin knowledge base, so it invites nobody."); }
       await asPostgres(tx);
       const [mine] = await tx`select enabled from okb.actor where actor_id = ${me.actor_id}`;
       if (me.actor_kind !== "human" || me.authority_class !== "administrator" || !mine?.enabled)
-        throw new Refused(403, "Only an administrator of your business's Kinetik knowledge base invites a person.");
+        throw new Refused(403, "Only an administrator of your business's Big Puffin knowledge base invites a person.");
 
       const basic = await templateGrants(tx, template || "basic");
       const grants: Grant[] = [...basic.grants];
       if (!template) grants.push(...await roleGrants(tx, caller, workflow, role));
-      const kinetik = template === "kinetik";
-      const display = kinetik && !/\(Kinetik\)$/.test(name) ? `${name} (Kinetik)` : name;
+      const bigpuffin = template === "kinetik";
+      const display = bigpuffin && !/\(Big Puffin\)$/.test(name) ? `${name} (Big Puffin)` : name;
       const authority = template ? basic.authority_class : "restricted";
 
       // The person: on the Auth user Supabase Auth holds for the email, or on the open invitation for it, or new.
@@ -228,12 +228,12 @@ Deno.serve(async (req) => {
         given.push({ ...g, actions: acts });
       }
       const scopes = new Map<string, string>((await tx`select code, display_name from okb.scope`).map((s: { code: string; display_name: string }) => [s.code, s.display_name]));
-      const open = kinetik
+      const open = bigpuffin
         ? (await tx`select distinct on (v.record_id) v.record_id, v.title, v.payload->>'state' as state from okb.record_version v join okb.record r using (record_id)
             join okb.scope s on s.scope_id = r.scope_id where s.code = 'administration' and r.kind = 'activity' and r.deleted_at is null
             order by v.record_id, v.change_no desc`)
-            .filter((t: { title: string; state: string }) => t.title.startsWith(ADD_KINETIK) && !["completed", "cancelled"].includes(t.state)
-              && (t.title === `${ADD_KINETIK} as a user` || t.title.toLowerCase().includes(email)))
+            .filter((t: { title: string; state: string }) => t.title.startsWith(ADD_BIGPUFFIN) && !["completed", "cancelled"].includes(t.state)
+              && (t.title === `${ADD_BIGPUFFIN} as a user` || t.title.toLowerCase().includes(email)))
         : [];
 
       // The access record, and the tasks it closes, as the caller.

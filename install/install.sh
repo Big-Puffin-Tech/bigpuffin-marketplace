@@ -1,23 +1,23 @@
 #!/bin/bash
-# The first install of Kinetik on a Mac, in one command. It is in Kinetik's public marketplace, beside
+# The first install of Big Puffin on a Mac, in one command. It is in Big Puffin's public marketplace, beside
 # install.ps1 for Windows.
 #
 #   bash install.sh <marketplace> --owner [--folder <folder>]
 #   bash install.sh <marketplace> --email <email> [okb setup's other options]
 #
-# <marketplace> is Kinetik's public marketplace, as `claude plugin marketplace add` takes it: a GitHub
-# owner/repo, a git or https address, or a folder. Kinetik gives it with this script.
+# <marketplace> is Big Puffin's public marketplace, as `claude plugin marketplace add` takes it: a GitHub
+# owner/repo, a git or https address, or a folder. Big Puffin gives it with this script.
 #
 # It installs Homebrew, then each program the okb plugin uses that is missing, with Homebrew, and Node.js 26 with
 # nodejs.org's installer. It prints one line for each: installed, already there, or failed with the command to run
-# by hand. It then adds the marketplace, installs the okb, kinetik and business-analyst plugins from it, and runs
-# the okb plugin's `okb.mjs setup` with the options given. okb setup makes the person's folder, ~/kinetik unless
+# by hand. It then adds the marketplace, installs the okb, bigpuffin and business-analyst plugins from it, and runs
+# the okb plugin's `okb.mjs setup` with the options given. okb setup makes the person's folder, ~/bigpuffin unless
 # --folder names another, signs in as --email, and runs okb sync, which installs the business's own release of its
 # plugins in place of the public copy.
 #
 # --owner is the business's owner's first run, before the business has a Supabase project. okb setup --owner --folder-only makes the folder
 # and names the business analyst, business-analyst:business-analyst, as its agent, and neither signs in nor runs
-# okb sync. It ends: "Start a new Code session on <folder>, and type: Set up Kinetik".
+# okb sync. It ends: "Start a new Code session on <folder>, and type: Set up Big Puffin".
 #
 # This script never asks for or keeps a password. okb setup's sign-in asks for the person's password at its own
 # prompt. Homebrew and Node.js's installer ask for the Mac's own password, with sudo, only when they install.
@@ -51,12 +51,12 @@ if [ "$owner" = 1 ]; then
 else
   case "$email" in ?*@?*) ;; *) echo "--email is needed: the work email your administrator gave you."; echo "The business's owner, before the business has a project, gives --owner instead."; echo "$USAGE"; exit 2 ;; esac
 fi
-case "$folder" in ""|-*) folder="$HOME/kinetik" ;; esac
+case "$folder" in ""|-*) folder="$HOME/bigpuffin" ;; esac
 case "$folder" in "~/"*) folder="$HOME/${folder#\~/}" ;; esac
 
-# The name of Kinetik's marketplace in Claude Code, which each plugin's id ends with.
-MARKETPLACE_NAME="kinetik"
-PLUGINS="okb kinetik business-analyst"
+# The name of Big Puffin's marketplace in Claude Code, which each plugin's id ends with.
+MARKETPLACE_NAME="bigpuffin"
+PLUGINS="okb bigpuffin business-analyst"
 
 # Each download, pinned, with its SHA-256. A test checks Node.js's line against the okb plugin's project.json.
 HOMEBREW_URL="https://raw.githubusercontent.com/Homebrew/install/be041513824fd2666a0e93cf5c3b0ca3bb0eb4b6/install.sh"
@@ -196,7 +196,7 @@ model() {
 have_model() { model >/dev/null; }
 install_model() { fetch "$MODEL_URL" "$OWN_MODEL" "$MODEL_SHA256"; }
 
-# Kinetik needs macOS 15 or later: Homebrew ships a ready-built Poppler only from macOS 15, and on an older Mac
+# Big Puffin needs macOS 15 or later: Homebrew ships a ready-built Poppler only from macOS 15, and on an older Mac
 # builds it from source, which takes hours and often fails. Nothing is installed on an older Mac, or on one whose
 # version sw_vers does not give.
 OLDEST_MACOS="${OLDEST_MACOS:-15}"
@@ -207,7 +207,7 @@ case "${macos%%.*}" in
     exit 1 ;;
 esac
 if [ "${macos%%.*}" -lt "$OLDEST_MACOS" ]; then
-  echo "Kinetik needs macOS $OLDEST_MACOS or later, and this Mac has macOS $macos. Update macOS in System Settings, General, Software Update, then run this line again."
+  echo "Big Puffin needs macOS $OLDEST_MACOS or later, and this Mac has macOS $macos. Update macOS in System Settings, General, Software Update, then run this line again."
   exit 1
 fi
 if ! tools; then
@@ -249,8 +249,8 @@ marketplace_folder() {
 }
 have_marketplace() { [ -n "$(marketplace_folder)" ]; }
 add_marketplace() { claude plugin marketplace add "$MARKETPLACE"; }
-if ! program "Kinetik's marketplace" have_marketplace add_marketplace "claude plugin marketplace add $MARKETPLACE"; then
-  echo "The plugins come from Kinetik's marketplace. Check its address with Kinetik, then run this again. The log is $LOG."
+if ! program "Big Puffin's marketplace" have_marketplace add_marketplace "claude plugin marketplace add $MARKETPLACE"; then
+  echo "The plugins come from Big Puffin's marketplace. Check its address with Big Puffin, then run this again. The log is $LOG."
   exit 1
 fi
 
@@ -278,7 +278,7 @@ esac
 
 OKB="$(marketplace_folder)/plugins/okb/cli/okb.mjs"
 if [ ! -f "$OKB" ]; then
-  echo "Kinetik's marketplace holds no okb.mjs at $OKB. Check its address with Kinetik. The log is $LOG."
+  echo "Big Puffin's marketplace holds no okb.mjs at $OKB. Check its address with Big Puffin. The log is $LOG."
   exit 1
 fi
 
@@ -291,7 +291,7 @@ for a in ${args[@]+"${args[@]}"}; do
     setup+=("$a")
   fi
 done
-# The owner's folder alone: the business analyst gives the owner okb setup --owner, which sets Kinetik up, once the
+# The owner's folder alone: the business analyst gives the owner okb setup --owner, which sets Big Puffin up, once the
 # owner has a Supabase account.
 if [ "$owner" = 1 ]; then setup+=("--folder-only"); fi
 echo "Setting up your folder with okb setup."

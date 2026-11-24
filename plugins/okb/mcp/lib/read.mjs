@@ -45,8 +45,8 @@ const INSTALL = {
   ffmpeg: { darwin: "brew install ffmpeg", win32: "winget install Gyan.FFmpeg", linux: `sudo apt install ffmpeg${OTHER_LINUX}` },
   magick: { darwin: "brew install imagemagick", win32: "winget install ImageMagick.ImageMagick", linux: `sudo apt install imagemagick libheif-plugin-libde265${OTHER_LINUX}` },
   whisper: {
-    darwin: "Kinetik's install script, install.sh, run again as the install guide gives it, which installs whisper.cpp with Homebrew and downloads its model, ggml-base.bin, to ~/.local/share/okb/whisper",
-    win32: "Kinetik's install script, install.ps1, run again as the install guide gives it, which puts whisper.cpp and its model, ggml-base.bin, in %LOCALAPPDATA%\\okb\\whisper",
+    darwin: "Big Puffin's install script, install.sh, run again as the install guide gives it, which installs whisper.cpp with Homebrew and downloads its model, ggml-base.bin, to ~/.local/share/okb/whisper",
+    win32: "Big Puffin's install script, install.ps1, run again as the install guide gives it, which puts whisper.cpp and its model, ggml-base.bin, in %LOCALAPPDATA%\\okb\\whisper",
     linux: "whisper-bin-ubuntu-x64.tar.gz from the newest of whisper.cpp's GitHub releases that lists it, and ggml-base.bin from its Hugging Face models, with their full paths set as whisper_cli and whisper_model in the okb plugin's settings",
   },
 };
@@ -250,7 +250,7 @@ async function pdf(copy, name, args) {
 }
 
 /**
- * Where whisper.cpp's program and model are looked for when the settings name none: the folder Kinetik's install
+ * Where whisper.cpp's program and model are looked for when the settings name none: the folder Big Puffin's install
  * script puts them in, Homebrew's whisper.cpp folders, where a person may have put the model by hand, and a build in
  * /opt. Homebrew's whisper.cpp puts whisper-cli on the command path, and installs no ggml-base.bin.
  */

@@ -1,11 +1,11 @@
 ---
 name: setup
-description: Use when a business's owner types "Set up Kinetik" or "Set up OKB", or asks how setup stands. The business analyst takes the owner through making a Supabase account, then gives them one command, okb setup --owner. The command builds the business's Kinetik knowledge base, OKB, in their Supabase project, with file search. It signs the owner in, checks it all works and makes the settings of Kinetik's connector. It runs in one of three modes: human only, AI guided or human directed.
+description: Use when a business's owner types "Set up Big Puffin" or "Set up OKB", or asks how setup stands. The business analyst takes the owner through making a Supabase account, then gives them one command, okb setup --owner. The command builds the business's Big Puffin knowledge base, OKB, in their Supabase project, with file search. It signs the owner in, checks it all works and makes the settings of Big Puffin's connector. It runs in one of three modes: human only, AI guided or human directed.
 ---
 
-# Kinetik setup
+# Big Puffin setup
 
-The owner starts this skill by typing "Set up Kinetik". The older phrase, "Set up OKB", starts it too. It is done once per business, before the first interview about a workflow.
+The owner starts this skill by typing "Set up Big Puffin". The older phrase, "Set up OKB", starts it too. It is done once per business, before the first interview about a workflow.
 
 The **owner** owns the business's Supabase account and becomes the first administrator. Supabase asks a person for three things: creating the account, making an access token, and choosing their own password. The business analyst, `business-analyst:business-analyst`, guides the owner through the account. Then it gives them one command, the setup command, which does every other step on the owner's computer. It never needs the Supabase command-line tool.
 
@@ -13,23 +13,23 @@ The business analyst never holds the Supabase connector or `Bash`. The okb plugi
 
 The business analyst never sees, asks for or types a password, a secret key or a token. The owner pastes the token and types their password into the command's own prompts. The command sends them to Supabase alone.
 
-The setup files are in the `okb` folder beside this skill: on macOS, `~/.claude/plugins/marketplaces/kinetik/plugins/business-analyst/skills/setup/okb/`, and on Windows, `$env:USERPROFILE\.claude\plugins\marketplaces\kinetik\plugins\business-analyst\skills\setup\okb\`. The setup command runs them. In this skill, `<okb>` stands for that folder, and `<folder>` for the setup folder, the session's own folder.
+The setup files are in the `okb` folder beside this skill: on macOS, `~/.claude/plugins/marketplaces/bigpuffin/plugins/business-analyst/skills/setup/okb/`, and on Windows, `$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\business-analyst\skills\setup\okb\`. The setup command runs them. In this skill, `<okb>` stands for that folder, and `<folder>` for the setup folder, the session's own folder.
 
 - `build.mjs` approves the setup files, sends them to the project, and lists each hosted function's files.
-- `functions/okb-setup/` runs each approved setup file in the project, and makes the owner's sign-in. `functions/okb-setup/kinetik.ts` holds Kinetik's staff, the address their codes are sent to, and Kinetik's support address.
+- `functions/okb-setup/` runs each approved setup file in the project, and makes the owner's sign-in. `functions/okb-setup/bigpuffin.ts` holds Big Puffin's staff, the address their codes are sent to, and Big Puffin's support address.
 - `functions/okb-invite/` stays deployed after setup. The business analyst adds each later person with one call to it, for an administrator, which makes their actor and a one-time invitation code.
 - `functions/okb-join/` stays deployed too, with JWT verification off. A person spends their code there, and chooses their own password.
-- `functions/okb-upgrade/` stays deployed too. Kinetik's own actor applies each new upgrade there, signed by Kinetik, so the owner never invites Kinetik into their Supabase organisation.
-- `setup.sql`, `file-search.sql`, `file-search-scopes.sql` and `schedule.sql` build OKB and file search. `first-administrator.sql` makes the administrator, the six scopes, Kinetik's actors with their invitation codes, and the open tasks setup leaves.
+- `functions/okb-upgrade/` stays deployed too. Big Puffin's own actor applies each new upgrade there, signed by Big Puffin, so the owner never invites Big Puffin into their Supabase organisation.
+- `setup.sql`, `file-search.sql`, `file-search-scopes.sql` and `schedule.sql` build OKB and file search. `first-administrator.sql` makes the administrator, the six scopes, Big Puffin's actors with their invitation codes, and the open tasks setup leaves.
 - `state.sql` reads where a project stands, `reset.sql` takes an unfinished attempt off, `data-api.sql` exposes the `okb` schema, and `health.sql` is the health check.
 - `bootstrap.sql` holds the same steps for a person to run by hand, and each later person's grants.
-- `tests.sql` and `file-search-tests.sql` are Kinetik's release checks. Setup never runs them in a business's project.
+- `tests.sql` and `file-search-tests.sql` are Big Puffin's release checks. Setup never runs them in a business's project.
 
 ## Choose the mode
 
 The owner chooses the mode. AI guided is the default.
 
-- **AI guided:** the owner types "Set up Kinetik". The business analyst follows its lines below: the account step when it is needed, then the setup command. It asks nothing more.
+- **AI guided:** the owner types "Set up Big Puffin". The business analyst follows its lines below: the account step when it is needed, then the setup command. It asks nothing more.
 - **Human directed:** the owner tells the business analyst what to do, step by step. It gives the same setup command for the build. A refusal from Supabase, OKB or the command still stands.
 - **Human only:** the owner follows the Person lines below, in the Supabase dashboard and a terminal, with `bootstrap.sql`, without the business analyst.
 
@@ -37,37 +37,37 @@ Each step gives a **Person** line and a **Business analyst agent** line. Nothing
 
 ## What the owner reads
 
-The owner reads plain sentences only: no code block, table, SQL, command, test output or file name, unless they ask. Each reply holds at most one question. A sentence the owner reads has no semicolon, and says nothing about what the owner or Kinetik does not need to do. Between the messages below, the business analyst writes nothing.
+The owner reads plain sentences only: no code block, table, SQL, command, test output or file name, unless they ask. Each reply holds at most one question. A sentence the owner reads has no semicolon, and says nothing about what the owner or Big Puffin does not need to do. Between the messages below, the business analyst writes nothing.
 
 The one exception in setup is the setup command, in section 1. It goes below its message, alone in one fenced code block tagged `bash`. The Claude desktop app gives that block a Run button, which runs it in the app's Terminal, where its hidden prompts work.
 
-- **A failure:** one plain sentence saying what failed and that Kinetik has been told, then stop. Before the owner's sign-in, Kinetik is told by the owner. The sentence asks them to email Kinetik's support address from `kinetik.ts`, or their Kinetik contact when it is null. After the sign-in, the business analyst saves a support request as the `kinetik:support` skill does, with the command's own line. The owner's agreement to setup covers that save.
+- **A failure:** one plain sentence saying what failed and that Big Puffin has been told, then stop. Before the owner's sign-in, Big Puffin is told by the owner. The sentence asks them to email Big Puffin's support address from `bigpuffin.ts`, or their Big Puffin contact when it is null. After the sign-in, the business analyst saves a support request as the `bigpuffin:support` skill does, with the command's own line. The owner's agreement to setup covers that save.
 
 The owner's messages, in order, in a run with no failure:
 
 - The account step from "Before setup", when the owner has no Supabase account yet.
 - The setup command's message, one line each, in this order:
-  - "This sets up Kinetik in your Supabase project."
-  - "Setup also gives Kinetik its own account in your knowledge base. We use it to design, build and update your agents. It can read and change your general records, workflows and glossary, and every change it makes is in your audit log. We are also sent your business's name and your name and email, so we know the account is yours."
+  - "This sets up Big Puffin in your Supabase project."
+  - "Setup also gives Big Puffin its own account in your knowledge base. We use it to design, build and update your agents. It can read and change your general records, workflows and glossary, and every change it makes is in your audit log. We are also sent your business's name and your name and email, so we know the account is yours."
   - "1. Make a Supabase access token at [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens). Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it on that page once setup is done."
   - "2. Click Run on the line below, and paste the token when it asks."
   - "3. Answer its questions: your business's name, your Supabase project, and your name, email and a password you choose."
   - "4. When it says so, start a new Code session on this folder, and type done there."
-- The summary, once the business analyst has checked the scopes in section 4: "Kinetik is set up, and you are its administrator. I stay with you in this folder, to add your staff and remind you of anything still open. Kinetik now has its own account in your knowledge base, as you agreed. I can show you what it can reach and what it has changed, and can remove it at any time."
+- The summary, once the business analyst has checked the scopes in section 4: "Big Puffin is set up, and you are its administrator. I stay with you in this folder, to add your staff and remind you of anything still open. Big Puffin now has its own account in your knowledge base, as you agreed. I can show you what it can reach and what it has changed, and can remove it at any time."
 
-The setup command prints its own lines in the Terminal, and the owner reads them there. It prints one progress line per stage as it ends, such as "Building your Kinetik knowledge base: done." Its stages, in order, are "Creating your project in London", "Waiting for your project to be ready", "Keeping your short name, <slug>, with Kinetik", "Building your Kinetik knowledge base", "Setting up file search", "Turning on the Data API", "Making you the administrator", "Checking everything works" and "Saving the setup record". The first is for a new project only. The wait starts with "Waiting for your project to be ready. This can take a few minutes." Then it prints the five lines of Kinetik's connector's settings, public sign-up off among them, and its summary.
+The setup command prints its own lines in the Terminal, and the owner reads them there. It prints one progress line per stage as it ends, such as "Building your Big Puffin knowledge base: done." Its stages, in order, are "Creating your project in London", "Waiting for your project to be ready", "Keeping your short name, <slug>, with Big Puffin", "Building your Big Puffin knowledge base", "Setting up file search", "Turning on the Data API", "Making you the administrator", "Checking everything works" and "Saving the setup record". The first is for a new project only. The wait starts with "Waiting for your project to be ready. This can take a few minutes." Then it prints the five lines of Big Puffin's connector's settings, public sign-up off among them, and its summary.
 
-The summary starts "Kinetik is set up in <project>, and you are its administrator." It ends with the one step left and "Start a new Code session on <folder>, and type done there." The session that gave the command started before the owner's sign-in, so its okb plugin cannot see that sign-in.
+The summary starts "Big Puffin is set up in <project>, and you are its administrator." It ends with the one step left and "Start a new Code session on <folder>, and type done there." The session that gave the command started before the owner's sign-in, so its okb plugin cannot see that sign-in.
 
-When Kinetik's website did not take Kinetik's invitation code, the command's summary gives it: "Kinetik's website did not take its invitation code. Please email it to <Kinetik email>, so Kinetik can sign in: <code>." On the Free plan, it adds "Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running."
+When Big Puffin's website did not take Big Puffin's invitation code, the command's summary gives it: "Big Puffin's website did not take its invitation code. Please email it to <Big Puffin email>, so Big Puffin can sign in: <code>." On the Free plan, it adds "Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running."
 
-Kinetik's staff load the guides and the Python runtime themselves, as their actor, since only that actor changes the Guides and Plugins scopes. At the owner's sign-in, `okb-setup` makes a one-time invitation code for each of them, and sends no email. It sends each code to Kinetik's website, `ACCESS_URL` in `kinetik.ts`. With it go the project's address, the email the code is for, its last day and the business's short name. The owner's agreement to setup covers that send.
+Big Puffin's staff load the guides and the Python runtime themselves, as their actor, since only that actor changes the Guides and Plugins scopes. At the owner's sign-in, `okb-setup` makes a one-time invitation code for each of them, and sends no email. It sends each code to Big Puffin's website, `ACCESS_URL` in `bigpuffin.ts`. With it go the project's address, the email the code is for, its last day and the business's short name. The owner's agreement to setup covers that send.
 
-`first-administrator.sql` makes each one's actor, with the `kinetik` template's grants and no sign-in yet. Kinetik's staff member spends the code with the okb command's `sign-in --join`, and chooses their own password.
+`first-administrator.sql` makes each one's actor, with the `kinetik` template's grants and no sign-in yet. Big Puffin's staff member spends the code with the okb command's `sign-in --join`, and chooses their own password.
 
-Kinetik applies each later upgrade itself, as its own actor, through `okb-upgrade`, which runs only an upgrade Kinetik signed. The owner gives Kinetik no role in their Supabase organisation.
+Big Puffin applies each later upgrade itself, as its own actor, through `okb-upgrade`, which runs only an upgrade Big Puffin signed. The owner gives Big Puffin no role in their Supabase organisation.
 
-Setup saves each loose end as an open task in Administration, assigned to the owner: "Send Kinetik its invitation code (<email>)" for a code the website did not take. The business analyst raises the first one still open at the start of each session. It completes the code's task once Kinetik's actor has signed in. When the code is lost or runs out, the business analyst adds Kinetik again, which makes a new code. With no staff in `kinetik.ts`, the task is "Add Kinetik as a user", which the business analyst's `okb-invite` call completes. The setup command also saves "Connect Kinetik's connector", and section 5 completes it.
+Setup saves each loose end as an open task in Administration, assigned to the owner: "Send Big Puffin its invitation code (<email>)" for a code the website did not take. The business analyst raises the first one still open at the start of each session. It completes the code's task once Big Puffin's actor has signed in. When the code is lost or runs out, the business analyst adds Big Puffin again, which makes a new code. With no staff in `bigpuffin.ts`, the task is "Add Big Puffin as a user", which the business analyst's `okb-invite` call completes. The setup command also saves "Connect Big Puffin's connector", and section 5 completes it.
 
 ## Before setup
 
@@ -83,7 +83,7 @@ The owner needs a Supabase account. The setup command finds or creates the proje
 
 1. **Give the command.**
    - **Person:** makes a Supabase access token as the message says, and clicks **Run** on the command the business analyst shows in the chat. Pastes the token, then answers the command's questions. They are the business's name, the Supabase organisation and project, and their name, email and chosen password, twice. In human only mode, the owner instead follows the Person lines of sections 2 to 4, in the Supabase dashboard.
-   - **Business analyst agent:** sends the setup command's message "What the owner reads" gives. Below it goes the command, alone in a single fenced code block tagged `bash`. Its `<marketplace>` is the kinetik marketplace's copy, `~/.claude/plugins/marketplaces/kinetik`, and `<folder>` is the session's folder from `check_plugins`. It writes both in full, so the block runs as it is. Then it waits. It never runs the command itself, and never asks for the token.
+   - **Business analyst agent:** sends the setup command's message "What the owner reads" gives. Below it goes the command, alone in a single fenced code block tagged `bash`. Its `<marketplace>` is the bigpuffin marketplace's copy, `~/.claude/plugins/marketplaces/bigpuffin`, and `<folder>` is the session's folder from `check_plugins`. It writes both in full, so the block runs as it is. Then it waits. It never runs the command itself, and never asks for the token.
 
      ```bash
      node "<marketplace>/plugins/okb/cli/okb.mjs" setup --owner --folder "<folder>"
@@ -96,13 +96,13 @@ The owner needs a Supabase account. The setup command finds or creates the proje
      - It lists the organisation's projects and asks which, or offers a new one. A new one is named after the business, in London. On a paid plan, it creates one only after the owner types yes.
      - It reads a project picked from the list with `state.sql` before it saves anything. One already set up, or holding records or files, gets "<project> already holds a knowledge base. Choose another project, or a new one.", and the list is asked again.
      - On a run after a stop, it reads `state.sql` again. A project already set up goes straight to the connector's settings. An attempt with no records or files is cleared once the owner types yes. A project that already holds records stops the command.
-     - It keeps the business's short name, its slug, with Kinetik's website. It deploys the hosted functions and runs the setup files, as section 2 gives them.
+     - It keeps the business's short name, its slug, with Big Puffin's website. It deploys the hosted functions and runs the setup files, as section 2 gives them.
      - It signs the owner in, runs `first-administrator.sql`, the health check and the scopes check, and saves the setup record and the open task.
-     - It makes the five settings of Kinetik's connector with the slug, and prints the summary.
+     - It makes the five settings of Big Puffin's connector with the slug, and prints the summary.
 
 3. **When the command stops.**
    - **Person:** clicks **Run** again. The command carries on from where it stopped, with the same project and slug.
-   - **Business analyst agent:** when the owner says the command stopped, it asks them to click Run on the same command again. When a key line says to run it again in 20 minutes, it tells the owner that time, and has them click Run then. When a line says Supabase refused the token, the owner makes a new token and runs it again. A project that already holds Kinetik records, or a second stop at the same step, is a failure, as "What the owner reads" says.
+   - **Business analyst agent:** when the owner says the command stopped, it asks them to click Run on the same command again. When a key line says to run it again in 20 minutes, it tells the owner that time, and has them click Run then. When a line says Supabase refused the token, the owner makes a new token and runs it again. A project that already holds Big Puffin records, or a second stop at the same step, is a failure, as "What the owner reads" says.
 
 **AI guided:** the business analyst sends the setup command's message once, and asks nothing else until the owner types done.
 
@@ -141,29 +141,29 @@ The owner's Auth user is their Supabase sign-in. The `okb-setup` hosted function
    - **Business analyst agent:** when the owner types done in a new session, signed in as them, it calls `okb_get_scopes`. It must list `general`, `routines`, `reference` and `plugins`. Then it gives the summary "What the owner reads" gives. When done arrives in a session whose okb plugin has no sign-in, with only `check_plugins` and the page tools, it says "Start a new Code session on this folder, and type done there."
 2. **Save the setup record.**
    - **Person:** in human only mode, runs `okb okb_add_record` in the setup folder, with the fields below.
-   - **Business analyst agent:** none: the setup command saves it with `okb_add_record`, as the owner. It saves it with `p_scope=administration`, `p_kind=evidence` and `p_title=Kinetik setup`. Its `p_fields` hold a `summary` that says "whose short name is <slug>", and `source_reference` "okb setup --owner". Nothing is saved on the owner's computer. It saves the open task "Connect Kinetik's connector" the same way, and drops `okb_setup`.
+   - **Business analyst agent:** none: the setup command saves it with `okb_add_record`, as the owner. It saves it with `p_scope=administration`, `p_kind=evidence` and `p_title=Big Puffin setup`. Its `p_fields` hold a `summary` that says "whose short name is <slug>", and `source_reference` "okb setup --owner". Nothing is saved on the owner's computer. It saves the open task "Connect Big Puffin's connector" the same way, and drops `okb_setup`.
 
-3. **Kinetik's connector.**
-   - **Person:** once Kinetik confirms the business, the Owner of the business's Claude organisation adds Kinetik's connector at `https://mcp.kinetik.it.com/<slug>`.
-   - **Business analyst agent:** while `okb_get_assigned` lists the open task "Connect Kinetik's connector", it reads the setup record with `okb_find_records` and `okb_show_record`. The slug is what follows the exact phrase "whose short name is " in its `summary`, up to the full stop. When a Kinetik connector's `show_home` is in the session, it completes the task as the `kinetik:outstanding` skill's step 3 does, then calls `show_home`. With more than one Kinetik connector, it calls each one's `show_home` until one's answer names this business's project, and uses that one. The project is `https://<projectRef>.supabase.co`, with `projectRef` from the okb plugin's `whoami`. When none does, it says Kinetik's connector for this business is not connected yet, and gives the address as below. Otherwise it says, once in the session, "Once Kinetik confirms your business, the Owner of your Claude organisation adds Kinetik's connector at the address below." Below it, alone in a fenced code block with no language tag, goes `https://mcp.kinetik.it.com/<slug>`, with the slug written in. It never asks the owner for the address. A summary without the phrase is a business set up before the command, which section 5 covers.
+3. **Big Puffin's connector.**
+   - **Person:** once Big Puffin confirms the business, the Owner of the business's Claude organisation adds Big Puffin's connector at `https://mcp.kinetik.it.com/<slug>`.
+   - **Business analyst agent:** while `okb_get_assigned` lists the open task "Connect Big Puffin's connector", it reads the setup record with `okb_find_records` and `okb_show_record`. The slug is what follows the exact phrase "whose short name is " in its `summary`, up to the full stop. When a Big Puffin connector's `show_home` is in the session, it completes the task as the `bigpuffin:outstanding` skill's step 3 does, then calls `show_home`. With more than one Big Puffin connector, it calls each one's `show_home` until one's answer names this business's project, and uses that one. The project is `https://<projectRef>.supabase.co`, with `projectRef` from the okb plugin's `whoami`. When none does, it says Big Puffin's connector for this business is not connected yet, and gives the address as below. Otherwise it says, once in the session, "Once Big Puffin confirms your business, the Owner of your Claude organisation adds Big Puffin's connector at the address below." Below it, alone in a fenced code block with no language tag, goes `https://mcp.kinetik.it.com/<slug>`, with the slug written in. It never asks the owner for the address. A summary without the phrase is a business set up before the command, which section 5 covers.
 
 **AI guided:** the business analyst ends with the summary, then follows step 3.
 
-## 5. Kinetik's connector
+## 5. Big Puffin's connector
 
-Kinetik's connector draws Kinetik's cards, such as the home card, in Claude. Kinetik hosts it at `https://mcp.kinetik.it.com/<slug>`, the slug being the business's short name, confirmed by Kinetik's operator. Each person connects it once in Claude and signs in as themselves, so their grants hold.
+The connector draws Big Puffin's cards, such as the home card, in Claude. It is at `https://mcp.kinetik.it.com/<slug>`, the business's short name, which Big Puffin's operator confirms. Each person connects it once in Claude and signs in as themselves, so their grants hold.
 
 The connector needs five settings in the project, and its address added to the business's Claude organisation. The setup command makes the five settings. A business set up before it makes them in step 3. Any step the owner says is done is skipped.
 
 1. **Save the open task, if none is open.**
    - **Person:** none.
-   - **Business analyst agent:** calls `okb_get_assigned`. When it lists an open task titled "Connect Kinetik's connector" in Administration, it goes on to step 2. Otherwise it saves one with `okb_add_record`, with `p_scope=administration`, `p_kind=activity` and `p_title="Connect Kinetik's connector"`. Its `p_reason` is "An open task setup left for the administrator." Its `p_fields` make it a task for the owner, due in 7 days, as `first-administrator.sql` does. The description is "Make Kinetik's connector's settings in Supabase, and add Kinetik's connector to Claude, once Kinetik gives its address." The completion requirement is "The owner's home card shows in Claude."
+   - **Business analyst agent:** calls `okb_get_assigned`. When it lists an open task titled "Connect Big Puffin's connector" in Administration, it goes on to step 2. Otherwise it saves one with `okb_add_record`, with `p_scope=administration`, `p_kind=activity` and `p_title="Connect Big Puffin's connector"`. Its `p_reason` is "An open task setup left for the administrator." Its `p_fields` make it a task for the owner, due in 7 days, as `first-administrator.sql` does. The description is "Make Big Puffin's connector's settings in Supabase, and add Big Puffin's connector to Claude, once Big Puffin gives its address." The completion requirement is "The owner's home card shows in Claude."
 2. **Wait for the address.**
-   - **Person:** hears from Kinetik that the business is confirmed, with the address, and tells the analyst.
-   - **Business analyst agent:** for a business the setup command set up, section 4's step 3 takes this step's place. Otherwise it raises the task each session until done, as "Open tasks from setup" says. When the owner gives the address, it checks it is `https://mcp.kinetik.it.com/` and one slug, which is lower-case words and numbers joined by hyphens. With any other, it says "That isn't the address of Kinetik's connector. Please check it with Kinetik." and stops. It reads the setup record, the evidence titled "Kinetik setup" in Administration, with `okb_find_records` and `okb_show_record`. When its `source_reference` is "okb setup --owner" and its `summary` says "whose short name is <slug>" with this slug, it goes on to step 4. Otherwise it goes on to step 3.
+   - **Person:** hears that the business is confirmed, with the address, and tells the analyst.
+   - **Business analyst agent:** for a business the setup command set up, section 4's step 3 takes this step's place. Otherwise it raises the task each session until done, as "Open tasks from setup" says. When the owner gives the address, it checks it is `https://mcp.kinetik.it.com/` and one slug, which is lower-case words and numbers joined by hyphens. With any other, it says "That isn't the address of Big Puffin's connector. Please check it with Big Puffin." and stops. It reads the setup record, the evidence titled "Big Puffin setup" in Administration, with `okb_find_records` and `okb_show_record`. When its `source_reference` is "okb setup --owner" and its `summary` says "whose short name is <slug>" with this slug, it goes on to step 4. Otherwise it goes on to step 3.
 3. **Make the connector's settings.**
    - **Person:** clicks **Run** on the command the business analyst shows in the chat. Makes a Supabase access token at the address the command gives, as it says, and pastes it at its prompt. When the command prints five lines that each say done, deletes the token on that page, and types "done" in the session. In human only mode, they run the same command, or follow the steps below.
-   - **Business analyst agent:** says "This makes the five settings Kinetik's connector needs in your Supabase project. Click Run on the line below. It asks for a Supabase access token, and tells you where to make one. Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it on that page once every line says done. Then type done here." Below it goes the command, alone in a single fenced code block tagged `bash`. The command is `node "<marketplace>/plugins/okb/cli/okb.mjs" connector-settings --url <project URL> --slug <slug>`. Its `<marketplace>` is as in section 1, and the project URL is `https://<projectRef>.supabase.co`, with `projectRef` from the okb plugin's `whoami`. It writes in real values. Before it shows the command, it reads the project's public signing keys with `WebFetch`, at `https://<projectRef>.supabase.co/auth/v1/.well-known/jwks.json`. A key with `alg` `ES256` or `RS256` there means the key is done already, so step 1 below is skipped. The command still runs, for the four auth settings. Then it waits. It never runs the command itself, and never asks for the token.
+   - **Business analyst agent:** says "This makes the five settings Big Puffin's connector needs in your Supabase project. Click Run on the line below. It asks for a Supabase access token, and tells you where to make one. Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it on that page once every line says done. Then type done here." Below it goes the command, alone in a single fenced code block tagged `bash`. The command is `node "<marketplace>/plugins/okb/cli/okb.mjs" connector-settings --url <project URL> --slug <slug>`. Its `<marketplace>` is as in section 1, and the project URL is `https://<projectRef>.supabase.co`, with `projectRef` from the okb plugin's `whoami`. It writes in real values. Before it shows the command, it reads the project's public signing keys with `WebFetch`, at `https://<projectRef>.supabase.co/auth/v1/.well-known/jwks.json`. A key with `alg` `ES256` or `RS256` there means the key is done already, so step 1 below is skipped. The command still runs, for the four auth settings. Then it waits. It never runs the command itself, and never asks for the token.
    - **When the command stops:** a key line that says to run it again gives the time. The business analyst tells the owner that time, and has them click Run then. When a line says Supabase refused the token, the owner makes a new token and runs it again. Step 4 waits until a run's lines all say done. When another line says failed, it gives the owner the four steps below instead, one per reply. Then it goes on to step 4.
 
    By hand, in the Supabase dashboard:
@@ -181,19 +181,19 @@ The connector needs five settings in the project, and its address added to the b
       - **Person:** in **Authentication → Sign In / Providers**, turns off **Allow new users to sign up**, and saves.
       - **Business analyst agent:** says "Next, in Authentication, open Sign In / Providers, turn off Allow new users to sign up, and save. Tell me when it's done."
 4. **Add the connector to Claude.**
-   - **Person:** the Owner of the business's Claude organisation adds a custom connector named Kinetik under **Organization settings → Connectors**, with the URL `https://mcp.kinetik.it.com/<slug>`.
-   - **Business analyst agent:** says, with the slug written in, "Next, in Claude, open Organization settings, then Connectors, and add a custom connector called Kinetik with the URL below. Only an Owner of your Claude organisation can do this. Tell me when it's added." Below it, alone in a fenced code block with no language tag, goes `https://mcp.kinetik.it.com/<slug>`.
+   - **Person:** the Owner of the business's Claude organisation adds a custom connector named Big Puffin under **Organization settings → Connectors**, with the URL `https://mcp.kinetik.it.com/<slug>`.
+   - **Business analyst agent:** says, with the slug written in, "Next, in Claude, open Organization settings, then Connectors, and add a custom connector called Big Puffin with the URL below. Only an Owner of your Claude organisation can do this. Tell me when it's added." Below it, alone in a fenced code block with no language tag, goes `https://mcp.kinetik.it.com/<slug>`.
 5. **Connect and check.**
-   - **Person:** in Claude, opens Customize, then Connectors, and connects Kinetik. On Kinetik's sign-in page, signs in with their knowledge base email and password, and presses Allow. Then starts a new Code session on this folder and asks "What is outstanding?" for the home card.
-   - **Business analyst agent:** says "Last, in Claude, open Customize, then Connectors, and connect Kinetik. Sign in with your knowledge base email and password, and press Allow. Then start a new Code session on this folder, and ask me what is outstanding. Your home card should show." When the home card shows, it completes the task, as its "Open tasks from setup" says, with the reason "The owner's home card showed." When the sign-in is turned away, it takes the owner through step 3 first, then step 5.
+   - **Person:** in Claude, opens Customize, then Connectors, and connects Big Puffin. On the sign-in page, signs in with their knowledge base email and password, and presses Allow. Then starts a new Code session on this folder and asks "What is outstanding?" for the home card.
+   - **Business analyst agent:** says "Last, in Claude, open Customize, then Connectors, and connect Big Puffin. Sign in with your knowledge base email and password, and press Allow. Then start a new Code session on this folder, and ask me what is outstanding. Your home card should show." When the home card shows, it completes the task, as its "Open tasks from setup" says, with the reason "The owner's home card showed." When the sign-in is turned away, it takes the owner through step 3 first, then step 5.
 
-Every person connects Kinetik the same way, as Kinetik's guide "Connecting Kinetik's connector" says.
+Every person connects it the same way, as the guide "Connecting Big Puffin's connector" says.
 
 **AI guided:** the business analyst gives the owner one step per reply, and asks nothing else.
 
 ## Status requests
 
-Setup has finished when `general`, `routines`, `reference` and `plugins` are there, the check the `business-analyst:routine-interview` skill's section 1 makes before an interview. In a folder with no sign-in yet, setup has not started or stopped part way, and the setup command carries on from where it stopped. Once the owner is signed in, the business analyst calls `okb_get_scopes`. It answers in one sentence: not started or stopped part way, or set up and working. It adds the next step and who does it. Once setup has finished, Kinetik's connector is set up when the task "Connect Kinetik's connector" is completed.
+Setup has finished when `general`, `routines`, `reference` and `plugins` are there, the check the `business-analyst:routine-interview` skill's section 1 makes before an interview. In a folder with no sign-in yet, setup has not started or stopped part way, and the setup command carries on from where it stopped. Once the owner is signed in, the business analyst calls `okb_get_scopes`. It answers in one sentence: not started or stopped part way, or set up and working. It adds the next step and who does it. Once setup has finished, Big Puffin's connector is set up when the task "Connect Big Puffin's connector" is completed.
 
 ## Problems
 

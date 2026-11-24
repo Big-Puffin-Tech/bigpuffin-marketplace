@@ -1,7 +1,7 @@
 // okb.mjs setup: sets up one person's folder from the Terminal. One folder works in one client's
 // project as one person. It makes the folder, where the person puts files for their agent and the agent
 // keeps its work, writes the folder's agent setting,
-// installs the agent's plugin from the kinetik marketplace, and runs the sign-in with --folder, which
+// installs the agent's plugin from the bigpuffin marketplace, and runs the sign-in with --folder, which
 // writes the folder's actor file. Its last step, the first after a first sign-in, is okb sync in the
 // folder, which installs the business's own release of its plugins from OKB in place of the public copy.
 //
@@ -13,13 +13,13 @@
 // --join is the first sign-in of a person their administrator added with a one-time invitation code: the sign-in asks
 // the code and the password they choose, twice, in place of a password someone gave them. Every other step is the same.
 //
-// The folder is ~/kinetik unless --folder names another. A folder set up before under another name, such as
+// The folder is ~/bigpuffin unless --folder names another. A folder set up before under another name, such as
 // ~/okb, keeps working: run setup again with --folder naming it.
 //
-// --owner is the business's owner's setup of Kinetik, and needs --folder: it makes the folder, names the business
-// analyst as its agent and installs its plugin, then sets Kinetik up in one run through Supabase's Management API, as owner-setup.mjs describes,
+// --owner is the business's owner's setup of Big Puffin, and needs --folder: it makes the folder, names the business
+// analyst as its agent and installs its plugin, then sets Big Puffin up in one run through Supabase's Management API, as owner-setup.mjs describes,
 // and ends with okb sync in the folder. With --folder-only, as the install script runs it before the owner has a Supabase
-// account, it stops once the folder is made, and the owner then types "Set up Kinetik" in a session on the folder.
+// account, it stops once the folder is made, and the owner then types "Set up Big Puffin" in a session on the folder.
 //
 // Each step prints what it did, or that it was already done, so running it again is safe. A failed step
 // stops the run with Claude Code's or the sign-in's message, and every step before it stays done.
@@ -36,17 +36,17 @@ import { osMismatch } from "./os-version.mjs";
 import { ownerSetup } from "./owner-setup.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-/** The marketplace this command runs from, such as Claude Code's copy of the kinetik marketplace. */
+/** The marketplace this command runs from, such as Claude Code's copy of the bigpuffin marketplace. */
 export const MARKETPLACE = resolve(HERE, "../../..");
 /** The marketplace's name in Claude Code, which each plugin's id ends with. */
-export const MARKETPLACE_NAME = "kinetik";
-export const DEFAULT_AGENT = "kinetik:database-operator";
+export const MARKETPLACE_NAME = "bigpuffin";
+export const DEFAULT_AGENT = "bigpuffin:database-operator";
 /** The agent of the owner's folder while OKB is set up. */
 export const OWNER_AGENT = "business-analyst:business-analyst";
 /** The folder's name in the home folder when --folder is left out. */
-export const DEFAULT_FOLDER = "kinetik";
+export const DEFAULT_FOLDER = "bigpuffin";
 /** What the owner types in a session on their folder to start setup. */
-export const OWNER_PHRASE = "Set up Kinetik";
+export const OWNER_PHRASE = "Set up Big Puffin";
 
 export const SETUP_USAGE = `Usage: node okb.mjs setup [--folder <folder>] --email <email> [--url <project URL> --key <publishable key>] [--agent <plugin>:<agent>] [--new-password]
        node okb.mjs setup [--folder <folder>] --email <email> --url <project URL> --key <publishable key> --join [--agent <plugin>:<agent>]
@@ -65,9 +65,9 @@ the first password.
 and a password you choose, twice, and needs --url and --key.
 
 --owner is for the business's owner. It makes the folder, names the business analyst, ${OWNER_AGENT}, as the
-folder's agent, and installs its plugin. Then it sets Kinetik up in one run: it asks for a Supabase access token,
-your business's name, your name, your email and the password you choose, builds your Kinetik knowledge base in your
-Supabase project, and makes the settings of Kinetik's connector. Run it again after a stop, and it carries on.
+folder's agent, and installs its plugin. Then it sets Big Puffin up in one run: it asks for a Supabase access token,
+your business's name, your name, your email and the password you choose, builds your Big Puffin knowledge base in your
+Supabase project, and makes the settings of Big Puffin's connector. Run it again after a stop, and it carries on.
 --folder-only stops once the folder is made, with no sign-in and no okb sync. The owner then types
 "${OWNER_PHRASE}" in a session opened on the folder.`;
 

@@ -1,10 +1,10 @@
--- OKB setup: the health check at the end of setup, in place of the release checks, which are Kinetik's own and
+-- OKB setup: the health check at the end of setup, in place of the release checks, which are Big Puffin's own and
 -- never run in a client's project. Reads only, as postgres, through Supabase's Management API. One row,
 -- whose ok is true when every part is:
 --   scopes        the six scopes are there, each enabled, with a sessions scope for each person with a sign-in; a
 --                 person invited with a code gets theirs when they spend it;
 --   administrator the first administrator is there, enabled;
---   kinetik    Kinetik's staff actors, each with the kinetik template's grants;
+--   bigpuffin    Big Puffin's staff actors, each with the kinetik template's grants;
 --   data_api      the Data API serves okb;
 --   schedule      file search's schedule and both its secrets are there;
 --   searchable    file search covers every scope's bucket but the plugins scopes'.
@@ -14,14 +14,14 @@ with scopes as (
  from okb.scope
 ), people as (
  select count(*) filter (where authority_class = 'administrator' and enabled) as administrators,
-  count(*) filter (where display_name like '% (Kinetik)' and enabled) as kinetik,
+  count(*) filter (where display_name like '% (Big Puffin)' and enabled) as bigpuffin,
   count(*) filter (where actor_kind = 'human' and auth_user_id is not null) as humans
  from okb.actor
 ), parts as (
  select
   (select six = 6 and sessions = (select humans from people) from scopes) as scopes,
   (select administrators >= 1 from people) as administrator,
-  (select kinetik from people) as kinetik,
+  (select bigpuffin from people) as bigpuffin,
   coalesce((select bool_or(c like 'pgrst.db_schemas=%' and c ~ '(^|[=, ])okb(,|$)') from pg_roles r, unnest(r.rolconfig) c where r.rolname = 'authenticator'), false) as data_api,
   exists(select 1 from cron.job where jobname = 'file-search-work' and active)
    and (select count(*) from vault.decrypted_secrets where name in ('file_search_worker_secret', 'file_search_project_url')) = 2 as schedule,

@@ -29,14 +29,14 @@ export function osMismatch(platform = process.platform, read = () => readVersion
     try { version = String(read() ?? "").trim(); } catch { version = ""; }
     const major = version.split(".")[0];
     if (!/^\d+$/.test(major)) return `okb setup could not read this Mac's macOS version with sw_vers. Check that this Mac runs macOS ${MIN_MACOS} or later, in the Apple menu, About This Mac, then run okb setup again.`;
-    if (Number(major) < MIN_MACOS) return `This Mac runs macOS ${version}, and Kinetik needs macOS ${MIN_MACOS} or later. Update macOS in System Settings, General, Software Update, then run okb setup again.`;
+    if (Number(major) < MIN_MACOS) return `This Mac runs macOS ${version}, and Big Puffin needs macOS ${MIN_MACOS} or later. Update macOS in System Settings, General, Software Update, then run okb setup again.`;
     return null;
   }
   if (platform === "win32") {
     let build;
     try { build = String(read() ?? "").trim().split(".")[2] ?? ""; } catch { build = ""; }
     if (!/^\d+$/.test(build)) return "okb setup could not read this computer's Windows build. Check that it runs Windows 10 version 1809 or later, in Settings, System, About, then run okb setup again.";
-    if (Number(build) < MIN_WINDOWS_BUILD) return `This computer runs Windows build ${build}, and Kinetik needs Windows 10 version 1809 or later. Update Windows in Settings, Windows Update, then run okb setup again.`;
+    if (Number(build) < MIN_WINDOWS_BUILD) return `This computer runs Windows build ${build}, and Big Puffin needs Windows 10 version 1809 or later. Update Windows in Settings, Windows Update, then run okb setup again.`;
   }
   return null;
 }

@@ -1,16 +1,16 @@
 <style>
-.gr { display: grid; gap: 10px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--kinetik-ink); }
+.gr { display: grid; gap: 10px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--bigpuffin-ink); }
 .gr * { box-sizing: border-box; }
 .gr h2 { margin: 0; font-size: 16px; }
 .gr p { margin: 0; overflow-wrap: anywhere; }
-.gr-sub { color: var(--kinetik-muted); font-size: 13px; }
+.gr-sub { color: var(--bigpuffin-muted); font-size: 13px; }
 .gr-refused { color: var(--color-text-danger, #b42318); }
 .gr-form { display: grid; gap: 10px; }
-.gr-form label { display: grid; gap: 2px; font-size: 13px; color: var(--kinetik-muted); }
-.gr-form input { font: inherit; color: inherit; padding: 4px 8px; border: 1px solid var(--kinetik-rule); border-radius: 0; background: transparent; min-width: 0; }
+.gr-form label { display: grid; gap: 2px; font-size: 13px; color: var(--bigpuffin-muted); }
+.gr-form input { font: inherit; color: inherit; padding: 4px 8px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; min-width: 0; }
 .gr-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-.gr-btn { font: inherit; color: inherit; padding: 3px 12px; border: 1px solid var(--kinetik-rule); border-radius: 0; background: transparent; cursor: pointer; }
-.gr-btn.main { background: var(--kinetik-key); color: var(--kinetik-key-ink); border-color: var(--kinetik-key); }
+.gr-btn { font: inherit; color: inherit; padding: 3px 12px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; cursor: pointer; }
+.gr-btn.main { background: var(--bigpuffin-key); color: var(--bigpuffin-key-ink); border-color: var(--bigpuffin-key); }
 .gr-btn:disabled { opacity: .5; cursor: default; }
 .gr-btn[hidden] { display: none; }
 </style>
@@ -51,14 +51,14 @@ $("gr-form").addEventListener("submit", function (e) {
   say("Checking the key with Anthropic…", false);
   callTool("graph_reader_save", { key: $("gr-key").value, pass: PASS }, "save").then(function (r) {
     if (r && !r.isError) { $("gr-key").value = ""; showState("on"); say("Connected. Tell Claude the graph reader is on.", false); }
-    else say("Not kept: " + (textOf(r) || "Kinetik's connector gave nothing back."), true);
+    else say("Not kept: " + (textOf(r) || "Big Puffin's connector gave nothing back."), true);
   }, function (e) { say("Not kept: " + (e && e.message || e), true); }).then(function () { busy(false); });
 });
 $("gr-off").addEventListener("click", function () {
   busy(true);
   callTool("graph_reader_off", { pass: PASS }, "off").then(function (r) {
     if (r && !r.isError) { showState("off"); say("The graph reader is off. The graph OKB already keeps stays.", false); }
-    else say("Not turned off: " + (textOf(r) || "Kinetik's connector gave nothing back."), true);
+    else say("Not turned off: " + (textOf(r) || "Big Puffin's connector gave nothing back."), true);
   }, function (e) { say("Not turned off: " + (e && e.message || e), true); }).then(function () { busy(false); });
 });
 onNotice["ui/notifications/tool-result"] = function (p) {

@@ -1,6 +1,6 @@
 // The Supabase Auth user's tools: `whoami`, `rpc`, `call_function`, `invite_person`, which calls the okb-invite
 // hosted function, `upload_file`, `list_files`, `download_file` and `read_file`, under that user's own rights; `update_plugins`, which runs okb sync
-// as that user; `check_plugins`, which compares the plugins installed from the kinetik marketplace with
+// as that user; `check_plugins`, which compares the plugins installed from the bigpuffin marketplace with
 // the newest release in the Plugins scope, with cli/releases.mjs, changes nothing, and gives what the
 // session's folder holds, as session-folder.mjs reads it; and `copy_to_agent_folder`, which copies a file
 // into the agent folder: the okb plugin's agent-tools hook keeps the agents' copies to the folders added to
@@ -17,7 +17,7 @@ import { agentFiles, agentJson, callFunction, callRpc, currentUser, downloadObje
 import { sessionFolderStatus } from "./session-folder.mjs";
 
 // The marketplace every client's plugins are installed from, as cli/releases.mjs names it.
-const MARKETPLACE_NAME = "kinetik";
+const MARKETPLACE_NAME = "bigpuffin";
 // check_plugins reads the releases with the okb plugin's cli/releases.mjs, loaded when it runs, so the other tools
 // need nothing outside this folder.
 const RELEASES = new URL("../../cli/releases.mjs", import.meta.url);
@@ -30,8 +30,8 @@ const folderPath = folder => { if (!folder) return null; try { return realpathSy
 const MAX_COPY_BYTES = 50 * 1024 * 1024;
 
 
-// Kinetik's public marketplace, which the install one-liners in its README take.
-export const PUBLIC_MARKETPLACE = "Kinetik-Infotech/kinetik-marketplace";
+// Big Puffin's public marketplace, which the install one-liners in its README take.
+export const PUBLIC_MARKETPLACE = "Big-Puffin-Tech/bigpuffin-marketplace";
 const RAW = `https://raw.githubusercontent.com/${PUBLIC_MARKETPLACE}/main/install`;
 
 /** The agent an invited person's folder works with: the business analyst for an administrator, and otherwise none named,
@@ -40,7 +40,7 @@ export const agentFor = template => template === "administrator" ? "business-ana
 
 /**
  * The commands a person runs to set up their folder and sign in, with the project's address and publishable key, which is
- * public: command, with Kinetik installed, and the README's install one-liners for macOS and Windows when it is not.
+ * public: command, with Big Puffin installed, and the README's install one-liners for macOS and Windows when it is not.
  * With a code, --join makes the sign-in ask for it and a password they choose. With an agent, --agent names it.
  */
 export function personCommands(url, key, email, join, agent = null) {
@@ -94,13 +94,13 @@ export const TOOLS = [
   },
   {
     name: "invite_person",
-    description: "Add one person to the business's OKB in one call, as the signed-in administrator, through the okb-invite hosted function: it makes their actor, named \"<name> (Kinetik)\" for the kinetik template, and a one-time invitation code for their email, valid for 7 days, or reuses the sign-in they already have; gives the access template's grants, or a workflow role's grants from its access.json with the basic template's; saves the access record in the Administration scope; and, for Kinetik, completes setup's open \"Add Kinetik\" tasks. It sends no email. Give template, or workflow and role. Only an administrator's call goes on. Returns the person's name, email, actor_id, sign_in (code or existing), the code and code_expires_at for code, the grants given by scope name, access_record_id, completed_tasks, and the person's commands: command, the one line they run when Kinetik is installed, and install_command and install_command_windows, the install one-liners when it is not; never a password or a link to sign in.",
+    description: "Add one person to the business's OKB in one call, as the signed-in administrator, through the okb-invite hosted function: it makes their actor, named \"<name> (Big Puffin)\" for the kinetik template, and a one-time invitation code for their email, valid for 7 days, or reuses the sign-in they already have; gives the access template's grants, or a workflow role's grants from its access.json with the basic template's; saves the access record in the Administration scope; and, for Big Puffin, completes setup's open \"Add Big Puffin\" tasks. It sends no email. Give template, or workflow and role. Only an administrator's call goes on. Returns the person's name, email, actor_id, sign_in (code or existing), the code and code_expires_at for code, the grants given by scope name, access_record_id, completed_tasks, and the person's commands: command, the one line they run when Big Puffin is installed, and install_command and install_command_windows, the install one-liners when it is not; never a password or a link to sign in.",
     inputSchema: {
       type: "object",
       properties: {
-        name: { type: "string", description: "The person's name, as the business calls them, such as Sam Lee, or Support for Kinetik's staff." },
+        name: { type: "string", description: "The person's name, as the business calls them, such as Sam Lee, or Support for Big Puffin's staff." },
         email: { type: "string", description: "The person's work email address." },
-        template: { type: "string", description: "An access template's code, such as basic or kinetik, as okb_get_access_templates lists them. Omit for a workflow role." },
+        template: { type: "string", description: "An access template's code, such as basic or bigpuffin, as okb_get_access_templates lists them. Omit for a workflow role." },
         workflow: { type: "string", description: "A workflow plugin's name, such as orders, for a role in it. Give role with it." },
         role: { type: "string", description: "One role in the workflow's access.json, such as adviser." },
       },
@@ -170,12 +170,12 @@ export const TOOLS = [
   },
   {
     name: "update_plugins",
-    description: "Update this computer's plugins from the business's own OKB, only when the person asks to update. It runs okb sync signed in as the person: it downloads the newest release from the Plugins scope, checks every file against the release's MANIFEST, passes over a release that fails for the next older one, keeps the release as a Git copy, registers it in Claude Code as the kinetik marketplace, and runs claude plugin update for each plugin installed from it. Returns what okb sync printed: the release the copy is at, each plugin's old and new version, and each plugin of the release not installed. The new versions take effect in the next Code session.",
+    description: "Update this computer's plugins from the business's own OKB, only when the person asks to update. It runs okb sync signed in as the person: it downloads the newest release from the Plugins scope, checks every file against the release's MANIFEST, passes over a release that fails for the next older one, keeps the release as a Git copy, registers it in Claude Code as the bigpuffin marketplace, and runs claude plugin update for each plugin installed from it. Returns what okb sync printed: the release the copy is at, each plugin's old and new version, and each plugin of the release not installed. The new versions take effect in the next Code session.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "check_plugins",
-    description: "Compare the plugins installed on this computer from the kinetik marketplace with the newest release in the business's Plugins scope in OKB, signed in as the person. It reads the newest release with a MANIFEST that carries Kinetik's signature and whose plugin.json files match it, and changes nothing in OKB or on the computer. Returns the release, and behind: each installed plugin whose version is lower than the release's, with both versions. With behind empty, or no release in the scope, the reply says nothing about plugins. Also returns sessionFolder, the session's folder: its full path, hasActorFile, hasAgentSetting and agent, madeBySetup, isAgentFolder and connected. A disconnected folder setup made also gives earlier: the agent, the email and the project its earlier sessions had, and reconnect: the command that connects it again. uploadProblems holds the last lines of the folder's sessions/upload-problems.log written since its last upload.",
+    description: "Compare the plugins installed on this computer from the bigpuffin marketplace with the newest release in the business's Plugins scope in OKB, signed in as the person. It reads the newest release with a MANIFEST that carries Big Puffin's signature and whose plugin.json files match it, and changes nothing in OKB or on the computer. Returns the release, and behind: each installed plugin whose version is lower than the release's, with both versions. With behind empty, or no release in the scope, the reply says nothing about plugins. Also returns sessionFolder, the session's folder: its full path, hasActorFile, hasAgentSetting and agent, madeBySetup, isAgentFolder and connected. A disconnected folder setup made also gives earlier: the agent, the email and the project its earlier sessions had, and reconnect: the command that connects it again. uploadProblems holds the last lines of the folder's sessions/upload-problems.log written since its last upload.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -193,7 +193,7 @@ export const TOOLS = [
   },
 ];
 
-/** The plugins installed from the kinetik marketplace, as { name: version }, from installed_plugins.json in the
+/** The plugins installed from the bigpuffin marketplace, as { name: version }, from installed_plugins.json in the
  * Claude config folder. A plugin installed at more than one scope gives its user scope's version. Null where the
  * file cannot be read. */
 export function installedPlugins(configDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), ".claude")) {
@@ -389,8 +389,8 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
 
   /**
    * Each installed plugin behind the newest release in the Plugins scope: the newest with a MANIFEST that carries
-   * Kinetik's signature and whose plugin.json files match it, as okb sync passes over a release that fails its check. A scope with no release, or none the person
-   * may read, leaves every plugin as installed from Kinetik's public marketplace, and none is behind.
+   * Big Puffin's signature and whose plugin.json files match it, as okb sync passes over a release that fails its check. A scope with no release, or none the person
+   * may read, leaves every plugin as installed from Big Puffin's public marketplace, and none is behind.
    */
   async function checkPlugins() {
     const installed = installedPlugins(configDir);
@@ -409,7 +409,7 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
         if (manifest.missing) continue;
         return { ok: false, problem: `The MANIFEST of release ${name} could not be read: ${manifest.problem}` };
       }
-      // A release with no signature of Kinetik's, or one that does not verify: okb sync passes it over too.
+      // A release with no signature of Big Puffin's, or one that does not verify: okb sync passes it over too.
       const signature = await downloadReleaseFile(releaseAccess, RELEASES_BUCKET, `${name}/${SIGNATURE}`);
       if (!signature.ok && !signature.missing) return { ok: false, problem: `The ${SIGNATURE} of release ${name} could not be read: ${signature.problem}` };
       if (!signature.ok || !verifyManifest(manifest.body, signature.body, RELEASES_BUCKET, name, releaseKeysFor(releaseAccess.url))) continue;
@@ -434,7 +434,7 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
       }
       return behind.length ? { ok: true, release: name, behind } : { ok: true, release: name, behind, reply: none };
     }
-    return { ok: true, release: null, behind: [], reply: `The Plugins scope shows ${email} no release, so the plugins stay as installed from Kinetik's public marketplace. ${none}` };
+    return { ok: true, release: null, behind: [], reply: `The Plugins scope shows ${email} no release, so the plugins stay as installed from Big Puffin's public marketplace. ${none}` };
   }
 
   /** Copies a file, not a link or a folder, from a full path into a new file directly inside the agent folder. */

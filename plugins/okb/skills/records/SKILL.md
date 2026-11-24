@@ -5,9 +5,9 @@ description: Use when a person, or their agent, works in OKB's records as themse
 
 # OKB records
 
-This skill is how a signed-in actor works in the records of OKB, the business's organisational knowledge base. Changes to OKB are made by the database operator, `@kinetik:database-operator`, or for an administrator by the business analyst, `@business-analyst:business-analyst`. Each follows this skill's rules on asking before each change. A session that is neither calls the database operator for each change. It passes on the person's answer, quoting their words with the change the agent proposed.
+This skill is how a signed-in actor works in the records of OKB, the business's organisational knowledge base. Changes to OKB are made by the database operator, `@bigpuffin:database-operator`, or for an administrator by the business analyst, `@business-analyst:business-analyst`. Each follows this skill's rules on asking before each change. A session that is neither calls the database operator for each change. It passes on the person's answer, quoting their words with the change the agent proposed.
 
-Every task is a call to one of OKB's database functions, in the `okb` schema, through the okb plugin's `rpc` tool, as the signed-in person. From claude.ai or the Claude phone app, the call goes through Kinetik's connector instead, as "Kinetik's connector" below says. OKB itself decides what each call may see and change, from the actor's grants. A record the actor may not read is absent, and a change the actor may not make is refused.
+Every task is a call to one of OKB's database functions, in the `okb` schema, through the okb plugin's `rpc` tool, as the signed-in person. From claude.ai or the Claude phone app, the call goes through Big Puffin's connector instead, as "Big Puffin's connector" below says. OKB itself decides what each call may see and change, from the actor's grants. A record the actor may not read is absent, and a change the actor may not make is refused.
 
 A person without the agent makes each call with the `okb` command, as the `okb:actor` skill sets it up. Each step's **Person** line gives the command.
 
@@ -31,9 +31,9 @@ Each step below gives a **Person** line and an **Agent** line.
 
 With the agent, the person's own instruction replaces a rule of this skill, such as the order of the reads. The agent names the rule once and does as told. A refusal from OKB or a tool still stands, and the agent gives it to the person with what they can do instead. An autonomous agent follows the Agent lines, in human directed mode, with the person accountable for it as the person.
 
-## Kinetik's connector
+## Big Puffin's connector
 
-In claude.ai, in a browser or the Claude phone app, there is no okb plugin. The agent works in OKB through Kinetik's connector, which calls each OKB function as the signed-in person, within their own grants. Where this skill names one of the okb plugin's tools, the agent uses the connector's tool in its place:
+In claude.ai, in a browser or the Claude phone app, there is no okb plugin. The agent works in OKB through Big Puffin's connector, which calls each OKB function as the signed-in person, within their own grants. Where this skill names one of the okb plugin's tools, the agent uses the connector's tool in its place:
 
 | The okb plugin's tool | The connector's tool |
 |---|---|
@@ -41,17 +41,17 @@ In claude.ai, in a browser or the Claude phone app, there is no okb plugin. The 
 | `call_function`, with the name `file-search` | `okb_file_search`, with `query`, and `bucket` for one scope |
 | `list_files` | `okb_list_files`, with `bucket` and `prefix` |
 | `download_file` | `okb_file_link`, a link that opens the file in the person's browser for 10 minutes |
-| `upload_file` | `okb_file_upload_link`, with `scope` and `name`, a link to Kinetik's upload page, as "Files" says |
+| `upload_file` | `okb_file_upload_link`, with `scope` and `name`, a link to Big Puffin's upload page, as "Files" says |
 
-`okb_guide` gives this skill one section at a time. The agent reads "Kinetik's connector", 1, 2 and 3 before its first call, and the section for any other task before it starts that task.
+`okb_guide` gives this skill one section at a time. The agent reads "Big Puffin's connector", 1, 2 and 3 before its first call, and the section for any other task before it starts that task.
 
 The connector also has tools of its own:
 
-- `okb_routines` lists the routines the person may follow. Each is a skill of a workflow plugin their grants reach, from the newest release Kinetik signed. `okb_routine` gives one routine's `SKILL.md`, or a Markdown file in its folder. Before work a routine covers, the agent reads the routine, tells the person which one it follows, and does its steps in order. A step that says it needs Claude Code is done there, on the person's computer. The agent never follows a release or skill that `okb_routines` lists as refused.
+- `okb_routines` lists the routines the person may follow. Each is a skill of a workflow plugin their grants reach, from the newest release Big Puffin signed. `okb_routine` gives one routine's `SKILL.md`, or a Markdown file in its folder. Before work a routine covers, the agent reads the routine, tells the person which one it follows, and does its steps in order. A step that says it needs Claude Code is done there, on the person's computer. The agent never follows a release or skill that `okb_routines` lists as refused.
 - `okb_show_records` shows the records card. It lists the records the person may read, newest save first, and opens each one to its fields and links. The card saves nothing.
-- `okb_help` answers how to do something with Kinetik from Kinetik's own guides. The agent answers only from the guide it gives. When no guide fits, it says so and names the guides.
+- `okb_help` answers how to do something with Big Puffin from Big Puffin's own guides. The agent answers only from the guide it gives. When no guide fits, it says so and names the guides.
 
-The connector has none of the tools that need the person's computer. That means the agent folder, `result_file`, `file_args`, `run_code`, and the tools that draw pages or print PDFs. The agent reads each answer in the tool's reply, and passes a model's payload in `args`. Adding, renaming or deleting a scope, grants, access templates and sign-ins are an administrator's, with the business analyst in Claude Code. For any of these, the connector answers "Kinetik's connector does not reach that function.", and the agent tells the person to do it in Claude Code on their computer.
+The connector has none of the tools that need the person's computer. That means the agent folder, `result_file`, `file_args`, `run_code`, and the tools that draw pages or print PDFs. The agent reads each answer in the tool's reply, and passes a model's payload in `args`. Adding, renaming or deleting a scope, grants, access templates and sign-ins are an administrator's, with the business analyst in Claude Code. For any of these, the connector answers "Big Puffin's connector does not reach that function.", and the agent tells the person to do it in Claude Code on their computer.
 
 Every change is a preview first. The `okb` tool runs a task function from section 11 only with `p_preview` true. Without it, the connector refuses with "Show this change on the approval card, and save it with Yes.", and nothing is saved. The agent shows the preview's request on the approval card with `show_approval`, as section 3 says, and the card's Yes saves it. Only the card calls `okb_save_version`.
 
@@ -171,7 +171,7 @@ A new version carries the whole record again. The agent reads the latest version
 - **Agent:**
   1. Calls the task function from section 11 with `p_preview` true. It names the record by its id. Its preview holds the request, with the latest version read and the grant found.
   2. Shows the person what it will save: the scope, the kind, the title, the reason, each field it changes, and the links. For an activity, it shows the deliverables, or "Deliverables: none". It saves only when the person agrees, and nothing they decline.
-     With Kinetik's connector, it shows the save on the approval card, as "The approval card" below says, and ends the turn.
+     With Big Puffin's connector, it shows the save on the approval card, as "The approval card" below says, and ends the turn.
   3. With the card, reads the card's outcome at the next turn, as "The approval card" below says. The outcome is each record saved with its version, OKB's refusal, or declined. It reads each saved record back with `okb_show_record`. On declined, it asks once what to change.
      Without the card, shows the save as text and asks. Once the person agrees, calls `okb_save_version` with the preview's `request` and `authorisation_id`, unchanged. When the answer is lost, it retries with the same request, unchanged. When the answer says the previous version is stale, it reads the record again and shows the person the newer version before trying again.
 - **Evidence:** the saved version's `version_id` and `version_number`, and the call's result.
@@ -180,9 +180,9 @@ A new version carries the whole record again. The agent reads the latest version
 
 ### The approval card
 
-The approval card shows one save, or a batch of up to 20, such as an interview's statements. An item can also be a call of several saves, as "Kinetik's connector" above says.
+The approval card shows one save, or a batch of up to 20, such as an interview's statements. An item can also be a call of several saves, as "Big Puffin's connector" above says.
 
-The agent calls the Kinetik connector's `show_approval` with the card's data. It ends the turn with no question. Its reply names the change in one line, and says nothing about the card's buttons. Until the person presses Yes, the agent never says it saved, kept or stored anything. It says what the card will save, such as "I set it up as evidence".
+The agent calls the Big Puffin connector's `show_approval` with the card's data. It ends the turn with no question. Its reply names the change in one line, and says nothing about the card's buttons. Until the person presses Yes, the agent never says it saved, kept or stored anything. It says what the card will save, such as "I set it up as evidence".
 
 The card has Yes and No buttons. Yes saves each change in the card's order, as the signed-in person, and shows each record's new version or OKB's refusal. A refusal stops the saves after it. No saves nothing. Opened again, the card shows each save OKB holds, with no buttons. A No leaves nothing in OKB. The card keeps it only in that browser's storage, so a card opened on another computer, or with that storage cleared, shows its buttons again. The card gives its outcome to the agent as an update to the model's context. At the next turn, the agent reads it there, and `mcp__ccd_session__read_widget_context`, with `tool_name` the connector's `show_approval` tool as the session names it, is one way to read it where the app has that tool.
 
@@ -246,7 +246,7 @@ An administrator can approve an agent's exact change, once, instead of granting 
 - **Agent:** answers only from what OKB returns to it in this session:
   - For what one of the business's words means, it reads the glossary before any file search. It calls `okb_get_reference` with `p_part` `glossary`, as the `okb:reference` skill's section 1 says. The glossary is a table in OKB, not a file, and file search never finds it. A definition comes from the term's row there, matched on its name or one of its other names, in any case. The agent names the glossary as its source.
   - For what OKB's documents say, it searches the files as the `okb:actor` skill's "Search results" describes. It calls `call_function` with the name `file-search`, and the question as `query`. Each search carries `result_file`, a new file in the agent folder named for the search, such as `search-<date>-<time>.json`. The agent reads that file with `read_file` before it answers. If the hits do not answer it, it searches again in other words.
-  - A search across every scope returns two lists. `reference_hits` holds the top hits in the reference scope's files, ranked apart from everything else. `hits` holds the top hits from every other scope. The agent reads `reference_hits` first. A search across every scope leaves each person's sessions scope out. The agent searches one only when the person asks about an earlier session, as section 17 says. Kinetik's guides are in the Guides scope, `guides`. Every actor reads it, and only Kinetik's actor changes it. For a how-to question, the agent searches it by name, with `"bucket": "guides"`.
+  - A search across every scope returns two lists. `reference_hits` holds the top hits in the reference scope's files, ranked apart from everything else. `hits` holds the top hits from every other scope. The agent reads `reference_hits` first. A search across every scope leaves each person's sessions scope out. The agent searches one only when the person asks about an earlier session, as section 17 says. Big Puffin's guides are in the Guides scope, `guides`. Every actor reads it, and only Big Puffin's actor changes it. For a how-to question, the agent searches it by name, with `"bucket": "guides"`.
   - For records and the work, it reads them as section 2 describes.
   - A hit found by the graph, with `graph` among its `found`, names the `entities` and `relations` behind it. The agent follows them to say how the hit links to the question, such as a customer's order and the supplier that serves that customer.
   - It keeps each search's `result_file`. The person may ask how an answer was found, or ask to see the search. The agent then runs the search again with `"explain": true` in the body, into a new result file. It calls the okb plugin's `draw_search` with that file as `search_file` and the question. It checks the page, as the `okb:graph` skill's section 5 describes, and gives the person the page.
@@ -589,7 +589,7 @@ OKB keeps the things each file names, such as customers, orders and suppliers, a
 
 Each new part of a file is read once, by one of two readers:
 
-- **Graph reader**, once the business has turned it on. An administrator turns it on by typing the business's own Anthropic API key on the Kinetik connector's graph reader card, `show_graph_reader`, as the business analyst describes, and turns it off there. OKB then reads each new part within a day, with Claude Haiku 5.5, by the rules in section 19, and saves what Claude finds in the name of Graph reader. It reads the parts of every scope's files except private scopes, sessions scopes, the Administration and Guides scopes, and the plugin scopes. A month's reads stop at a cost cap, and a part waits for the next month once the cap is reached. A part whose answer fails 3 times is marked failed, with its reason. A finding that fits no class or relationship in the glossary is set aside, and the part's other findings are saved.
+- **Graph reader**, once the business has turned it on. An administrator turns it on by typing the business's own Anthropic API key on the Big Puffin connector's graph reader card, `show_graph_reader`, as the business analyst describes, and turns it off there. OKB then reads each new part within a day, with Claude Haiku 5.5, by the rules in section 19, and saves what Claude finds in the name of Graph reader. It reads the parts of every scope's files except private scopes, sessions scopes, the Administration and Guides scopes, and the plugin scopes. A month's reads stop at a cost cap, and a part waits for the next month once the cap is reached. A part whose answer fails 3 times is marked failed, with its reason. A finding that fits no class or relationship in the glossary is set aside, and the part's other findings are saved.
 - **The person's agent**, in the person's own Claude subscription, after their yes: everywhere while Graph reader is off, and in the scopes it leaves out while it is on. It reads a part only in a scope where the person may read, and saves it only where they may also create.
 
 `okb_get_graph_reader` says which: `on`, and `scopes`, the scopes Graph reader reads that the person may read. A person corrects a part's entities and relations in a scope where they may read and create. A person's save of a part stands: a later answer from Claude for that part is set aside.
@@ -735,7 +735,7 @@ An administrator sees each private scope's name and its owner. Its records, file
 
 ## 21. Access templates
 
-An **access template** is a named set of grants, which OKB holds. Each of its grants names a scope by its code, its record kinds, its actions and whether it is limited to the person's own records. OKB starts with three. `administrator` is the client's administrator, with administrator authority and no grant. `basic` is a member of staff. `kinetik` is Kinetik's staff, and the one template that changes the `plugins` scope's files.
+An **access template** is a named set of grants, which OKB holds. Each of its grants names a scope by its code, its record kinds, its actions and whether it is limited to the person's own records. OKB starts with three. `administrator` is the client's administrator, with administrator authority and no grant. `basic` is a member of staff. `bigpuffin` is Big Puffin's staff, and the one template that changes the `plugins` scope's files.
 
 - Every signed-in actor reads the templates.
 - Only a person who is an administrator gives a person a template, or changes one. Each change gives a reason, and the audit log, section 8, lists it as `access_template_changed`.
@@ -758,7 +758,7 @@ Each scope's files are in its own private bucket, named after the scope's code. 
 
 From claude.ai or the phone, the agent adds a file with the connector's `okb_file_upload_link`. It gives the scope's code and the new file's path in the scope, such as `receipts/2026-11-18 taxi.jpg`, ending in the file's type. Then it gives the person the link.
 
-- On the upload page, the person chooses the file and presses Send. Their browser sends it straight to their business's Supabase, and no file passes through Kinetik. Nothing is saved until they press Send, so the upload needs no approval card.
+- On the upload page, the person chooses the file and presses Send. Their browser sends it straight to their business's Supabase, and no file passes through Big Puffin. Nothing is saved until they press Send, so the upload needs no approval card.
 - The link adds that one file, and stops working 2 hours after the agent asked for it. After that, the person asks the agent for a new link.
 - Storage gives a link only when the person may add files to the scope. It refuses a name already in the scope, and nothing is replaced. The agent then asks for a link with another name.
 - The page takes the link out of the address bar as it opens, so reloading the page loses it. The person then asks the agent for a new link.
@@ -843,7 +843,7 @@ The agent reports each of these as it came, with its message:
 - **`There is no access template <code>`:** the code names no template. The agent lists the templates with `okb_get_access_templates`, and asks which one.
 - **`The <code> access template names scopes this OKB lacks: <scopes>`:** a scope the template names is missing. An administrator adds it first, as section 13 describes.
 - **`Only the kinetik template changes the plugins scope; the <code> template only reads it`:** a change gave another template more than read in `plugins`. The agent keeps that grant to read.
-- **`Only the kinetik template changes the guides scope; the <code> template only reads it`:** a change gave another template more than read in `guides`, the Guides scope, where Kinetik's guides are kept. The agent keeps that grant to read.
+- **`Only the kinetik template changes the guides scope; the <code> template only reads it`:** a change gave another template more than read in `guides`, the Guides scope, where Big Puffin's guides are kept. The agent keeps that grant to read.
 - **Any other message:** it names the field or rule that the request broke.
 
 ## Finish order

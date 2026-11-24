@@ -1,30 +1,30 @@
 <style>
-.rc { display: grid; gap: 12px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--kinetik-ink); }
+.rc { display: grid; gap: 12px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--bigpuffin-ink); }
 .rc * { box-sizing: border-box; }
 .rc button, .rc select, .rc input { font: inherit; color: inherit; }
 .rc-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
 .rc-head h2, .rc-head h3 { margin: 0; flex: 1 1 240px; overflow-wrap: anywhere; }
 .rc-head h2 { font-size: 16px; }
 .rc-head h3 { font-size: 15px; }
-.rc-sub { color: var(--kinetik-muted); font-size: 13px; }
+.rc-sub { color: var(--bigpuffin-muted); font-size: 13px; }
 .rc-refused { color: var(--color-text-danger, #b42318); overflow-wrap: anywhere; }
-.rc-btn { padding: 3px 12px; border: 1px solid var(--kinetik-rule); border-radius: 0; background: transparent; cursor: pointer; }
-.rc-btn.main { background: var(--kinetik-key); color: var(--kinetik-key-ink); border-color: var(--kinetik-key); }
+.rc-btn { padding: 3px 12px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; cursor: pointer; }
+.rc-btn.main { background: var(--bigpuffin-key); color: var(--bigpuffin-key-ink); border-color: var(--bigpuffin-key); }
 .rc-btn:disabled { opacity: .5; cursor: default; }
 .rc-btn[hidden] { display: none; }
 .rc-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
-.rc-filters label { display: grid; gap: 2px; font-size: 13px; color: var(--kinetik-muted); }
-.rc-filters select, .rc-filters input { padding: 3px 6px; border: 1px solid var(--kinetik-rule); border-radius: 0; background: transparent; min-width: 0; }
+.rc-filters label { display: grid; gap: 2px; font-size: 13px; color: var(--bigpuffin-muted); }
+.rc-filters select, .rc-filters input { padding: 3px 6px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; min-width: 0; }
 .rc-filters input { width: min(240px, 100%); }
 .rc-list { display: grid; gap: 6px; }
-.rc-item { display: grid; gap: 2px; width: 100%; text-align: left; border: 1px solid var(--kinetik-rule); border-radius: 0; padding: 6px 10px; background: var(--kinetik-plate); cursor: pointer; min-width: 0; }
+.rc-item { display: grid; gap: 2px; width: 100%; text-align: left; border: 1px solid var(--bigpuffin-rule); border-radius: 0; padding: 6px 10px; background: var(--bigpuffin-plate); cursor: pointer; min-width: 0; }
 .rc-item b { font-weight: 600; overflow-wrap: anywhere; }
-.rc-panel { border-left: 3px solid var(--kinetik-key); padding: 10px 12px; background: var(--kinetik-plate); display: grid; gap: 6px; }
+.rc-panel { border-left: 3px solid var(--bigpuffin-key); padding: 10px 12px; background: var(--bigpuffin-plate); display: grid; gap: 6px; }
 .rc-panel[hidden] { display: none; }
 .rc-panel p { margin: 0; }
 .rc-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-.rc-table th, .rc-table td { text-align: left; vertical-align: top; padding: 3px 6px; border-top: 1px solid var(--kinetik-rule); overflow-wrap: anywhere; white-space: pre-wrap; }
-.rc-table th { width: 32%; font-weight: 500; color: var(--kinetik-muted); }
+.rc-table th, .rc-table td { text-align: left; vertical-align: top; padding: 3px 6px; border-top: 1px solid var(--bigpuffin-rule); overflow-wrap: anywhere; white-space: pre-wrap; }
+.rc-table th { width: 32%; font-weight: 500; color: var(--bigpuffin-muted); }
 .rc-links { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
 .rc-link { background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; text-align: left; }
 @media (max-width: 560px) { .rc-table th { width: 40%; } }
@@ -54,7 +54,7 @@ function textOf(r) { return ((r && r.content) || []).map(function (c) { return c
 /** Runs one of the card's tools, and gives its data, or throws OKB's refusal. */
 function read(name, args, button) {
   return callTool(name, args, button).then(function (r) {
-    if (!r || r.isError) throw new Error(textOf(r) || "Kinetik's connector gave nothing back.");
+    if (!r || r.isError) throw new Error(textOf(r) || "Big Puffin's connector gave nothing back.");
     return r.structuredContent || {};
   });
 }

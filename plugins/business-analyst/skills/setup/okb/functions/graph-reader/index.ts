@@ -299,7 +299,7 @@ async function serve(req: Request): Promise<Response> {
       .then(([row]) => !!row?.s && row.s === given);
     if (busy) throw refuse(503, "OKB is busy. Try again in a minute.", { busy: true });
     if (scheduled) {
-      if (!key()) throw refuse(503, "The graph reader is off: the business's Anthropic API key is not in the Vault. An administrator types it on the graph reader card in Kinetik's connector, as the business analyst describes.", { key: "missing" });
+      if (!key()) throw refuse(503, "The graph reader is off: the business's Anthropic API key is not in the Vault. An administrator types it on the graph reader card in Big Puffin's connector, as the business analyst describes.", { key: "missing" });
       return json(200, await run());
     }
     const user = given ? await seam.user(given, req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "") : null;

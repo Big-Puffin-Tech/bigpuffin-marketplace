@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       // The administrator who invited them approves the link, or, when they are no longer one, an enabled administrator.
       const [approver] = await tx`select a.actor_id from okb.actor a where a.enabled and a.actor_kind = 'human' and a.authority_class = 'administrator'
         order by a.actor_id = ${open.invited_by_actor_id} desc, a.actor_id limit 1`;
-      if (!approver) throw new Refused(409, "Your business's Kinetik knowledge base has no administrator to approve your sign-in. Ask your administrator.");
+      if (!approver) throw new Refused(409, "Your business's Big Puffin knowledge base has no administrator to approve your sign-in. Ask your administrator.");
 
       const made = await auth("POST", "users", { email, password, email_confirm: true, user_metadata: { name: open.display_name } });
       if (!made.ok || typeof made.body.id !== "string") {

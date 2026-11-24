@@ -5,7 +5,7 @@ description: Use when a new member of staff asks to get started, or for training
 
 # Getting started
 
-Getting started teaches a new member of staff to work with Kinetik, in their own folder and in their business's Kinetik knowledge base. The knowledge base is in the business's own Supabase project, and holds its records, its files, its glossary and its data dictionary. Its technical name is OKB, which the `okb` command and some messages use. The lessons call it the Kinetik knowledge base. Every lesson uses the person's own records, so nothing is a demonstration. The business's first session is a training call with Kinetik, and this skill can be run any time after it.
+Getting started teaches a new member of staff to work with Big Puffin, in their own folder and in their business's Big Puffin knowledge base. The knowledge base is in the business's own Supabase project, and holds its records, its files, its glossary and its data dictionary. Its technical name is OKB, which the `okb` command and some messages use. The lessons call it the Big Puffin knowledge base. Every lesson uses the person's own records, so nothing is a demonstration. The business's first session is a training call with Big Puffin, and this skill can be run any time after it.
 
 The lessons run in this order:
 
@@ -21,7 +21,7 @@ The lessons run in this order:
 
 Each lesson the person finishes is saved as an evidence record in the General scope, as section 1 describes. The person can stop after any lesson and carry on in a later session.
 
-This skill sets the order, the wording and the checks. It uses the `okb:check`, `okb:records`, `okb:actor`, `okb:print` and `okb:writing` skills. It belongs to no one agent: any agent can run it. Usually the database operator, `@kinetik:database-operator`, runs it, and it saves through that agent's grants.
+This skill sets the order, the wording and the checks. It uses the `okb:check`, `okb:records`, `okb:actor`, `okb:print` and `okb:writing` skills. It belongs to no one agent: any agent can run it. Usually the database operator, `@bigpuffin:database-operator`, runs it, and it saves through that agent's grants.
 
 ## Choose the mode
 
@@ -73,15 +73,15 @@ The database operator's own tools run on the person's computer. Python 3 draws i
 
 ## 3. Lesson 2: Claude desktop, and where to find the database operator
 
-Claude desktop is Anthropic's app for the Mac and Windows. Its Code tab runs Claude Code: the person types a request, and an agent carries it out in a folder on the computer. The person's folder holds their sign-in to the Kinetik knowledge base, and its agent is the database operator.
+Claude desktop is Anthropic's app for the Mac and Windows. Its Code tab runs Claude Code: the person types a request, and an agent carries it out in a folder on the computer. The person's folder holds their sign-in to the Big Puffin knowledge base, and its agent is the database operator.
 
 1. **Open the folder in Claude desktop.**
    - **Person:** opens Claude desktop, picks the Code tab, and picks their folder, such as `okb` in their home folder.
    - **The agent:** gives the person the folder's full path, from `whoami`'s `agentFolderPath`.
-2. **Meet the database operator.** It works in the Kinetik knowledge base as the person, within their own grants, and shows each change before saving it.
+2. **Meet the database operator.** It works in the Big Puffin knowledge base as the person, within their own grants, and shows each change before saving it.
    - **Person:** types "Who am I?" in a new session.
    - **The agent:** answers as the database operator does: the person's name, the project and whether they are restricted to their grants.
-   - In another folder, or in a session whose agent is not the database operator, the person types `@kinetik:database-operator` before the message.
+   - In another folder, or in a session whose agent is not the database operator, the person types `@bigpuffin:database-operator` before the message.
 3. **Save the lesson,** as section 1, step 3 says, with the answer the person got.
    - **Person:** saves the lesson as section 1 says.
    - **The agent:** saves the lesson as section 1 says.
@@ -101,7 +101,7 @@ Each person starts a session in Claude desktop, on their office computer, in the
 3. **Carry it on from the phone.**
    - **Person:** opens the Claude app on their phone, signed in to the same Claude account. They open the session the office computer runs, and type "Thank you, that is all."
    - **The agent:** none. It asks the person what the phone showed, and whether the reply arrived in the same session on the office computer.
-   - Starting a new session from the phone is a newer Claude feature that Kinetik has not yet tested. Until it has, the person starts each session on the office computer.
+   - Starting a new session from the phone is a newer Claude feature that Big Puffin has not yet tested. Until it has, the person starts each session on the office computer.
 4. **Save the lesson,** with `standing` `stated`, since only the person can report what the phone showed.
    - **Person:** saves the lesson as section 1 says.
    - **The agent:** saves the lesson as section 1 says.
@@ -126,7 +126,7 @@ Each of the business's workflows is one plugin with one agent, and each routine 
 
 ## 6. Lesson 5: A question about your records
 
-The database operator answers only from what the Kinetik knowledge base returns: the business's records and the passages its file search finds. If the knowledge base holds no answer, it says so.
+The database operator answers only from what the Big Puffin knowledge base returns: the business's records and the passages its file search finds. If the knowledge base holds no answer, it says so.
 
 1. **Ask about the tasks assigned to the person.**
    - **Person:** types "What is assigned to me?" Without the agent, runs `okb okb_get_assigned`.
@@ -161,14 +161,14 @@ Each scope keeps its files in a bucket of its own, named after the scope's code.
 
 ## 8. Lesson 7: The first install, and updating with plugins
 
-The first install comes from Kinetik's public marketplace. The person added it, installed the `kinetik` plugin, and signed in with `okb setup`, as the public marketplace's README describes. The last step of `okb setup` was `okb sync`. It installed the business's own release of its plugins from the Plugins scope, in place of the public copy. After that, each update comes from the business's own Supabase project. Kinetik publishes each release of the business's plugins to the Plugins scope, and the `kinetik:plugins` skill installs it.
+The first install comes from Big Puffin's public marketplace. The person added it, installed the `bigpuffin` plugin, and signed in with `okb setup`, as the public marketplace's README describes. The last step of `okb setup` was `okb sync`. It installed the business's own release of its plugins from the Plugins scope, in place of the public copy. After that, each update comes from the business's own Supabase project. Big Puffin publishes each release of the business's plugins to the Plugins scope, and the `bigpuffin:plugins` skill installs it.
 
 1. **See what is installed.**
    - **Person:** in Terminal or PowerShell, runs `claude plugin list`, and reads each plugin's version.
-   - **The agent:** asks the person for the list, and names the `kinetik`, `okb` and `business-analyst` plugins and their versions.
+   - **The agent:** asks the person for the list, and names the `bigpuffin`, `okb` and `business-analyst` plugins and their versions.
 2. **Update the plugins.** `okb sync` downloads the newest release from the Plugins scope and checks each file against the release's list. A release that fails the check is passed over for the next older one. It then updates each plugin installed from it, and prints each plugin's old and new version.
    - **Person:** in their folder, runs `okb sync`, and reads each plugin's line.
-   - **The agent:** follows the `kinetik:plugins` skill with the person. It gives them each plugin's old and new version, and the release their copy is now at.
+   - **The agent:** follows the `bigpuffin:plugins` skill with the person. It gives them each plugin's old and new version, and the release their copy is now at.
 3. **Start a new session.** The new versions load in a new session.
    - **Person:** starts a new Code session on their folder.
    - **The agent:** tells the person to start a new Code session on their folder after this lesson is saved.
@@ -222,4 +222,4 @@ The glossary says what the business's words mean. An SOP, a standard operating p
 
 - **A lesson out of order:** run it, and save it under its own number.
 - **A lesson done again:** save a new version of its evidence record, rather than a second record. Use `okb_change_record`, as the `okb:records` skill's section 11 describes.
-- **A problem during a lesson:** offer the `kinetik:support` skill, which saves the problem for Kinetik. Save the lesson once it is done.
+- **A problem during a lesson:** offer the `bigpuffin:support` skill, which saves the problem for Big Puffin. Save the lesson once it is done.

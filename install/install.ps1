@@ -1,23 +1,23 @@
-# The first install of Kinetik on Windows, in one command. It is in Kinetik's public marketplace, beside
+# The first install of Big Puffin on Windows, in one command. It is in Big Puffin's public marketplace, beside
 # install.sh for macOS.
 #
 #   powershell -ExecutionPolicy Bypass -File install.ps1 <marketplace> --owner [--folder <folder>]
 #   powershell -ExecutionPolicy Bypass -File install.ps1 <marketplace> --email <email> [okb setup's other options]
 #
-# <marketplace> is Kinetik's public marketplace, as `claude plugin marketplace add` takes it: a GitHub owner/repo,
-# a git or https address, or a folder. Kinetik gives it with this script.
+# <marketplace> is Big Puffin's public marketplace, as `claude plugin marketplace add` takes it: a GitHub owner/repo,
+# a git or https address, or a folder. Big Puffin gives it with this script.
 #
 # It installs each program the okb plugin uses that is missing, with winget, and Node.js 26 with nodejs.org's
 # installer. It downloads whisper.cpp's whisper-bin-x64.zip and its model, ggml-base.bin, to %LOCALAPPDATA%\okb\whisper.
 # It prints one line for each: installed, already there, or failed with the command to run by hand. It refreshes its
 # own PATH after each install. It then adds the marketplace, installs the okb plugin with whisper.cpp's paths in its
-# settings, then the kinetik and business-analyst plugins, and runs the okb plugin's `okb.mjs setup` with the
-# options given. okb setup makes the person's folder, %USERPROFILE%\kinetik unless --folder names another, signs in as
+# settings, then the bigpuffin and business-analyst plugins, and runs the okb plugin's `okb.mjs setup` with the
+# options given. okb setup makes the person's folder, %USERPROFILE%\bigpuffin unless --folder names another, signs in as
 # --email, and runs okb sync, which installs the business's own release of its plugins in place of the public copy.
 #
 # --owner is the business's owner's first run, before the business has a Supabase project. okb setup --owner --folder-only makes the folder
 # and names the business analyst, business-analyst:business-analyst, as its agent, and neither signs in nor runs
-# okb sync. It ends: "Start a new Code session on <folder>, and type: Set up Kinetik".
+# okb sync. It ends: "Start a new Code session on <folder>, and type: Set up Big Puffin".
 #
 # This script never asks for or keeps a password. okb setup's sign-in asks for the person's password at its own
 # prompt. Windows asks once to approve the installs that need an administrator. A folder already signed in keeps its
@@ -55,11 +55,11 @@ if ($Owner) {
   Write-Host "The business's owner, before the business has a project, gives --owner instead."
   Write-Host $Usage; exit 2
 }
-if (-not $Folder -or $Folder.StartsWith('-')) { $Folder = Join-Path $HOME 'kinetik' }
+if (-not $Folder -or $Folder.StartsWith('-')) { $Folder = Join-Path $HOME 'bigpuffin' }
 
-# The name of Kinetik's marketplace in Claude Code, which each plugin's id ends with.
-$MarketplaceName = 'kinetik'
-$Plugins = @('okb', 'kinetik', 'business-analyst')
+# The name of Big Puffin's marketplace in Claude Code, which each plugin's id ends with.
+$MarketplaceName = 'bigpuffin'
+$Plugins = @('okb', 'bigpuffin', 'business-analyst')
 
 # Each download, pinned, with its SHA-256. A test checks Node.js's line against the okb plugin's project.json.
 $NodeVersion = '26.12.0'
@@ -72,7 +72,7 @@ $WhisperSha256 = '6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816c
 $ModelUrl = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.bin'
 $ModelSha256 = '60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe'
 
-# Kinetik needs Windows 10 version 1809, build 17763, or later: the oldest Windows that runs winget. Nothing is installed
+# Big Puffin needs Windows 10 version 1809, build 17763, or later: the oldest Windows that runs winget. Nothing is installed
 # on an older Windows, or on one whose build this cannot read.
 $MinWindowsBuild = 17763
 $WindowsBuild = 0
@@ -82,7 +82,7 @@ if ($WindowsBuild -le 0) {
   exit 1
 }
 if ($WindowsBuild -lt $MinWindowsBuild) {
-  Write-Host "Kinetik needs Windows 10 version 1809 or later, and this computer has Windows build $WindowsBuild. Update Windows in Settings, Windows Update, then run this line again."
+  Write-Host "Big Puffin needs Windows 10 version 1809 or later, and this computer has Windows build $WindowsBuild. Update Windows in Settings, Windows Update, then run this line again."
   exit 1
 }
 
@@ -272,7 +272,7 @@ function Find-MarketplaceFolder {
   if ($found -and $found.installLocation) { $found.installLocation } else { $null }
 }
 
-# True when <plugin>@kinetik is installed, from Claude Code's list of plugins.
+# True when <plugin>@bigpuffin is installed, from Claude Code's list of plugins.
 function Test-Plugin($plugin) {
   try { $listed = (& claude plugin list --json 2>$null) -join "`n" | ConvertFrom-Json } catch { return $false }
   [bool](@($listed) | Where-Object { $_.id -eq "$plugin@$MarketplaceName" })
@@ -329,10 +329,10 @@ if ($Failed | Where-Object { $_ -in @("Claude Code's command-line tool", 'Node.j
 }
 if ($Failed) { Write-Host "Install each program that failed with its command, later. The log is $Log." }
 
-$Missing["Kinetik's marketplace"] = -not (Find-MarketplaceFolder)
-Install-Program "Kinetik's marketplace" { [bool](Find-MarketplaceFolder) } { & claude plugin marketplace add $Marketplace } "claude plugin marketplace add $Marketplace"
-if ($Failed -contains "Kinetik's marketplace") {
-  Write-Host "The plugins come from Kinetik's marketplace. Check its address with Kinetik, then run this again. The log is $Log."
+$Missing["Big Puffin's marketplace"] = -not (Find-MarketplaceFolder)
+Install-Program "Big Puffin's marketplace" { [bool](Find-MarketplaceFolder) } { & claude plugin marketplace add $Marketplace } "claude plugin marketplace add $Marketplace"
+if ($Failed -contains "Big Puffin's marketplace") {
+  Write-Host "The plugins come from Big Puffin's marketplace. Check its address with Big Puffin, then run this again. The log is $Log."
   exit 1
 }
 
@@ -352,7 +352,7 @@ if ($Failed | Where-Object { $_ -like 'The * plugin' }) {
 
 $Okb = Join-Path (Find-MarketplaceFolder) 'plugins\okb\cli\okb.mjs'
 if (-not (Test-Path $Okb)) {
-  Write-Host "Kinetik's marketplace holds no okb.mjs at $Okb. Check its address with Kinetik. The log is $Log."
+  Write-Host "Big Puffin's marketplace holds no okb.mjs at $Okb. Check its address with Big Puffin. The log is $Log."
   exit 1
 }
 
@@ -363,7 +363,7 @@ foreach ($option in $Options) {
     Write-Host "$Folder is already signed in, so your password stays as it is."
   } else { $Setup += $option }
 }
-# The owner's folder alone: the business analyst gives the owner okb setup --owner, which sets Kinetik up, once the
+# The owner's folder alone: the business analyst gives the owner okb setup --owner, which sets Big Puffin up, once the
 # owner has a Supabase account.
 if ($Owner) { $Setup += '--folder-only' }
 $node = Find-Node26

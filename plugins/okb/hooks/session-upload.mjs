@@ -20,7 +20,7 @@ import { createTools } from "../mcp/lib/tools.mjs";
 import { UPLOADED, uploaded } from "./session-copy.mjs";
 
 /** The okb plugin's id in Claude Code's settings. */
-const PLUGIN_ID = "okb@kinetik";
+const PLUGIN_ID = "okb@bigpuffin";
 const SCHEMA = "okb";
 
 /** The project and email of the actor file in the folder that holds `sessionsFolder`, or null. */

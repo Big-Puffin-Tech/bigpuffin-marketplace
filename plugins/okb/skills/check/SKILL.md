@@ -5,7 +5,7 @@ description: Use when a person asks to check this computer, or whether their age
 
 # Checking the computer
 
-The agent's own tools, such as the database operator's, `@kinetik:database-operator`, run on the person's computer, with these programs:
+The agent's own tools, such as the database operator's, `@bigpuffin:database-operator`, run on the person's computer, with these programs:
 
 | Tool | Program |
 |---|---|
@@ -40,16 +40,16 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 ## 1. Copy the samples
 
 - **Responsible:** the agent.
-- **Person:** copies the samples into their folder. For the folder `~/kinetik`, on macOS and Linux, in Terminal:
+- **Person:** copies the samples into their folder. For the folder `~/bigpuffin`, on macOS and Linux, in Terminal:
 
   ```sh
-  cp ~/.claude/plugins/marketplaces/kinetik/plugins/okb/skills/check/samples/check.* ~/kinetik/
+  cp ~/.claude/plugins/marketplaces/bigpuffin/plugins/okb/skills/check/samples/check.* ~/bigpuffin/
   ```
 
   On Windows, in PowerShell:
 
   ```powershell
-  Copy-Item "$env:USERPROFILE\.claude\plugins\marketplaces\kinetik\plugins\okb\skills\check\samples\check.*" "$env:USERPROFILE\kinetik"
+  Copy-Item "$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\okb\skills\check\samples\check.*" "$env:USERPROFILE\bigpuffin"
   ```
 
 - **The agent:** calls `copy_samples`, which copies each sample into the agent folder and leaves a file already there as it is. Takes the agent folder from its `agentFolder`. Each file in `differs` is not this release's sample. The agent names it, and skips the step that reads it. Step 3 reports each program that step checks as "checked once <file> is moved out of the agent folder".

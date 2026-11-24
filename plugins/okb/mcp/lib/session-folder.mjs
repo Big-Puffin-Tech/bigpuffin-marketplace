@@ -13,7 +13,7 @@ const samePath = (one, other) => process.platform === "win32" ? one.toLowerCase(
 const isDir = path => { try { return statSync(path).isDirectory(); } catch { return false; } };
 const configFolder = () => process.env.CLAUDE_CONFIG_DIR || join(homedir(), ".claude");
 // The marketplace every client's plugins are installed from.
-const MARKETPLACE = "kinetik";
+const MARKETPLACE = "bigpuffin";
 // A session copy, as session-copy.mjs names it: <date>-<title>-<first 8 of the session id>.md.
 const SESSION_COPY = /^(\d{4}-\d{2}-\d{2}|undated)-.+-[0-9a-f]{8}\.md$/;
 // The newest transcripts read for the folder's earlier agent and account, and the largest read.
@@ -55,9 +55,9 @@ export function uploadProblems(folder, lines = LOG_LINES) {
 }
 
 // The agents a folder can name, when installed_plugins.json cannot be read.
-const KNOWN_AGENTS = ["kinetik:database-operator", "business-analyst:business-analyst"];
+const KNOWN_AGENTS = ["bigpuffin:database-operator", "business-analyst:business-analyst"];
 
-/** The agents installed on this computer from the kinetik marketplace, as `<plugin>:<agent>`, from each plugin's
+/** The agents installed on this computer from the bigpuffin marketplace, as `<plugin>:<agent>`, from each plugin's
  * agents folder. A transcript's agentSetting can name a skill, which setup refuses as an agent. */
 export function installedAgents(configDir = configFolder()) {
   let plugins;
@@ -151,7 +151,7 @@ export function ownEmail(configDir = configFolder()) {
 /** The agent a folder's name points to: the business analyst, the administrators' agent, for a folder named for an administrator. */
 export const agentByName = folder => {
   const name = folder.split(/[\\/]/).filter(Boolean).pop()?.toLowerCase() ?? "";
-  return name.includes("admin") ? "business-analyst:business-analyst" : "kinetik:database-operator";
+  return name.includes("admin") ? "business-analyst:business-analyst" : "bigpuffin:database-operator";
 };
 
 /**
@@ -173,8 +173,8 @@ export function reconnectCommand(folder, { setting = null, earlier, configDir, p
   const q = platform === "win32" ? powershellQuote : posixQuote;
   const options = `--email ${q(email)} --agent ${q(agent)}`;
   const command = !email ? null : platform === "win32"
-    ? `node "$env:USERPROFILE\\.claude\\plugins\\marketplaces\\kinetik\\plugins\\okb\\cli\\okb.mjs" setup --folder ${q(folder)} ${options}`
-    : `node ~/.claude/plugins/marketplaces/kinetik/plugins/okb/cli/okb.mjs setup --folder ${q(folder)} ${options}`;
+    ? `node "$env:USERPROFILE\\.claude\\plugins\\marketplaces\\bigpuffin\\plugins\\okb\\cli\\okb.mjs" setup --folder ${q(folder)} ${options}`
+    : `node ~/.claude/plugins/marketplaces/bigpuffin/plugins/okb/cli/okb.mjs setup --folder ${q(folder)} ${options}`;
   return { folder, email, emailFrom, agent, agentFrom, shell: platform === "win32" ? "PowerShell" : "Terminal", command };
 }
 

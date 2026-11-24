@@ -6,13 +6,13 @@
 //   node build.mjs approve --ref <project reference> --folder <setup folder> --firm <business's name> [--slug <slug>] [--reset]
 //   node build.mjs run --url <project URL> [--key <publishable key>] [--ref <project reference>] <file> [<file> ...]
 //   node build.mjs functions
-//   node build.mjs kinetik-code --folder <setup folder>
+//   node build.mjs bigpuffin-code --folder <setup folder>
 //
 // approve prints one SQL statement, which the setup command runs through the Management API. It makes the okb_setup
 // schema, which the okb-setup hosted function reads, and approves this folder's setup files by their SHA-256, each to run once:
 // setup.sql, file-search.sql, file-search-scopes.sql, schedule.sql with the project reference filled in, and
 // first-administrator.sql, with reset.sql too for --reset. It keeps the business's name, --firm, in okb_setup.firm, which
-// okb-setup sends Kinetik's website with each code, so Kinetik knows whose project it is. It also writes a new sign-in code to the setup folder's
+// okb-setup sends Big Puffin's website with each code, so Big Puffin knows whose project it is. It also writes a new sign-in code to the setup folder's
 // .okb-owner-code, readable by the owner alone, for the owner's first sign-in, and approves the code by its SHA-256
 // for a day. The code itself is never printed.
 //
@@ -23,8 +23,8 @@
 // its name, its verify_jwt setting, its entrypoint and the full path of each of its files, with the name each file
 // is deployed under.
 //
-// kinetik-code prints, one line each, the one-time invitation code okb-setup made for each of Kinetik's staff at
-// the owner's sign-in, which the sign-in saved to the setup folder's .okb-kinetik-code, readable by the owner alone:
+// bigpuffin-code prints, one line each, the one-time invitation code okb-setup made for each of Big Puffin's staff at
+// the owner's sign-in, which the sign-in saved to the setup folder's .okb-bigpuffin-code, readable by the owner alone:
 // the actor's name, the email to send the code to, the code and the day it runs out. Then it deletes the file, so the
 // code is kept nowhere on the computer. The setup summary gives the owner each line. It prints nothing when the file
 // holds no code, and says so when there is no file.
@@ -40,18 +40,18 @@ export const PROJECT_REF = /^[a-z0-9]{20}$/;
 export const BUILD_FILES = ["setup.sql", "file-search.sql", "file-search-scopes.sql", "schedule.sql", "first-administrator.sql"];
 /** The file in the setup folder that holds the owner's sign-in code. */
 export const OWNER_CODE_FILE = ".okb-owner-code";
-/** The file in the setup folder where the owner's sign-in saves Kinetik's invitation codes, as the okb plugin's sign-in-flow.mjs names it. */
-export const KINETIK_CODE_FILE = ".okb-kinetik-code";
+/** The file in the setup folder where the owner's sign-in saves Big Puffin's invitation codes, as the okb plugin's sign-in-flow.mjs names it. */
+export const BIGPUFFIN_CODE_FILE = ".okb-bigpuffin-code";
 
 /**
  * The hosted functions, in the order setup deploys them. okb-setup runs the setup files; the file search
  * functions follow, each with every file it imports; then okb-invite, which stays, for the business analyst's invitations,
- * okb-join, where an invited person spends their code and chooses their password, okb-upgrade, which applies Kinetik's
- * signed upgrades for Kinetik's own actor, and graph-reader, which stays off until an administrator adds the business's
+ * okb-join, where an invited person spends their code and chooses their password, okb-upgrade, which applies Big Puffin's
+ * signed upgrades for Big Puffin's own actor, and graph-reader, which stays off until an administrator adds the business's
  * own Anthropic API key.
  */
 export const FUNCTIONS = [
-  { name: "okb-setup", verify_jwt: false, files: ["index.ts", "kinetik.ts"] },
+  { name: "okb-setup", verify_jwt: false, files: ["index.ts", "bigpuffin.ts"] },
   { name: "file-search-worker", verify_jwt: false, files: ["index.ts", "text.ts", "vendor/sheetjs-0.20.3/xlsx.mjs", "vendor/sheetjs-0.20.3/types/index.d.ts"] },
   { name: "file-search", verify_jwt: true, files: ["index.ts"] },
   { name: "file-search-purge", verify_jwt: true, files: ["index.ts"] },
@@ -64,7 +64,7 @@ export const FUNCTIONS = [
 export const USAGE = `Usage: node build.mjs approve --ref <project reference> --folder <setup folder> --firm <business's name> [--slug <slug>] [--reset]
        node build.mjs run --url <project URL> [--key <publishable key>] [--ref <project reference>] <file> [<file> ...]
        node build.mjs functions
-       node build.mjs kinetik-code --folder <setup folder>`;
+       node build.mjs bigpuffin-code --folder <setup folder>`;
 
 const sha256 = text => createHash("sha256").update(text, "utf8").digest("hex");
 const literal = text => `'${String(text).replaceAll("'", "''")}'`;
@@ -80,7 +80,7 @@ export function fileText(name, ref, folder = HERE) {
 
 /** A business's slug: lower-case words and numbers joined by hyphens, 2 to 40 characters. */
 export const SLUG = /^(?=.{2,40}$)[a-z0-9]+(-[a-z0-9]+)*$/;
-/** A business's name as Kinetik's website takes it: 1 to 200 characters, with no control character. */
+/** A business's name as Big Puffin's website takes it: 1 to 200 characters, with no control character. */
 export const FIRM = /^[^\p{Cc}]{1,200}$/u;
 
 /** The statement that makes okb_setup and approves the files and the owner's code, and the code file it wrote. */
@@ -138,11 +138,11 @@ export function functions(here = HERE) {
 /** The day a code runs out, in words, such as 1 November 2026. */
 const day = iso => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
-/** Kinetik's codes from the setup folder, one line each, and the file deleted, unless keep is true. */
-export function kinetikCodes(folder, { keep = false } = {}) {
+/** Big Puffin's codes from the setup folder, one line each, and the file deleted, unless keep is true. */
+export function bigpuffinCodes(folder, { keep = false } = {}) {
   if (!folder || !existsSync(folder)) throw new Error(`${folder ?? "--folder"} is not a folder.`);
-  const file = join(resolve(folder), KINETIK_CODE_FILE);
-  if (!existsSync(file)) throw new Error(`${folder} holds no ${KINETIK_CODE_FILE}: the owner's sign-in saved no code for Kinetik, or it was read already.`);
+  const file = join(resolve(folder), BIGPUFFIN_CODE_FILE);
+  if (!existsSync(file)) throw new Error(`${folder} holds no ${BIGPUFFIN_CODE_FILE}: the owner's sign-in saved no code for Big Puffin, or it was read already.`);
   let codes;
   try { codes = JSON.parse(readFileSync(file, "utf8")); } catch { codes = null; }
   if (!Array.isArray(codes)) throw new Error(`${file} is not the list the owner's sign-in saves.`);
@@ -176,7 +176,7 @@ export async function main(argv, { say = line => process.stdout.write(`${line}\n
       return 0;
     }
     if (command === "functions") { say(JSON.stringify(functions(), null, 2)); return 0; }
-    if (command === "kinetik-code") { for (const line of kinetikCodes(o.folder)) say(line); return 0; }
+    if (command === "bigpuffin-code") { for (const line of bigpuffinCodes(o.folder)) say(line); return 0; }
     if (command === "run") {
       const ref = o.ref ?? /^https:\/\/([a-z0-9]{20})\.supabase\.co\/?$/.exec(o.url ?? "")?.[1];
       if (!o.url || !o.files.length) throw new Error(`run needs --url and at least one file.\n${USAGE}`);

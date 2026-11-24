@@ -1,26 +1,26 @@
 {
-  "name": "kinetik",
+  "name": "bigpuffin",
   "owner": {
     "name": "Joel Smalley"
   },
   "metadata": {
-    "description": "Kinetik's plugins for small and medium-sized businesses: the Kinetik knowledge base each business keeps in its own Supabase project, its organisational knowledge base (OKB), and the agents that work in it.",
-    "version": "1.9.0"
+    "description": "Big Puffin's plugins for small and medium-sized businesses: the Big Puffin knowledge base each business keeps in its own Supabase project, its organisational knowledge base (OKB), and the agents that work in it.",
+    "version": "2.0.0"
   },
   "plugins": [
     {
-      "name": "kinetik",
-      "description": "The database operator, every member of staff's agent for their business's Kinetik knowledge base, the organisational knowledge base (OKB), with the Dashboard button, which asks what is outstanding, and the skills every business gets: adding staff, approving a model, getting started, ingesting from connectors, showing what is outstanding, updating plugins and support.",
-      "source": "./plugins/kinetik"
+      "name": "bigpuffin",
+      "description": "The database operator, every member of staff's agent for their business's Big Puffin knowledge base, the organisational knowledge base (OKB), with the Dashboard button, which asks what is outstanding, and the skills every business gets: adding staff, approving a model, getting started, ingesting from connectors, showing what is outstanding, updating plugins and support.",
+      "source": "./plugins/bigpuffin"
     },
     {
       "name": "okb",
-      "description": "Lets each person work in their business's Kinetik knowledge base, its organisational knowledge base (OKB), in the business's own Supabase project, within their own permissions: records, files and their search, the glossary and data dictionary, boards, graphs and printed PDFs.",
+      "description": "Lets each person work in their business's Big Puffin knowledge base, its organisational knowledge base (OKB), in the business's own Supabase project, within their own permissions: records, files and their search, the glossary and data dictionary, boards, graphs and printed PDFs.",
       "source": "./plugins/okb"
     },
     {
       "name": "business-analyst",
-      "description": "The business analyst, the agent of a business's owner and administrators. It sets up Kinetik for the business: its Kinetik knowledge base, the organisational knowledge base (OKB), in its own Supabase project. Then it keeps the business's scopes, staff and grants, and interviews its people about their routines, saving each confirmed routine as a model of how the work is done today.",
+      "description": "The business analyst, the agent of a business's owner and administrators. It sets up Big Puffin for the business: its Big Puffin knowledge base, the organisational knowledge base (OKB), in its own Supabase project. Then it keeps the business's scopes, staff and grants, and interviews its people about their routines, saving each confirmed routine as a model of how the work is done today.",
       "source": "./plugins/business-analyst"
     },
     {

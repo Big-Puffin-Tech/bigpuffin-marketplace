@@ -1,13 +1,13 @@
 ---
 name: support
-description: Use when a person has a problem with Kinetik, or asks Kinetik for help. Saves the problem, with what the person did and what they got, as a task in their business's records assigned to Kinetik. Tells them where to follow its progress. It runs in one of three modes: human only, AI guided or human directed.
+description: Use when a person has a problem with Big Puffin, or asks Big Puffin for help. Saves the problem, with what the person did and what they got, as a task in their business's records assigned to Big Puffin. Tells them where to follow its progress. It runs in one of three modes: human only, AI guided or human directed.
 ---
 
 # Support
 
-A support request is a task in the General scope of the business's organisational knowledge base (OKB), assigned to Kinetik. OKB is the business's own Supabase project. The person who raises the request owns it, and Kinetik's staff work on it in the same records. Nothing about the problem is kept anywhere else.
+A support request is a task in the General scope of the business's organisational knowledge base (OKB), assigned to Big Puffin. OKB is the business's own Supabase project. The person who raises the request owns it, and Big Puffin's staff work on it in the same records. Nothing about the problem is kept anywhere else.
 
-This skill sets the order, the wording and the checks. It uses the `okb:records` and `okb:writing` skills. It belongs to no one agent: any agent can run it. Usually the database operator, `@kinetik:database-operator`, runs it, and it saves through that agent's grants.
+This skill sets the order, the wording and the checks. It uses the `okb:records` and `okb:writing` skills. It belongs to no one agent: any agent can run it. Usually the database operator, `@bigpuffin:database-operator`, runs it, and it saves through that agent's grants.
 
 ## Choose the mode
 
@@ -36,21 +36,21 @@ With the agent, the person's own instruction replaces a rule of this skill, such
 
 **AI guided:** the agent gives the person the description, and waits for their approval of its wording.
 
-## 2. Find Kinetik
+## 2. Find Big Puffin
 
-Kinetik's staff work in the business's records as actors the business made with the `kinetik` access template. A support request is assigned to one of them.
+Big Puffin's staff work in the business's records as actors the business made with the `kinetik` access template. A support request is assigned to one of them.
 
 1. **Find the General scope.**
    - **Person:** runs `okb okb_get_scopes`, and notes General's `scope_id`.
    - **The agent:** calls `okb_get_scopes`, and takes the id of the scope with the code `general`.
-2. **Find Kinetik's staff among the people who can read General.**
-   - **Person:** runs `okb okb_find_people p_scope_id=<General's id> p_name="Kinetik"`.
-   - **The agent:** calls `okb_find_people` with `p_scope_id` General's id and `p_name` "Kinetik", as the `okb:records` skill's section 9 describes.
+2. **Find Big Puffin's staff among the people who can read General.**
+   - **Person:** runs `okb okb_find_people p_scope_id=<General's id> p_name="Big Puffin"`.
+   - **The agent:** calls `okb_find_people` with `p_scope_id` General's id and `p_name` "Big Puffin", as the `okb:records` skill's section 9 describes.
    - With one person in the answer, the request is assigned to them.
    - With more than one, the agent lists their names and asks which one. Any of them will do.
-   - With none, the agent asks the person for the name of their contact at Kinetik, and calls `okb_find_people` with that name. With still none, it saves nothing. It tells the person that setup makes Kinetik's staff from Kinetik's own list, or Kinetik adds them later.
+   - With none, the agent asks the person for the name of their contact at Big Puffin, and calls `okb_find_people` with that name. With still none, it saves nothing. It tells the person that setup makes Big Puffin's staff from Big Puffin's own list, or Big Puffin adds them later.
 
-**AI guided:** the agent gives the person the name of the Kinetik staff member, and waits for their approval.
+**AI guided:** the agent gives the person the name of the Big Puffin staff member, and waits for their approval.
 
 ## 3. Save the request
 
@@ -59,13 +59,13 @@ The request is one task in General, with these fields:
 - The title is "Support:" and the problem in a few words, such as "Support: the board page will not open".
 - `activity_kind` is `task`.
 - `description` holds three parts, in this order: "What I did:", "What I got:" and "When:", each from section 1.
-- `completion_requirements` is "Kinetik says what caused the problem and what it changed, and I confirm it is fixed."
-- `assignee_actor_id` is the Kinetik staff member's `actor_id`, from section 2.
+- `completion_requirements` is "Big Puffin says what caused the problem and what it changed, and I confirm it is fixed."
+- `assignee_actor_id` is the Big Puffin staff member's `actor_id`, from section 2.
 - OKB makes the person the request's owner, and saves it as Pending.
 
 1. **Preview the request.**
-   - **Person:** runs `okb okb_add_record p_scope=general p_kind=activity p_title="Support: <the problem>" p_reason="Support request for Kinetik" p_fields.activity_kind=task p_fields.description="<description>" p_fields.completion_requirements="<requirements>" p_fields.assignee_actor_id=<actor id> p_preview=true`.
-   - **The agent:** calls `okb_add_record` with those fields and `p_preview` true. It shows the person the save, as the `okb:records` skill's section 3 describes. That is the scope, the title, the description, the deliverables and the Kinetik staff member's name, never their id.
+   - **Person:** runs `okb okb_add_record p_scope=general p_kind=activity p_title="Support: <the problem>" p_reason="Support request for Big Puffin" p_fields.activity_kind=task p_fields.description="<description>" p_fields.completion_requirements="<requirements>" p_fields.assignee_actor_id=<actor id> p_preview=true`.
+   - **The agent:** calls `okb_add_record` with those fields and `p_preview` true. It shows the person the save, as the `okb:records` skill's section 3 describes. That is the scope, the title, the description, the deliverables and the Big Puffin staff member's name, never their id.
 2. **Save it once the person agrees.**
    - **Person:** runs the same command without `p_preview`.
    - **The agent:** calls `okb_save_version` with the preview's `request` and `authorisation_id`, unchanged.
@@ -76,12 +76,12 @@ The request is one task in General, with these fields:
 
 ## 4. Where to follow its progress
 
-Kinetik's staff find the request among their own tasks. They start it, write what they find, and complete it with a note of what they changed. The person reads each of these in the request's state and its history.
+Big Puffin's staff find the request among their own tasks. They start it, write what they find, and complete it with a note of what they changed. The person reads each of these in the request's state and its history.
 
 1. **Tell the person where to look.**
    - **Person:** asks their database operator "How is my support request getting on?" Without the agent, runs `okb okb_show_record p_record="<the request's title>"` for its state, or `okb okb_get_progress p_cutoff=null p_observed_at=null p_cursor=null p_limit=100 p_scope_id=<General's id> result_file=progress-1.json` for General's work.
    - **The agent:** tells the person the request's title, and that the database operator answers that question. It reads the request with `okb_get_record` or `okb_get_progress`, as the `okb:records` skill's section 2 describes. It gives the state, the person it is assigned to and the last change.
-2. **Read the states to the person.** Pending: Kinetik has not started it. In progress: Kinetik has started it. Paused: it waits on something, named in its blockers. Completed: Kinetik says what it changed, in the completion note. For each change, `okb_get_history` gives who made it, when and why.
+2. **Read the states to the person.** Pending: Big Puffin has not started it. In progress: Big Puffin has started it. Paused: it waits on something, named in its blockers. Completed: Big Puffin says what it changed, in the completion note. For each change, `okb_get_history` gives who made it, when and why.
    - **Person:** reads the state with `okb okb_show_record`, and its history with `okb okb_get_history p_record_id=<record id>`.
    - **The agent:** reads them with `okb_get_record` and `okb_get_history`, and gives them in plain words.
 
@@ -90,5 +90,5 @@ Kinetik's staff find the request among their own tasks. They start it, write wha
 ## 5. When the person changes something
 
 - **More detail, later:** add it to the request's `description` in a new version. Use `okb_change_record`, as the `okb:records` skill's section 11 describes.
-- **The problem went away:** tell Kinetik in the request, with a new version of its description. Leave the state to Kinetik.
+- **The problem went away:** tell Big Puffin in the request, with a new version of its description. Leave the state to Big Puffin.
 - **A second problem:** save it as its own request.

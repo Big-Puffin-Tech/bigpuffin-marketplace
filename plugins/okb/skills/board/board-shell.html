@@ -378,7 +378,7 @@ dd.record-id code { font: 12px var(--mono); overflow-wrap: anywhere; }
       return b.name ? esc(b.name) + " (" + esc(STATE[b.state] ? STATE[b.state].label.toLowerCase() : b.state) + ")" : esc(b.description);
     }).join("<br>") : "None";
     var asks = a.next_states.map(function (s, i) {
-      return '<code id="ask-' + i + '">@agent-kinetik:database-operator move record ' + esc(a.id) + " to " + esc(STATE[s].label.toLowerCase()) + '</code><button class="copy" data-copy="ask-' + i + '">Copy</button>';
+      return '<code id="ask-' + i + '">@agent-bigpuffin:database-operator move record ' + esc(a.id) + " to " + esc(STATE[s].label.toLowerCase()) + '</code><button class="copy" data-copy="ask-' + i + '">Copy</button>';
     }).join("");
     d.innerHTML = '<div class="drawer-head"><div>' + kindTag(a) + "<h3>" + named(a) + '</h3></div><button class="close" id="close" aria-label="Close">×</button></div>' +
       '<div class="badges"><span class="state-pill"><span class="dot" style="background:' + st.color + '"></span>' + st.label + "</span>" + badges(a) + "</div>" +

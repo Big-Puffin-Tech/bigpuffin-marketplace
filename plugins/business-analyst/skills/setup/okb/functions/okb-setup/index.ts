@@ -1,6 +1,6 @@
 // okb-setup: builds OKB in the business's project from the setup files on the owner's computer, and makes the owner's
 // own sign-in, so neither the Supabase command-line tool nor a paste into the SQL Editor is needed. The setup command
-// deploys it through the Management API with verify_jwt off, with kinetik.ts beside it. It checks each call itself.
+// deploys it through the Management API with verify_jwt off, with bigpuffin.ts beside it. It checks each call itself.
 //
 // POST .../okb-setup/sql, the body one setup file's text. It runs a file only when the file's SHA-256 is in
 // okb_setup.approved, which only the project's postgres login writes, such as the setup command through the
@@ -12,25 +12,25 @@
 // sign-in --owner sends. It goes on only when the code's SHA-256 is okb_setup.owner_code's, unexpired, and OKB has
 // no actor yet. It makes the owner's Auth user with the password they chose, confirmed, through Supabase Auth's own
 // admin API; an Auth user an earlier attempt made for the same email gets the new password instead. For each of Real
-// Agent's staff kinetik.ts lists, it reuses the Auth user Auth holds for the email, or else makes a one-time
+// Agent's staff bigpuffin.ts lists, it reuses the Auth user Auth holds for the email, or else makes a one-time
 // invitation code, as okb-invite makes one: three groups of four from an alphabet with no look-alike letters or digits,
-// valid for 7 days. It sends no email. It sends each code to Kinetik's website, ACCESS_URL, as JSON { project_url,
+// valid for 7 days. It sends no email. It sends each code to Big Puffin's website, ACCESS_URL, as JSON { project_url,
 // email, code, expires, firm, owner_name, owner_email, publishable_key, slug }, with a 5-second limit: the owner's agreement
 // to setup covers this. firm is the business's name, from okb_setup.firm, which build.mjs approve keeps, and the owner's
-// name and email are theirs from this sign-in, so Kinetik knows whose project the code opens. publishable_key is the
-// project's publishable key, which the sign-in sends as its apikey header, so Kinetik can redeem the code. It goes
+// name and email are theirs from this sign-in, so Big Puffin knows whose project the code opens. publishable_key is the
+// project's publishable key, which the sign-in sends as its apikey header, so Big Puffin can redeem the code. It goes
 // only when it is a publishable key, sb_publishable_..., or a legacy key whose role is anon, and is left out otherwise,
 // so a secret key never leaves the project. slug is the business's slug, from okb_setup.firm, and is left out when
 // build.mjs approve was given none. It records each person with
 // an Auth user in okb_setup.person, and each code's SHA-256 alone in okb_setup.staff_code, for first-administrator.sql,
 // which makes the actors and the invitations okb-join spends. It records each loose end in okb_setup.open_task, which
-// first-administrator.sql saves as an open task for the owner: "Send Kinetik its invitation code" for each code the
-// website did not take, and "Add Kinetik as a user" when the staff list is empty. It spends the sign-in code.
-// Response: { ok: true, email, kinetik, kinetik_codes: [{ name, email, code, expires_at }], open_tasks } or
-// { ok: false, problem }. kinetik_codes holds only the codes the website did not take, each once, and the sign-in
+// first-administrator.sql saves as an open task for the owner: "Send Big Puffin its invitation code" for each code the
+// website did not take, and "Add Big Puffin as a user" when the staff list is empty. It spends the sign-in code.
+// Response: { ok: true, email, bigpuffin, bigpuffin_codes: [{ name, email, code, expires_at }], open_tasks } or
+// { ok: false, problem }. bigpuffin_codes holds only the codes the website did not take, each once, and the sign-in
 // saves them for the business analyst's summary. The password is never stored, logged or returned.
 import postgres from "npm:postgres@3.4.9";
-import { ACCESS_URL, STAFF } from "./kinetik.ts";
+import { ACCESS_URL, STAFF } from "./bigpuffin.ts";
 
 const PROJECT = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -84,19 +84,19 @@ const codeHash = (code: string) => sha256(new TextEncoder().encode(code.toUpperC
 export function openTasks(staff: { name: string; email: string }[], coded: { name: string; email: string; expires_at: string }[]) {
   const tasks: { title: string; description: string; completion_requirements: string }[] = [];
   if (!staff.length) tasks.push({
-    title: "Add Kinetik as a user",
-    description: "Kinetik's staff are not in your knowledge base yet. Ask your business analyst to add Kinetik once Kinetik gives you its email address.",
-    completion_requirements: "An actor named \"<name> (Kinetik)\" is in the knowledge base.",
+    title: "Add Big Puffin as a user",
+    description: "Big Puffin's staff are not in your knowledge base yet. Ask your business analyst to add Big Puffin once Big Puffin gives you its email address.",
+    completion_requirements: "An actor named \"<name> (Big Puffin)\" is in the knowledge base.",
   });
   for (const c of coded) tasks.push({
-    title: `Send Kinetik its invitation code (${c.email})`,
-    description: `Setup made Kinetik's account, ${c.name} (Kinetik), with a one-time invitation code. Email the code to ${c.email}. It works once, until ${c.expires_at.slice(0, 10)}. If the code is lost or runs out, ask your business analyst: add Kinetik, ${c.email}.`,
-    completion_requirements: `${c.name} (Kinetik) has signed in with the code.`,
+    title: `Send Big Puffin its invitation code (${c.email})`,
+    description: `Setup made Big Puffin's account, ${c.name} (Big Puffin), with a one-time invitation code. Email the code to ${c.email}. It works once, until ${c.expires_at.slice(0, 10)}. If the code is lost or runs out, ask your business analyst: add Big Puffin, ${c.email}.`,
+    completion_requirements: `${c.name} (Big Puffin) has signed in with the code.`,
   });
   return tasks;
 }
 
-/** Sends one code to Kinetik's website. True only when it answers 2xx within 5 seconds. */
+/** Sends one code to Big Puffin's website. True only when it answers 2xx within 5 seconds. */
 async function deliver(c: { email: string; code: string; expires_at: string }, who: { firm: string; owner_name: string; owner_email: string; publishable_key?: string; slug?: string }): Promise<boolean> {
   if (!ACCESS_URL) return false;
   try {
@@ -144,7 +144,7 @@ async function owner(db: any, body: Record<string, unknown>, apikey: string | nu
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!code) return json(400, { ok: false, problem: "The sign-in code is missing." });
-  if (!name || name.length > 200) return json(400, { ok: false, problem: "Give your name, as Kinetik should show it." });
+  if (!name || name.length > 200) return json(400, { ok: false, problem: "Give your name, as Big Puffin should show it." });
   if (!EMAIL.test(email)) return json(400, { ok: false, problem: `${email || "That"} is not an email address.` });
   if (password.length < 8) return json(400, { ok: false, problem: "Choose a password of at least 8 characters." });
 
@@ -164,7 +164,7 @@ async function owner(db: any, body: Record<string, unknown>, apikey: string | nu
     const code = newCode();
     coded.push({ name: one.name, email: address, code, sha256: await codeHash(code), expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString() });
   }
-  // Each code Kinetik's website takes needs nothing from the owner. Any other goes in the summary and an open task.
+  // Each code Big Puffin's website takes needs nothing from the owner. Any other goes in the summary and an open task.
   // to_jsonb, so a firm table an older approve made, with no slug column, reads as no slug.
   const [firmRow] = coded.length ? await db`select to_jsonb(f) as row from okb_setup.firm f` : [];
   const firm = firmRow?.row as { name: string; slug?: string | null } | undefined;
@@ -184,8 +184,8 @@ async function owner(db: any, body: Record<string, unknown>, apikey: string | nu
       await tx`insert into okb_setup.open_task(position, title, description, completion_requirements) values (${i + 1}, ${t.title}, ${t.description}, ${t.completion_requirements})`;
     await tx`delete from okb_setup.owner_code`;
   });
-  return json(200, { ok: true, email, kinetik: [...people.filter(p => p.role === "kinetik").map(p => p.name), ...coded.map(c => c.name)],
-    kinetik_codes: unsent.map(c => ({ name: `${c.name} (Kinetik)`, email: c.email, code: c.code, expires_at: c.expires_at })), open_tasks: tasks.map(t => t.title) });
+  return json(200, { ok: true, email, bigpuffin: [...people.filter(p => p.role === "kinetik").map(p => p.name), ...coded.map(c => c.name)],
+    bigpuffin_codes: unsent.map(c => ({ name: `${c.name} (Big Puffin)`, email: c.email, code: c.code, expires_at: c.expires_at })), open_tasks: tasks.map(t => t.title) });
 }
 
 Deno.serve(async (req) => {
