@@ -11,15 +11,17 @@ The **owner** owns the business's Supabase account and becomes the first adminis
 
 The business analyst never holds the Supabase connector or `Bash`. The okb plugin's hook refuses both to it, before, during and after setup. The setup command reaches Supabase through its Management API, with the access token the owner pastes at its own hidden prompt.
 
-The business analyst never sees, asks for or types a password, a secret key or a token. The owner pastes the token and types their password into the command's own prompts. The command sends them to Supabase alone.
+The business analyst never sees, asks for or types a password, a secret key, a setup key or a token. The owner pastes the token, types the setup key Big Puffin sent them and types their password into the command's own prompts. The command sends the token and the password to Supabase alone, and the setup key to Big Puffin's connector alone.
 
 The setup files are in the `okb` folder beside this skill: on macOS, `~/.claude/plugins/marketplaces/bigpuffin/plugins/business-analyst/skills/setup/okb/`, and on Windows, `$env:USERPROFILE\.claude\plugins\marketplaces\bigpuffin\plugins\business-analyst\skills\setup\okb\`. The setup command runs them. In this skill, `<okb>` stands for that folder, and `<folder>` for the setup folder, the session's own folder.
 
-- `build.mjs` approves the setup files, sends them to the project, and lists each hosted function's files.
-- `functions/okb-setup/` runs each approved setup file in the project, and makes the owner's sign-in. `functions/okb-setup/bigpuffin.ts` holds Big Puffin's staff, the address their codes are sent to, and Big Puffin's support address.
-- `functions/okb-invite/` stays deployed after setup. The business analyst adds each later person with one call to it, for an administrator, which makes their actor and a one-time invitation code.
-- `functions/okb-join/` stays deployed too, with JWT verification off. A person spends their code there, and chooses their own password.
-- `functions/okb-upgrade/` stays deployed too. Big Puffin's own actor applies each new upgrade there, signed by Big Puffin, so the owner never invites Big Puffin into their Supabase organisation.
+- `build.mjs` approves the setup files, sends them to the project, and names each hosted function with its JWT setting.
+- Big Puffin's hosted functions are not in this folder. Big Puffin's connector serves them. The setup command fetches them with the one-time setup key Big Puffin sends the owner, and deploys them in the project. `okb redeploy` fetches them with an administrator's own sign-in.
+- `okb-setup` runs each approved setup file in the project, and makes the owner's sign-in. It holds Big Puffin's staff and the address their codes are sent to.
+- `okb-invite` stays deployed after setup. The business analyst adds each later person with one call to it, for an administrator, which makes their actor and a one-time invitation code.
+- `okb-join` stays deployed too, with JWT verification off. A person spends their code there, and chooses their own password.
+- `password-reset` stays deployed too. It gives an administrator a reset code for a person who has lost their password. The person sets a new password with it on Big Puffin's sign-in page.
+- `okb-upgrade` stays deployed too. Big Puffin's own actor applies each new upgrade there, signed by Big Puffin, so the owner never invites Big Puffin into their Supabase organisation.
 - `setup.sql`, `file-search.sql`, `file-search-scopes.sql` and `schedule.sql` build OKB and file search. `first-administrator.sql` makes the administrator, the six scopes, Big Puffin's actors with their invitation codes, and the open tasks setup leaves.
 - `state.sql` reads where a project stands, `reset.sql` takes an unfinished attempt off, `data-api.sql` exposes the `okb` schema, and `health.sql` is the health check.
 - `bootstrap.sql` holds the same steps for a person to run by hand, and each later person's grants.
@@ -41,7 +43,7 @@ The owner reads plain sentences only: no code block, table, SQL, command, test o
 
 The one exception in setup is the setup command, in section 1. It goes below its message, alone in one fenced code block tagged `bash`. The Claude desktop app gives that block a Run button, which runs it in the app's Terminal, where its hidden prompts work.
 
-- **A failure:** one plain sentence saying what failed and that Big Puffin has been told, then stop. Before the owner's sign-in, Big Puffin is told by the owner. The sentence asks them to email Big Puffin's support address from `bigpuffin.ts`, or their Big Puffin contact when it is null. After the sign-in, the business analyst saves a support request as the `bigpuffin:support` skill does, with the command's own line. The owner's agreement to setup covers that save.
+- **A failure:** one plain sentence saying what failed and that Big Puffin has been told, then stop. Before the owner's sign-in, Big Puffin is told by the owner. The sentence asks them to email Big Puffin's support address, support@bigpuffin.io. After the sign-in, the business analyst saves a support request as the `bigpuffin:support` skill does, with the command's own line. The owner's agreement to setup covers that save.
 
 The owner's messages, in order, in a run with no failure:
 
@@ -51,23 +53,23 @@ The owner's messages, in order, in a run with no failure:
   - "Setup also gives Big Puffin its own account in your knowledge base. We use it to design, build and update your agents. It can read and change your general records, workflows and glossary, and every change it makes is in your audit log. We are also sent your business's name and your name and email, so we know the account is yours."
   - "1. Make a Supabase access token at [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens). Name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. Delete it on that page once setup is done."
   - "2. Click Run on the line below, and paste the token when it asks."
-  - "3. Answer its questions: your business's name, your Supabase project, and your name, email and a password you choose."
+  - "3. Answer its questions: your business's name, your Supabase project, the setup key Big Puffin sent you, and your name, email and a password you choose."
   - "4. When it says so, start a new Code session on this folder, and type done there."
 - The summary, once the business analyst has checked the scopes in section 4: "Big Puffin is set up, and you are its administrator. I stay with you in this folder, to add your staff and remind you of anything still open. Big Puffin now has its own account in your knowledge base, as you agreed. I can show you what it can reach and what it has changed, and can remove it at any time."
 
-The setup command prints its own lines in the Terminal, and the owner reads them there. It prints one progress line per stage as it ends, such as "Building your Big Puffin knowledge base: done." Its stages, in order, are "Creating your project in London", "Waiting for your project to be ready", "Keeping your short name, <slug>, with Big Puffin", "Building your Big Puffin knowledge base", "Setting up file search", "Turning on the Data API", "Making you the administrator", "Checking everything works" and "Saving the setup record". The first is for a new project only. The wait starts with "Waiting for your project to be ready. This can take a few minutes." Then it prints the five lines of Big Puffin's connector's settings, public sign-up off among them, and its summary.
+The setup command prints its own lines in the Terminal, and the owner reads them there. It prints one progress line per stage as it ends, such as "Building your Big Puffin knowledge base: done." Its stages, in order, are "Creating your project in London", "Waiting for your project to be ready", "Keeping your short name, <slug>, with Big Puffin", "Fetching Big Puffin's hosted functions", "Building your Big Puffin knowledge base", "Setting up file search", "Turning on the Data API", "Making you the administrator", "Checking everything works" and "Saving the setup record". The first is for a new project only. The wait starts with "Waiting for your project to be ready. This can take a few minutes." Then it prints the five lines of Big Puffin's connector's settings, public sign-up off among them, and its summary.
 
 The summary starts "Big Puffin is set up in <project>, and you are its administrator." It ends with the one step left and "Start a new Code session on <folder>, and type done there." The session that gave the command started before the owner's sign-in, so its okb plugin cannot see that sign-in.
 
-When Big Puffin's website did not take Big Puffin's invitation code, the command's summary gives it: "Big Puffin's website did not take its invitation code. Please email it to <Big Puffin email>, so Big Puffin can sign in: <code>." On the Free plan, it adds "Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running."
+When Big Puffin's connector did not take Big Puffin's invitation code, the command's summary gives it: "Big Puffin's connector did not take its invitation code. Please email it to <Big Puffin email>, so Big Puffin can sign in: <code>." On the Free plan, it adds "Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running."
 
-Big Puffin's staff load the guides and the Python runtime themselves, as their actor, since only that actor changes the Guides and Plugins scopes. At the owner's sign-in, `okb-setup` makes a one-time invitation code for each of them, and sends no email. It sends each code to Big Puffin's website, `ACCESS_URL` in `bigpuffin.ts`. With it go the project's address, the email the code is for, its last day and the business's short name. The owner's agreement to setup covers that send.
+Big Puffin's staff load the guides and the Python runtime themselves, as their actor, since only that actor changes the Guides and Plugins scopes. At the owner's sign-in, `okb-setup` makes a one-time invitation code for each of them, and sends no email. It sends each code to Big Puffin's connector, `ACCESS_URL` in `okb-setup`'s `bigpuffin.ts`. With it go the project's address, the email the code is for, its last day and the business's short name. The owner's agreement to setup covers that send.
 
 `first-administrator.sql` makes each one's actor, with the `bigpuffin` template's grants and no sign-in yet. Big Puffin's staff member spends the code with the okb command's `sign-in --join`, and chooses their own password.
 
 Big Puffin applies each later upgrade itself, as its own actor, through `okb-upgrade`, which runs only an upgrade Big Puffin signed. The owner gives Big Puffin no role in their Supabase organisation.
 
-Setup saves each loose end as an open task in Administration, assigned to the owner: "Send Big Puffin its invitation code (<email>)" for a code the website did not take. The business analyst raises the first one still open at the start of each session. It completes the code's task once Big Puffin's actor has signed in. When the code is lost or runs out, the business analyst adds Big Puffin again, which makes a new code. With no staff in `bigpuffin.ts`, the task is "Add Big Puffin as a user", which the business analyst's `okb-invite` call completes. The setup command also saves "Connect Big Puffin's connector", and section 5 completes it.
+Setup saves each loose end as an open task in Administration, assigned to the owner: "Send Big Puffin its invitation code (<email>)" for a code the connector did not take. The business analyst raises the first one still open at the start of each session. It completes the code's task once Big Puffin's actor has signed in. When the code is lost or runs out, the business analyst adds Big Puffin again, which makes a new code. With no staff in `okb-setup`'s `bigpuffin.ts`, the task is "Add Big Puffin as a user", which the business analyst's `okb-invite` call completes. The setup command also saves "Connect Big Puffin's connector", and section 5 completes it.
 
 ## Before setup
 
@@ -82,7 +84,7 @@ The owner needs a Supabase account. The setup command finds or creates the proje
 ## 1. The setup command
 
 1. **Give the command.**
-   - **Person:** makes a Supabase access token as the message says, and clicks **Run** on the command the business analyst shows in the chat. Pastes the token, then answers the command's questions. They are the business's name, the Supabase organisation and project, and their name, email and chosen password, twice. In human only mode, the owner instead follows the Person lines of sections 2 to 4, in the Supabase dashboard.
+   - **Person:** makes a Supabase access token as the message says, and clicks **Run** on the command the business analyst shows in the chat. Pastes the token, then answers the command's questions. They are the business's name, the Supabase organisation and project, the setup key Big Puffin sent them, and their name, email and chosen password, twice. In human only mode, the owner instead follows the Person lines of sections 2 to 4, in the Supabase dashboard.
    - **Business analyst agent:** sends the setup command's message "What the owner reads" gives. Below it goes the command, alone in a single fenced code block tagged `bash`. Its `<marketplace>` is the bigpuffin marketplace's copy, `~/.claude/plugins/marketplaces/bigpuffin`, and `<folder>` is the session's folder from `check_plugins`. It writes both in full, so the block runs as it is. Then it waits. It never runs the command itself, and never asks for the token.
 
      ```bash
@@ -96,13 +98,15 @@ The owner needs a Supabase account. The setup command finds or creates the proje
      - It lists the organisation's projects and asks which, or offers a new one. A new one is named after the business, in London. On a paid plan, it creates one only after the owner types yes.
      - It reads a project picked from the list with `state.sql` before it saves anything. One already set up, or holding records or files, gets "<project> already holds a knowledge base. Choose another project, or a new one.", and the list is asked again.
      - On a run after a stop, it reads `state.sql` again. A project already set up goes straight to the connector's settings. An attempt with no records or files is cleared once the owner types yes. A project that already holds records stops the command.
-     - It keeps the business's short name, its slug, with Big Puffin's website. It deploys the hosted functions and runs the setup files, as section 2 gives them.
+     - It keeps the business's short name, its slug, with Big Puffin's connector.
+     - It asks for the setup key at a hidden prompt, and fetches Big Puffin's hosted functions from the connector with it. A key the connector does not take stops the command before anything is deployed. The key works for one project, and a run after a stop asks for it again.
+     - It deploys the hosted functions and runs the setup files, as section 2 gives them.
      - It signs the owner in, runs `first-administrator.sql`, the health check and the scopes check, and saves the setup record and the open task.
      - It makes the five settings of Big Puffin's connector with the slug, and prints the summary.
 
 3. **When the command stops.**
    - **Person:** clicks **Run** again. The command carries on from where it stopped, with the same project and slug.
-   - **Business analyst agent:** when the owner says the command stopped, it asks them to click Run on the same command again. When a key line says to run it again in 20 minutes, it tells the owner that time, and has them click Run then. When a line says Supabase refused the token, the owner makes a new token and runs it again. A project that already holds Big Puffin records, or a second stop at the same step, is a failure, as "What the owner reads" says.
+   - **Business analyst agent:** when the owner says the command stopped, it asks them to click Run on the same command again. When a key line says to run it again in 20 minutes, it tells the owner that time, and has them click Run then. When a line says Supabase refused the token, the owner makes a new token and runs it again. When a line says Big Puffin's connector did not take the setup key, the owner checks the key and runs it again. A second refusal of the key is a failure: the owner emails support@bigpuffin.io for a new key. A project that already holds Big Puffin records, or a second stop at the same step, is a failure, as "What the owner reads" says.
 
 **AI guided:** the business analyst sends the setup command's message once, and asks nothing else until the owner types done.
 
@@ -117,7 +121,7 @@ The setup command does each step of this section. Its lines are for a person wor
    - **Person:** in the dashboard's SQL Editor, runs the whole of `setup.sql`, then `file-search.sql`, then `file-search-scopes.sql`, each in a new query, unchanged. When the editor offers to change a file or turn on Row Level Security, chooses the option that runs it unchanged.
    - **Business analyst agent:** none: the setup command does it.
 3. **Deploy the hosted functions.**
-   - **Person:** opens **Edge Functions** and deploys each function in the editor. `file-search-worker` takes its `index.ts`, its `text.ts`, and `vendor/sheetjs-0.20.3/xlsx.mjs` and `vendor/sheetjs-0.20.3/types/index.d.ts` at those paths, with JWT verification off. `file-search`, `file-search-purge` and `okb-invite` each take their `index.ts`, with it on. `okb-join` takes its `index.ts`, with it off. `okb-upgrade` takes its `index.ts` and `upgrade-key.ts`, with it on. `graph-reader` takes its `index.ts` and `prompt.ts`, with it off. It stays off until an administrator adds the business's own Anthropic API key, as the business analyst describes. Then runs `schedule.sql`, with the project reference in place of its placeholder.
+   - **Person:** gets the functions' files from Big Puffin's connector with the setup key Big Puffin sent. A `POST` to `https://mcp.bigpuffin.dev/api/functions` gives them, with the JSON body `{"project_url": "<project URL>", "publishable_key": "<publishable key>", "setup_key": "<setup key>"}`. Then opens **Edge Functions** and deploys each function in the editor. `file-search-worker` takes its `index.ts`, its `text.ts`, and `vendor/sheetjs-0.20.3/xlsx.mjs` and `vendor/sheetjs-0.20.3/types/index.d.ts` at those paths, with JWT verification off. `file-search`, `file-search-purge`, `okb-invite` and `password-reset` each take their `index.ts`, with it on. `okb-join` takes its `index.ts`, with it off. `okb-upgrade` takes its `index.ts` and `upgrade-key.ts`, with it on. `graph-reader` takes its `index.ts` and `prompt.ts`, with it off. It stays off until an administrator adds the business's own Anthropic API key, as the business analyst describes. Then runs `schedule.sql`, with the project reference in place of its placeholder.
    - **Business analyst agent:** none: the setup command does it.
 4. **Expose the Data API.** Supabase's Data API serves the `okb` schema, through which each person's agent works.
    - **Person:** runs `data-api.sql` in the SQL Editor, or ticks `okb` under the Data API's **Exposed schemas** and saves.
@@ -137,7 +141,7 @@ The owner's Auth user is their Supabase sign-in. The `okb-setup` hosted function
 ## 4. Finish
 
 1. **Check that it works.**
-   - **Person:** runs `health.sql` in the SQL Editor, and sees `ok` true. Under **Edge Functions**, sees the eight functions, with JWT verification off for `okb-setup`, `file-search-worker`, `okb-join` and `graph-reader` alone.
+   - **Person:** runs `health.sql` in the SQL Editor, and sees `ok` true. Under **Edge Functions**, sees the nine functions, with JWT verification off for `okb-setup`, `file-search-worker`, `okb-join` and `graph-reader` alone.
    - **Business analyst agent:** when the owner types done in a new session, signed in as them, it calls `okb_get_scopes`. It must list `general`, `routines`, `reference` and `plugins`. Then it gives the summary "What the owner reads" gives. When done arrives in a session whose okb plugin has no sign-in, with only `check_plugins` and the page tools, it says "Start a new Code session on this folder, and type done there."
 2. **Save the setup record.**
    - **Person:** in human only mode, runs `okb okb_add_record` in the setup folder, with the fields below.

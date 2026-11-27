@@ -1,20 +1,20 @@
 <style>
-.gr { display: grid; gap: 10px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--bigpuffin-ink); }
+.gr { display: grid; gap: 10px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--brand-ink); }
 .gr * { box-sizing: border-box; }
 .gr h2 { margin: 0; font-size: 16px; }
 .gr p { margin: 0; overflow-wrap: anywhere; }
-.gr-sub { color: var(--bigpuffin-muted); font-size: 13px; }
+.gr-sub { color: var(--brand-muted); font-size: 13px; }
 .gr-refused { color: var(--color-text-danger, #b42318); }
 .gr-form { display: grid; gap: 10px; }
-.gr-form label { display: grid; gap: 2px; font-size: 13px; color: var(--bigpuffin-muted); }
-.gr-form input { font: inherit; color: inherit; padding: 4px 8px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; min-width: 0; }
+.gr-form label { display: grid; gap: 2px; font-size: 13px; color: var(--brand-muted); }
+.gr-form input { font: inherit; color: inherit; padding: 4px 8px; border: 1px solid var(--brand-rule); border-radius: 0; background: transparent; min-width: 0; }
 .gr-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-.gr-btn { font: inherit; color: inherit; padding: 3px 12px; border: 1px solid var(--bigpuffin-rule); border-radius: 0; background: transparent; cursor: pointer; }
-.gr-btn.main { background: var(--bigpuffin-key); color: var(--bigpuffin-key-ink); border-color: var(--bigpuffin-key); }
+.gr-btn { font: inherit; color: inherit; padding: 3px 12px; border: 1px solid var(--brand-rule); border-radius: 0; background: transparent; cursor: pointer; }
+.gr-btn.main { background: var(--brand-accent); color: var(--brand-on-accent); border-color: var(--brand-accent); }
 .gr-btn:disabled { opacity: .5; cursor: default; }
 .gr-btn[hidden] { display: none; }
 </style>
-<section class="gr">
+<section class="gr" data-brand-logo>
   <h2>Graph reader</h2>
   <p class="gr-sub">OKB reads who and what your files name, and how they're linked, so a search can follow those links. Anthropic charges your business's API key for each part it reads. Type the key here, not in the chat.</p>
   <p id="gr-state">Checking…</p>
@@ -31,7 +31,8 @@
 <script>
 // The graph reader card: it shows whether the graph reader is on, in the words show_graph_reader's result gives. Save
 // calls graph_reader_save with the key typed here, which OKB keeps only once Anthropic takes it, and the card then shows
-// connected or the reason. Turn off calls graph_reader_off, which removes the key. When Anthropic didn't answer, the card
+// connected or the reason. Connected with no class in the glossary shows the waiting state, since OKB then reads no
+// part. Turn off calls graph_reader_off, which removes the key. When Anthropic didn't answer, the card
 // says why and offers both. Both send the pass show_graph_reader gave the card in its result's _meta, which the model
 // never sees. The shell gives it callTool and onNotice.
 var SAID = {}, PASS = "", begun = false;
@@ -50,7 +51,12 @@ $("gr-form").addEventListener("submit", function (e) {
   busy(true);
   say("Checking the key with Anthropic…", false);
   callTool("graph_reader_save", { key: $("gr-key").value, pass: PASS }, "save").then(function (r) {
-    if (r && !r.isError) { $("gr-key").value = ""; showState("on"); say("Connected. Tell Claude the graph reader is on.", false); }
+    if (r && !r.isError) {
+      var now = (r.structuredContent && r.structuredContent.state) || "on";
+      $("gr-key").value = ""; showState(now, r.structuredContent && r.structuredContent.problem);
+      say(now === "waiting" ? "Connected, but OKB reads no part until the glossary has a class. Tell Claude the graph reader is on, and ask it to propose the glossary's classes."
+        : "Connected. Tell Claude the graph reader is on.", false);
+    }
     else say("Not kept: " + (textOf(r) || "Big Puffin's connector gave nothing back."), true);
   }, function (e) { say("Not kept: " + (e && e.message || e), true); }).then(function () { busy(false); });
 });

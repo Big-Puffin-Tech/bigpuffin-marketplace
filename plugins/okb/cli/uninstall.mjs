@@ -159,13 +159,13 @@ export function survey({ home, configDir, temp, platform, claude, localAppData =
   // Claude Code's settings name as the bigpuffin marketplace's source, with the files okb sync keeps beside it.
   const copies = join(home, "okb-marketplace");
   for (const ref of (() => { try { return readdirSync(copies); } catch { return []; } })()) {
-    const ref0 = ref.replace(/\.(incoming|old|lock|workflows)$/, "");
+    const ref0 = ref.replace(/\.(incoming|old|lock|workflows|sync\.json|sync\.log|sync-check\.json)$/, "");
     if (PROJECT_REF.test(ref0)) refs.add(ref0);
   }
   const known = readJson(join(configDir, "plugins", "known_marketplaces.json"))?.[MARKETPLACE_NAME];
   const registered = sourceFolder(known?.source?.url) ?? sourceFolder(settings.extraKnownMarketplaces?.[MARKETPLACE_NAME]?.source?.url);
   const outside = registered && !resolve(registered).startsWith(`${resolve(copies)}${process.platform === "win32" ? "\\" : "/"}`) && resolve(registered) !== resolve(home)
-    ? ["", ".incoming", ".old", ".lock", ".workflows"].map(end => `${resolve(registered)}${end}`) : [];
+    ? ["", ".incoming", ".old", ".lock", ".workflows", ".sync.json", ".sync.log", ".sync-check.json"].map(end => `${resolve(registered)}${end}`) : [];
 
   const signIns = [];
   for (const ref of [...refs].sort()) {

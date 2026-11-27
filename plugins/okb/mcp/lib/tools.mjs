@@ -1,4 +1,5 @@
-// The Supabase Auth user's tools: `whoami`, `rpc`, `call_function`, `invite_person`, which calls the okb-invite
+// The Supabase Auth user's tools: `whoami`, `rpc`, `call_function`, `system` and `connect`, which reach Big Puffin's system
+// connectors through its connector (system.mjs), `invite_person`, which calls the okb-invite
 // hosted function, `upload_file`, `list_files`, `download_file` and `read_file`, under that user's own rights; `update_plugins`, which runs okb sync
 // as that user; `check_plugins`, which compares the plugins installed from the bigpuffin marketplace with
 // the newest release in the Plugins scope, with cli/releases.mjs, changes nothing, and gives what the
@@ -15,6 +16,7 @@ import { READ_LIMIT, readAgentFile } from "./read.mjs";
 import { createHash } from "node:crypto";
 import { agentFiles, agentJson, callFunction, callRpc, currentUser, downloadObject, listObjects, placeAt, sessionAccess, signInLevel, uploadObject, uploadSource, writeAgentFile, PROJECT_REF, ROW_LIMIT } from "./session.mjs";
 import { sessionFolderStatus } from "./session-folder.mjs";
+import { CONNECT_TOOL, callSystem, openConnect, SYSTEM_TOOL } from "./system.mjs";
 
 // The marketplace every client's plugins are installed from, as cli/releases.mjs names it.
 const MARKETPLACE_NAME = "bigpuffin";
@@ -33,6 +35,10 @@ const MAX_COPY_BYTES = 50 * 1024 * 1024;
 // Big Puffin's public marketplace, which the install one-liners in its README take.
 export const PUBLIC_MARKETPLACE = "Big-Puffin-Tech/bigpuffin-marketplace";
 const RAW = `https://raw.githubusercontent.com/${PUBLIC_MARKETPLACE}/main/install`;
+// The SHA-256 of install/install.sh and install/install.ps1, which each install command checks before it runs the script.
+// scripts/pin-install.mjs writes them.
+const INSTALL_SH_SHA256 = "0dd6c5b2683eba504632cbbef9a6ec502ccf8417b7920ec9cdfe46c2eda69b6f";
+const INSTALL_PS1_SHA256 = "dc12d807f85bbae87c59b7731a5a5a230afb6ca7f6b92b9100a7c1b30e95751b";
 
 /** The agent an invited person's folder works with: the business analyst for an administrator, and otherwise none named,
  * so okb setup gives the database operator. */
@@ -40,15 +46,16 @@ export const agentFor = template => template === "administrator" ? "business-ana
 
 /**
  * The commands a person runs to set up their folder and sign in, with the project's address and publishable key, which is
- * public: command, with Big Puffin installed, and the README's install one-liners for macOS and Windows when it is not.
+ * public: command, with Big Puffin installed, and the README's install one-liners for macOS and Windows when it is not,
+ * each checking the install script's SHA-256 before it runs it.
  * With a code, --join makes the sign-in ask for it and a password they choose. With an agent, --agent names it.
  */
 export function personCommands(url, key, email, join, agent = null) {
   const options = `--email ${email} --url ${url} --key ${key}${join ? " --join" : ""}${agent ? ` --agent ${agent}` : ""}`;
   return {
     command: `node ~/.claude/plugins/marketplaces/${MARKETPLACE_NAME}/plugins/okb/cli/okb.mjs setup ${options}`,
-    install_command: `cd ~ && curl -fsSLO ${RAW}/install.sh && bash install.sh ${PUBLIC_MARKETPLACE} ${options}`,
-    install_command_windows: `cd ~; Invoke-WebRequest -UseBasicParsing ${RAW}/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 ${PUBLIC_MARKETPLACE} ${options}`,
+    install_command: `cd ~ && curl -fsSLO ${RAW}/install.sh && echo "${INSTALL_SH_SHA256}  install.sh" | shasum -a 256 -c && bash install.sh ${PUBLIC_MARKETPLACE} ${options}`,
+    install_command_windows: `cd ~; Invoke-WebRequest -UseBasicParsing ${RAW}/install.ps1 -OutFile install.ps1; if ((Get-FileHash install.ps1 -Algorithm SHA256).Hash -eq '${INSTALL_PS1_SHA256}') { powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 ${PUBLIC_MARKETPLACE} ${options} } else { Write-Error 'install.ps1 does not match its checksum, and was not run.' }`,
   };
 }
 
@@ -191,6 +198,8 @@ export const TOOLS = [
       additionalProperties: false,
     },
   },
+  SYSTEM_TOOL,
+  CONNECT_TOOL,
 ];
 
 /** The plugins installed from the bigpuffin marketplace, as { name: version }, from installed_plugins.json in the
@@ -397,7 +406,7 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
     if (!installed) return { ok: false, problem: "This computer's list of installed plugins, installed_plugins.json in the Claude config folder, could not be read." };
     const session = await access();
     if (!session.ok) return session;
-    const { downloadFile: downloadReleaseFile, listReleases, manifestEntries, releaseKeysFor, sha256, verifyManifest, RELEASES_BUCKET, SIGNATURE } = await import(RELEASES.href);
+    const { downloadFile: downloadReleaseFile, listReleases, manifestEntries, releaseFiles, releaseKeysFor, sha256, verifyManifest, RELEASES_BUCKET, SIGNATURE } = await import(RELEASES.href);
     const releaseAccess = { url: session.url, key: session.key, token: session.token };
     const listed = await listReleases(releaseAccess);
     if (!listed.ok) return { ok: false, problem: `The releases in OKB could not be listed: ${listed.problem}` };
@@ -415,11 +424,13 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
       if (!signature.ok || !verifyManifest(manifest.body, signature.body, RELEASES_BUCKET, name, releaseKeysFor(releaseAccess.url))) continue;
       let hashes;
       try { hashes = new Map(manifestEntries(manifest.body.toString("utf8")).map(e => [e.path, e.hash])); } catch { continue; }
-      const files = [];
-      for (const plugin of plugins) {
+      // Each plugin.json, from the release's release.zip, or one at a time from a release without one.
+      const listedPaths = plugins.map(plugin => `plugins/${plugin}/.claude-plugin/plugin.json`).filter(path => hashes.has(path));
+      const got = new Map((await releaseFiles(releaseAccess, RELEASES_BUCKET, name, listedPaths)).map((one, i) => [listedPaths[i], one]));
+      const files = plugins.map(plugin => {
         const path = `plugins/${plugin}/.claude-plugin/plugin.json`;
-        files.push(hashes.has(path) ? { plugin, path, got: await downloadReleaseFile(releaseAccess, RELEASES_BUCKET, `${name}/${path}`) } : null);
-      }
+        return got.has(path) ? { plugin, path, got: got.get(path) } : null;
+      });
       const failed = files.find(f => f && !f.got.ok && !f.got.missing);
       if (failed) return { ok: false, problem: `${failed.plugin}'s plugin.json in release ${name} could not be read: ${failed.got.problem}` };
       // A plugin.json the MANIFEST lists that is missing or changed: okb sync passes this release over too.
@@ -473,11 +484,22 @@ export function createTools({ ref, email, agentFolder = null, defaultSchema = nu
         return asContent({ ...await checkPlugins(), ...(folder ? { sessionFolder: folder } : {}) });
       }
       if (name === "copy_to_agent_folder") return asContent(copyIn(args?.source_file, args?.new_file));
+      if (name === "system") return asContent(await callSystem(access, args ?? {}));
+      if (name === "connect") return asContent(await openConnect(access));
       return asContent({ ok: false, problem: `No such tool: ${name}` });
     } catch (err) {
       return asContent({ ok: false, problem: `${name} failed: ${err instanceof Error ? err.message : String(err)}` });
     }
   }
 
-  return { TOOLS, callTool };
+  /** One OKB function as the signed-in person, for the page tools' read of the business's brand: its result, or a throw. */
+  async function call(fn, args = {}) {
+    const session = await access();
+    if (!session.ok) throw new Error(session.problem);
+    const out = await callRpc(session.url, session.key, session.token, fn, defaultSchema ?? undefined, args);
+    if (!out.ok) throw new Error(out.problem);
+    return out.body;
+  }
+
+  return { TOOLS, callTool, call };
 }

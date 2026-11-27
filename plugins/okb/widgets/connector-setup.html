@@ -1,0 +1,81 @@
+<style>
+.cs { display: grid; gap: 10px; padding: 6px 0 12px; font-size: 14px; line-height: 1.45; color: var(--brand-ink); }
+.cs * { box-sizing: border-box; }
+.cs h2 { margin: 0; font-size: 16px; }
+.cs p { margin: 0; overflow-wrap: anywhere; }
+.cs-sub { color: var(--brand-muted); font-size: 13px; }
+.cs-refused { color: var(--color-text-danger, #b42318); }
+.cs-form { display: grid; gap: 10px; }
+.cs-form label { display: grid; gap: 2px; font-size: 13px; color: var(--brand-muted); }
+.cs-form input, .cs-form select { font: inherit; color: inherit; padding: 4px 8px; border: 1px solid var(--brand-rule); border-radius: 0; background: transparent; min-width: 0; }
+.cs-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.cs-btn { font: inherit; color: inherit; padding: 3px 12px; border: 1px solid var(--brand-rule); border-radius: 0; background: transparent; cursor: pointer; }
+.cs-btn.main { background: var(--brand-accent); color: var(--brand-on-accent); border-color: var(--brand-accent); }
+.cs-btn:disabled { opacity: .5; cursor: default; }
+</style>
+<section class="cs" data-brand-logo>
+  <h2>Connect a system</h2>
+  <p class="cs-sub">Big Puffin's connector checks the key with the system, then keeps it in your business's own OKB, locked with a key only Big Puffin's connector holds. Type the key here, not in the chat.</p>
+  <p id="cs-state">Checking…</p>
+  <form class="cs-form" id="cs-form" autocomplete="off" hidden>
+    <label>System
+      <select id="cs-connector"></select></label>
+    <label>Account: the name your business gives this account, in lower-case letters, numbers, - and _, such as main
+      <input id="cs-account" autocapitalize="off" spellcheck="false" required pattern="[a-z0-9][a-z0-9_\-]{0,30}"></label>
+    <div id="cs-fields" class="cs-form"></div>
+    <div class="cs-buttons"><button class="cs-btn main" id="cs-save" type="submit">Save</button></div>
+  </form>
+  <p id="cs-said" aria-live="polite"></p>
+</section>
+<script>
+// The connector setup card: an administrator connects one account of one system. It draws each system's fields from
+// show_connector_setup's result, a secret one as dots. Save calls connector_secret_save with the system, the account and
+// the fields typed here, which Big Puffin's connector keeps only once the system takes them, and the card then shows
+// connected or the reason. Save sends the pass show_connector_setup gave the card in its result's _meta, which the model
+// never sees. The shell gives it callTool and onNotice.
+var SYSTEMS = [], PASS = "", begun = false;
+function $(id) { return document.getElementById(id); }
+function textOf(r) { return ((r && r.content) || []).map(function (c) { return c.text || ""; }).join(" "); }
+function say(text, refused) { var p = $("cs-said"); p.className = refused ? "cs-refused" : ""; p.textContent = text; }
+function chosen() { var name = $("cs-connector").value; return SYSTEMS.filter(function (s) { return s.name === name; })[0]; }
+function drawFields() {
+  var box = $("cs-fields"); box.textContent = "";
+  var s = chosen(); if (!s) return;
+  s.fields.forEach(function (f) {
+    var label = document.createElement("label"), input = document.createElement("input");
+    label.textContent = f.label + (f.optional ? " (optional)" : "");
+    input.name = f.name; input.type = f.secret ? "password" : "text"; input.autocomplete = f.secret ? "new-password" : "off";
+    input.setAttribute("autocapitalize", "off"); input.spellcheck = false; input.required = !f.optional;
+    label.appendChild(input); box.appendChild(label);
+  });
+}
+$("cs-connector").addEventListener("change", drawFields);
+$("cs-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var fields = {};
+  Array.prototype.forEach.call($("cs-fields").querySelectorAll("input"), function (i) { if (i.value !== "") fields[i.name] = i.value; });
+  $("cs-save").disabled = true;
+  say("Checking with " + (chosen() ? chosen().title : "the system") + "…", false);
+  callTool("connector_secret_save", { connector: $("cs-connector").value, account: $("cs-account").value.trim(), fields: fields, pass: PASS }, "save").then(function (r) {
+    if (r && !r.isError) {
+      Array.prototype.forEach.call($("cs-fields").querySelectorAll("input"), function (i) { i.value = ""; });
+      say(textOf(r) || "Connected.", false);
+    } else say("Not kept: " + (textOf(r) || "Big Puffin's connector gave nothing back."), true);
+  }, function (e) { say("Not kept: " + (e && e.message || e), true); }).then(function () { $("cs-save").disabled = false; });
+});
+onNotice["ui/notifications/tool-result"] = function (p) {
+  if (begun) return;
+  begun = true;
+  if (p.isError) { $("cs-state").textContent = textOf(p); $("cs-state").className = "cs-refused"; return; }
+  var given = p.structuredContent || {};
+  SYSTEMS = given.systems || [];
+  PASS = (p._meta && p._meta.pass) || "";
+  if (!PASS) { $("cs-state").textContent = "Claude gave this card no pass, so it can't connect a system. Ask Claude to show the connector setup card again."; $("cs-state").className = "cs-refused"; return; }
+  SYSTEMS.forEach(function (s) { var o = document.createElement("option"); o.value = s.name; o.textContent = s.title; $("cs-connector").appendChild(o); });
+  if (given.connector) $("cs-connector").value = given.connector;
+  if (given.account) $("cs-account").value = given.account;
+  $("cs-state").textContent = "Choose the system, name the account, and type its keys.";
+  drawFields();
+  $("cs-form").hidden = false;
+};
+</script>

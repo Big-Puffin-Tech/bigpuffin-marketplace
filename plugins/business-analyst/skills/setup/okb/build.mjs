@@ -5,23 +5,22 @@
 //
 //   node build.mjs approve --ref <project reference> --folder <setup folder> --firm <business's name> [--slug <slug>] [--reset]
 //   node build.mjs run --url <project URL> [--key <publishable key>] [--ref <project reference>] <file> [<file> ...]
-//   node build.mjs functions
 //   node build.mjs bigpuffin-code --folder <setup folder>
 //
 // approve prints one SQL statement, which the setup command runs through the Management API. It makes the okb_setup
 // schema, which the okb-setup hosted function reads, and approves this folder's setup files by their SHA-256, each to run once:
 // setup.sql, file-search.sql, file-search-scopes.sql, schedule.sql with the project reference filled in, and
 // first-administrator.sql, with reset.sql too for --reset. It keeps the business's name, --firm, in okb_setup.firm, which
-// okb-setup sends Big Puffin's website with each code, so Big Puffin knows whose project it is. It also writes a new sign-in code to the setup folder's
+// okb-setup sends Big Puffin's connector with each code, so Big Puffin knows whose project it is. It also writes a new sign-in code to the setup folder's
 // .okb-owner-code, readable by the owner alone, for the owner's first sign-in, and approves the code by its SHA-256
 // for a day. The code itself is never printed.
 //
 // run sends each file, in order, to the okb-setup hosted function, which runs it as postgres. It prints one line
 // per file, and stops at the first that fails, with the database's message. Exit code 1 then.
 //
-// functions prints, as JSON, each hosted function the setup command deploys through the Management API, in order:
-// its name, its verify_jwt setting, its entrypoint and the full path of each of its files, with the name each file
-// is deployed under.
+// FUNCTIONS names each hosted function the setup command deploys through the Management API, in order, with its
+// verify_jwt setting and the files it is deployed with. The functions' files are not in this plugin: Big Puffin's
+// connector serves them to a business's setup, and the setup command checks what it gets against this list.
 //
 // bigpuffin-code prints, one line each, the one-time invitation code okb-setup made for each of Big Puffin's staff at
 // the owner's sign-in, which the sign-in saved to the setup folder's .okb-bigpuffin-code, readable by the owner alone:
@@ -46,7 +45,8 @@ export const BIGPUFFIN_CODE_FILE = ".okb-bigpuffin-code";
 /**
  * The hosted functions, in the order setup deploys them. okb-setup runs the setup files; the file search
  * functions follow, each with every file it imports; then okb-invite, which stays, for the business analyst's invitations,
- * okb-join, where an invited person spends their code and chooses their password, okb-upgrade, which applies Big Puffin's
+ * okb-join, where an invited person spends their code and chooses their password, password-reset, which gives an
+ * administrator a person's reset code, okb-upgrade, which applies Big Puffin's
  * signed upgrades for Big Puffin's own actor, and graph-reader, which stays off until an administrator adds the business's
  * own Anthropic API key.
  */
@@ -57,13 +57,13 @@ export const FUNCTIONS = [
   { name: "file-search-purge", verify_jwt: true, files: ["index.ts"] },
   { name: "okb-invite", verify_jwt: true, files: ["index.ts"] },
   { name: "okb-join", verify_jwt: false, files: ["index.ts"] },
+  { name: "password-reset", verify_jwt: true, files: ["index.ts"] },
   { name: "okb-upgrade", verify_jwt: true, files: ["index.ts", "upgrade-key.ts"] },
   { name: "graph-reader", verify_jwt: false, files: ["index.ts", "prompt.ts"] },
 ];
 
 export const USAGE = `Usage: node build.mjs approve --ref <project reference> --folder <setup folder> --firm <business's name> [--slug <slug>] [--reset]
        node build.mjs run --url <project URL> [--key <publishable key>] [--ref <project reference>] <file> [<file> ...]
-       node build.mjs functions
        node build.mjs bigpuffin-code --folder <setup folder>`;
 
 const sha256 = text => createHash("sha256").update(text, "utf8").digest("hex");
@@ -80,7 +80,7 @@ export function fileText(name, ref, folder = HERE) {
 
 /** A business's slug: lower-case words and numbers joined by hyphens, 2 to 40 characters. */
 export const SLUG = /^(?=.{2,40}$)[a-z0-9]+(-[a-z0-9]+)*$/;
-/** A business's name as Big Puffin's website takes it: 1 to 200 characters, with no control character. */
+/** A business's name as Big Puffin's connector takes it: 1 to 200 characters, with no control character. */
 export const FIRM = /^[^\p{Cc}]{1,200}$/u;
 
 /** The statement that makes okb_setup and approves the files and the owner's code, and the code file it wrote. */
@@ -127,14 +127,6 @@ export async function runFile(url, key, name, text) {
   return { ok: false, problem: body?.problem ?? `okb-setup answered HTTP ${res.status}` };
 }
 
-/** Each function to deploy, with the full path of each file. */
-export function functions(here = HERE) {
-  return FUNCTIONS.map(f => ({
-    name: f.name, verify_jwt: f.verify_jwt, entrypoint_path: "index.ts",
-    files: f.files.map(name => ({ name, path: join(here, "functions", f.name, name) })),
-  }));
-}
-
 /** The day a code runs out, in words, such as 1 November 2026. */
 const day = iso => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
@@ -175,7 +167,6 @@ export async function main(argv, { say = line => process.stdout.write(`${line}\n
       fail(`The owner's sign-in code is in ${codeFile}.`);
       return 0;
     }
-    if (command === "functions") { say(JSON.stringify(functions(), null, 2)); return 0; }
     if (command === "bigpuffin-code") { for (const line of bigpuffinCodes(o.folder)) say(line); return 0; }
     if (command === "run") {
       const ref = o.ref ?? /^https:\/\/([a-z0-9]{20})\.supabase\.co\/?$/.exec(o.url ?? "")?.[1];
