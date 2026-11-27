@@ -11,6 +11,7 @@
 //   node okb.mjs sign-in --join --url <project URL> --key <publishable key> [--email <email>] [--folder <folder>]
 //   node okb.mjs sync [--project <ref> --email <email>] [--into <local folder>]
 //   node okb.mjs connector-settings --url <project URL> --slug <slug>
+//   node okb.mjs redeploy <function> [<function> ...] [--folder <folder>]
 //   node okb.mjs uninstall [--yes] [--remove-work]
 //   node okb.mjs [--project <ref> --email <email>] <name> [<argument>=<value> ...]
 //
@@ -19,7 +20,8 @@
 // the first sign-in. sync installs the newest release of the business's plugins from OKB's Plugins
 // scope, as sync.mjs describes. uninstall takes Big Puffin's install off the computer and keeps the person's
 // folders, as uninstall.mjs describes. connector-settings makes the five settings Big Puffin's connector needs in the
-// project, with a Supabase access token typed at its own hidden prompt, as connector-settings.mjs describes. --folder signs in as --email and writes that folder's actor file, so a session
+// project, with a Supabase access token typed at its own hidden prompt, as connector-settings.mjs describes. redeploy
+// deploys named Big Puffin hosted functions again, from Big Puffin's connector, as an administrator, as redeploy.mjs describes. --folder signs in as --email and writes that folder's actor file, so a session
 // opened on it works as that person. The first sign-in asks for the project's address and
 // publishable key, unless --url and --key give them.
 // SUPABASE_PROJECT_REF and SUPABASE_AUTH_EMAIL, set together, stand in for --project and --email.
@@ -43,6 +45,7 @@ import { setup, SETUP_USAGE } from "./setup.mjs";
 import { runSync, SYNC_USAGE } from "./sync.mjs";
 import { uninstall, UNINSTALL_USAGE } from "./uninstall.mjs";
 import { connectorSettings, CONNECTOR_SETTINGS_USAGE } from "./connector-settings.mjs";
+import { redeploy, REDEPLOY_USAGE } from "./redeploy.mjs";
 
 export const USAGE = `Usage: node okb.mjs setup [--folder <folder>] --email <email> [--url <project URL> --key <publishable key>] [--agent <plugin>:<agent>] [--new-password | --join]
        node okb.mjs setup --owner --folder <folder>
@@ -52,6 +55,7 @@ export const USAGE = `Usage: node okb.mjs setup [--folder <folder>] --email <ema
        node okb.mjs sign-in --join --url <project URL> --key <publishable key> [--email <email>] [--folder <folder>]
        node okb.mjs sync [--project <ref> --email <email>] [--into <local folder>]
        node okb.mjs connector-settings --url <project URL> --slug <slug>
+       node okb.mjs redeploy <function> [<function> ...] [--folder <folder>]
        node okb.mjs uninstall [--yes] [--remove-work]
        node okb.mjs [--project <ref> --email <email>] <name> [<argument>=<value> ...]
 
@@ -75,6 +79,9 @@ signed in as you, and updates each plugin installed from it. node okb.mjs sync -
 
 connector-settings makes the five settings Big Puffin's connector needs in your business's Supabase project. It asks
 for a Supabase access token at a hidden prompt, and uses it once. node okb.mjs connector-settings --help says more.
+
+redeploy deploys Big Puffin's hosted functions you name again in your business's Supabase project, from Big Puffin's
+connector, as an administrator, as an upgrade asks. node okb.mjs redeploy --help says more.
 
 uninstall takes Big Puffin's install off this computer, signs you out and keeps your folders. It lists
 each item first, and asks you to type yes. node okb.mjs uninstall --help says more.
@@ -126,8 +133,9 @@ export function signInArgs(argv, email, cwd = process.cwd()) {
   return [SIGN_IN, ...(email && !named ? ["--email", email] : []), ...argv];
 }
 
-// A tool argument that names a local file: a top-level `file`, or a name ending in _file or _files.
-const isFileArgument = name => name === "file" || /_files?$/.test(name);
+// A tool's own argument that names a local file: a top-level `file`, or a name ending in _file or _files. An OKB
+// function's arguments are the database's, so its only local file is result_file, where the CLI writes the answer.
+const isFileArgument = (tool, key) => tool.startsWith("okb_") ? key === "result_file" : key === "file" || /_files?$/.test(key);
 
 /** The command line's options, name and arguments. */
 export function parse(argv, cwd = process.cwd()) {
@@ -153,13 +161,13 @@ export function parse(argv, cwd = process.cwd()) {
         const held = out.args[name] ?? {};
         if (held === null || typeof held !== "object" || Array.isArray(held)) throw new Error(`${name} is given as a value and as fields.`);
         if (field in held) throw new Error(`${key} is given twice.`);
-        out.args[name] = { ...held, [field]: value(field, text, cwd, false) };
+        out.args[name] = { ...held, [field]: value(field, text, cwd) };
       } else if (key in out.args) {
         // A file list may be given one file at a time.
         if (!/_files$/.test(key)) throw new Error(`${key} is given twice.`);
-        out.args[key] = [].concat(out.args[key], value(key, text, cwd));
+        out.args[key] = [].concat(out.args[key], value(key, text, cwd, isFileArgument(out.name, key)));
       } else {
-        out.args[key] = value(key, text, cwd);
+        out.args[key] = value(key, text, cwd, isFileArgument(out.name, key));
       }
     }
   }
@@ -169,8 +177,8 @@ export function parse(argv, cwd = process.cwd()) {
   return out;
 }
 
-/** One argument's value: a file's JSON, JSON, or text. A top-level file argument's paths are made full; a field of an object, such as a bucket path, stays as typed. */
-function value(key, text, cwd, topLevel = true) {
+/** One argument's value: a file's JSON, JSON, or text. A tool's file argument's paths are made full; anything else, such as a field of an object or a bucket path, stays as typed. */
+function value(key, text, cwd, localFile = false) {
   let v;
   if (text.startsWith("@")) {
     const file = resolve(cwd, text.slice(1));
@@ -182,7 +190,7 @@ function value(key, text, cwd, topLevel = true) {
     const json = /^\s*[[{"]/.test(text) || ["true", "false", "null"].includes(text.trim());
     if (json) { try { v = JSON.parse(text); } catch { v = text; } } else v = text;
   }
-  if (topLevel && isFileArgument(key)) {
+  if (localFile) {
     if (typeof v === "string") return resolve(cwd, v);
     if (Array.isArray(v)) return v.map(one => resolve(cwd, String(one)));
     // A single file name for a list, such as progress_files=progress.json.
@@ -219,6 +227,11 @@ export function account(project, email, home = homedir(), cwd = process.cwd()) {
 export async function run({ project, email, name, args }, cwd = process.cwd(), home = homedir()) {
   const pages = pageTools({ agentFolder: cwd });
   const asked = name ?? "";
+  // A shared login's password: refused in a Claude Code session, which sets CLAUDECODE, so no agent reads or types one
+  // through okb. A person opens a login on the Login card.
+  const loginFunction = fn => ["okb_open_login", "okb_save_login"].includes(String(fn ?? "").trim().toLowerCase().replace(/^okb\./, ""));
+  if (process.env.CLAUDECODE && (loginFunction(asked) || (asked === "rpc" && loginFunction(args?.function))))
+    return { ok: false, problem: "A shared login's password is opened, typed and generated on the Login card alone." };
   let content;
   if (PAGE_TOOLS.some(t => t.name === asked)) {
     if (["draw_board", "draw_graph"].includes(asked)) {
@@ -257,6 +270,10 @@ if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(resolve(pro
     const words = process.argv.slice(3);
     if (words.includes("--help") || words.includes("-h")) { process.stdout.write(`${CONNECTOR_SETTINGS_USAGE}\n`); process.exit(0); }
     process.exitCode = await connectorSettings(words);
+  } else if (process.argv[2] === "redeploy") {
+    const words = process.argv.slice(3);
+    if (words.includes("--help") || words.includes("-h")) { process.stdout.write(`${REDEPLOY_USAGE}\n`); process.exit(0); }
+    process.exitCode = await redeploy(words);
   } else if (process.argv[2] === "sync") {
     const words = process.argv.slice(3);
     if (words.includes("--help") || words.includes("-h")) { process.stdout.write(`${SYNC_USAGE}\n`); process.exit(0); }

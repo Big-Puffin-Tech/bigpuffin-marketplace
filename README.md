@@ -18,13 +18,13 @@ The owner is the person at the business who will own the Supabase account and be
 On macOS:
 
 ```sh
-cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --owner
+cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && echo "0dd6c5b2683eba504632cbbef9a6ec502ccf8417b7920ec9cdfe46c2eda69b6f  install.sh" | shasum -a 256 -c && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --owner
 ```
 
 On Windows:
 
 ```powershell
-cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --owner
+cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; if ((Get-FileHash install.ps1 -Algorithm SHA256).Hash -eq 'dc12d807f85bbae87c59b7731a5a5a230afb6ca7f6b92b9100a7c1b30e95751b') { powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --owner } else { Write-Error 'install.ps1 does not match its checksum, and was not run.' }
 ```
 
 The script installs the programs and the plugins, as section 3 says. It then makes the folder `bigpuffin` in your home folder, and makes the business analyst that folder's agent. It does not sign you in, since there is no project to sign in to yet. Give `--folder <folder>` for another folder, outside any Git repository.
@@ -37,7 +37,7 @@ Set up Big Puffin
 
 Before you type it, create a free account at supabase.com. The business analyst then gives you one command.
 
-Click Run on it, and paste a Supabase access token. Make it at supabase.com/dashboard/account/tokens: name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. The command asks your business's name and which Supabase project to use, or creates one in London. It builds everything, and asks your name, email and a password you choose. It ends with a short summary. The business analyst never sees, asks for or types a password, a secret key or a token.
+Click Run on it, and paste a Supabase access token. Make it at supabase.com/dashboard/account/tokens: name it, choose the shortest expiry, choose Organization under Resource access, and keep Full access. The command asks your business's name and which Supabase project to use, or creates one in London. It asks for the setup key Big Puffin sent you. It builds everything, and asks your name, email and a password you choose. It ends with a short summary. The business analyst never sees, asks for or types a password, a secret key, a setup key or a token.
 
 ### 2. Each member of staff, after setup
 
@@ -49,13 +49,13 @@ Once setup has finished, the business's administrator adds each member of staff 
 The command, with those values in place of the angle brackets, on macOS:
 
 ```sh
-cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
+cd ~ && curl -fsSLO https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.sh && echo "0dd6c5b2683eba504632cbbef9a6ec502ccf8417b7920ec9cdfe46c2eda69b6f  install.sh" | shasum -a 256 -c && bash install.sh Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
 ```
 
 On Windows:
 
 ```powershell
-cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join
+cd ~; Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Big-Puffin-Tech/bigpuffin-marketplace/main/install/install.ps1 -OutFile install.ps1; if ((Get-FileHash install.ps1 -Algorithm SHA256).Hash -eq 'dc12d807f85bbae87c59b7731a5a5a230afb6ca7f6b92b9100a7c1b30e95751b') { powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 Big-Puffin-Tech/bigpuffin-marketplace --email <email> --url <project address> --key <publishable key> --join } else { Write-Error 'install.ps1 does not match its checksum, and was not run.' }
 ```
 
 The script installs the programs and the plugins, then sets up the folder `bigpuffin` in your home folder with `okb setup`. The sign-in asks for your invitation code. Then it asks you to choose a password, twice. The password stays hidden as you type it, and goes only to your business's Supabase project. Save it in your password manager. A wrong code, or one that has run out, is refused, and after five wrong tries the code stops working. Ask your administrator for a new one.

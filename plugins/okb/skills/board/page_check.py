@@ -5,13 +5,22 @@ the page draws, then the findings. Beside a page `<name>.html` it is `<name>.out
 picture is `<name>.png`, the page's first screen, 1,600 pixels wide, taken with a Chromium
 browser run headless where one is found: Google Chrome, Chromium or Microsoft Edge.
 """
+import json
 import os
 import shutil
+import signal
+import stat
 import subprocess
 import sys
+import tempfile
 import time
 import re
 from datetime import datetime, timedelta, timezone
+
+try:
+    import fcntl
+except ImportError:  # Windows
+    fcntl = None
 
 # Where a Chromium browser is installed, in the order tried. A name without a separator is looked
 # for on PATH, which is where Chromium and the Linux packages put theirs.
@@ -48,6 +57,144 @@ def browser():
             if found:
                 return found
     return None
+
+
+# How many browsers run at once on this computer, across every session, test run and plugin that holds this helper. Many
+# at once slow each other past their time.
+BROWSER_SLOTS = max(2, min(8, (os.cpu_count() or 4) // 4))
+SLOTS_FOLDER = os.path.join(tempfile.gettempdir(), f"okb-browser-slots-{os.getuid() if hasattr(os, 'getuid') else 0}")
+
+
+class Stopped(SystemExit):
+    """This script was told to stop, with SIGTERM, while the browser ran."""
+
+
+def slots_folder():
+    """The slot folder, made private to this user. None when it is not a folder this user alone owns and writes."""
+    try:
+        os.makedirs(SLOTS_FOLDER, mode=0o700, exist_ok=True)
+        st = os.lstat(SLOTS_FOLDER)
+    except OSError:
+        return None
+    if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.getuid() or st.st_mode & 0o022:
+        return None
+    return SLOTS_FOLDER
+
+
+def take_slot(deadline):
+    """Holds one of the browser slots, waiting until the deadline for one. Returns the open slot's descriptor,
+    or None where there is no lock to take, on Windows, or no slot came in time: then the browser runs anyway."""
+    if fcntl is None:
+        return None
+    folder = slots_folder()
+    if folder is None:
+        return None
+    while True:
+        for n in range(BROWSER_SLOTS):
+            try:
+                slot = os.open(os.path.join(folder, f"{n}.lock"), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+            except OSError:
+                return None
+            try:
+                fcntl.flock(slot, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return slot
+            except OSError:
+                os.close(slot)
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(0.2)
+
+
+def signal_group(pid, sig):
+    """Sends the signal to the browser's process group. On macOS one sandboxed helper can refuse it, and
+    the call then fails although the others got it."""
+    try:
+        os.killpg(pid, sig)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
+def stop(process, grace):
+    """Asks the browser and its helpers to quit, and kills them after `grace` seconds. On Windows there are
+    no process groups, and the browser is killed."""
+    if sys.platform == "win32":
+        process.kill()
+        process.wait()
+        return
+    signal_group(process.pid, signal.SIGTERM)
+    try:
+        process.wait(grace)
+    except subprocess.TimeoutExpired:
+        pass
+    # Helpers still shutting down after the browser has quit are ended too.
+    signal_group(process.pid, signal.SIGKILL)
+    process.wait()
+
+
+def with_features_off(switches):
+    """The switches with MacAppCodeSignClone added to the features turned off. Chrome reads only the last
+    --disable-features, so a caller's own list is joined to it rather than given beside it."""
+    features, rest = ["MacAppCodeSignClone"], []
+    for switch in switches:
+        if switch.startswith("--disable-features="):
+            features += [f for f in switch.split("=", 1)[1].split(",") if f and f not in features]
+        else:
+            rest.append(switch)
+    return [*rest, "--disable-features=" + ",".join(features)]
+
+
+def remove_profile(profile):
+    """Removes the profile folder. On Windows a helper of the browser can hold it open a moment after the
+    browser returns, so it is tried again for up to 5 seconds."""
+    end = time.monotonic() + (5 if sys.platform == "win32" else 0)
+    while True:
+        shutil.rmtree(profile, ignore_errors=True)
+        if not os.path.exists(profile) or time.monotonic() >= end:
+            return
+        time.sleep(0.25)
+
+
+def run_browser(found, switches, timeout, grace=5):
+    """Runs the browser headless with the switches, in its own process group and with its own new profile
+    folder, removed afterwards. Raises subprocess.TimeoutExpired once the browser has run `timeout` seconds,
+    after stopping it. Waiting for a slot counts towards the time."""
+    deadline = time.monotonic() + timeout
+    profile = slot = process = None
+
+    def stopped(*_):
+        raise Stopped(128 + signal.SIGTERM)
+
+    try:
+        previous = signal.signal(signal.SIGTERM, stopped)
+    except ValueError:  # not the main thread
+        previous = None
+    try:
+        slot = take_slot(deadline - 30)
+        profile = tempfile.mkdtemp(prefix="okb-profile-")
+        # MacAppCodeSignClone is what makes Chrome on macOS copy itself into the temporary folder at each start.
+        # Chrome removes the copy only when it quits on its own, never when it is stopped, so it is turned off.
+        # Other browsers ignore a feature they do not know.
+        process = subprocess.Popen([found, "--headless", f"--user-data-dir={profile}", *with_features_off(switches)],
+                                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   start_new_session=sys.platform != "win32")
+        left = max(1.0, deadline - time.monotonic())
+        try:
+            process.wait(left)
+        except subprocess.TimeoutExpired:
+            stop(process, grace)
+            raise subprocess.TimeoutExpired(found, timeout) from None
+    except BaseException:
+        if process is not None and process.poll() is None:
+            stop(process, grace)
+        raise
+    finally:
+        if previous is not None:
+            signal.signal(signal.SIGTERM, previous)
+        if slot is not None:
+            os.close(slot)
+        if profile is not None:
+            remove_profile(profile)
+    return process.returncode
 
 
 def companions(page_path):
@@ -92,11 +239,10 @@ def picture(page_path, height, fragment=""):
     try:
         # The two keychain switches keep the browser off the macOS keychain, whose dialog a home
         # folder without one raises, as the okb command's tests give it.
-        subprocess.run([found, "--headless", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
-                        "--no-default-browser-check", "--use-mock-keychain", "--password-store=basic",
-                        f"--window-size=1600,{height}",
-                        "--virtual-time-budget=8000", f"--screenshot={os.path.abspath(png)}", url],
-                       capture_output=True, timeout=90, check=False)
+        run_browser(found, ["--disable-gpu", "--hide-scrollbars", "--no-first-run",
+                            "--no-default-browser-check", "--use-mock-keychain", "--password-store=basic",
+                            f"--window-size=1600,{height}",
+                            "--virtual-time-budget=8000", f"--screenshot={os.path.abspath(png)}", url], timeout=90)
     except (OSError, subprocess.TimeoutExpired) as err:
         return f"no picture: the browser did not finish ({err})"
     if not written(png):
@@ -353,7 +499,42 @@ def state_machine_findings(graph_data, sm_data):
     return found
 
 
-def check_state_machine(page_path, title, line, graph_data, sm_data):
+LIST_SHOWN = 5
+
+
+def list_text(value):
+    """A case list or auto_for list in a line: its first five items, and how many more."""
+    items = [str(v) for v in value] if isinstance(value, list) else [str(value)]
+    if not items:
+        return "every case"
+    shown = ", ".join(items[:LIST_SHOWN])
+    return f"{shown} and {len(items) - LIST_SHOWN} more" if len(items) > LIST_SHOWN else shown
+
+
+def run_lines(properties):
+    """A step's run attributes, one (label, text) each, as the state machine page's card shows them."""
+    lines = []
+    if properties.get("plugin"):
+        lines.append(("Workflow plugin", str(properties["plugin"])))
+    if properties.get("action"):
+        lines.append(("Action", str(properties["action"])))
+    if properties.get("performed_by"):
+        lines.append(("Done by", str(properties["performed_by"])))
+    if properties.get("approval"):
+        lines.append(("Approval", str(properties["approval"])))
+    if properties.get("auto_for"):
+        lines.append(("Runs without asking for", list_text(properties["auto_for"])))
+    cases = properties.get("cases") if isinstance(properties.get("cases"), dict) else {}
+    for name, value in cases.items():
+        lines.append((name.replace("_", " ").capitalize(), list_text(value)))
+    settings = properties.get("settings") if isinstance(properties.get("settings"), dict) else {}
+    if settings:
+        lines.append(("Settings", "; ".join(f"{k.replace('_', ' ')} {json.dumps(v) if isinstance(v, (dict, list)) else v}"
+                                            for k, v in settings.items())))
+    return lines
+
+
+def check_state_machine(page_path, title, line, graph_data, sm_data, since=None):
     """The state machine page's outline and picture. Returns a line for the tool's output."""
     nodes = graph_data["nodes"]
     by_id = {n["id"]: n for n in nodes}
@@ -375,6 +556,8 @@ def check_state_machine(page_path, title, line, graph_data, sm_data):
             linked = detail.get(n["id"], {}).get("links", {}).get(category, [])
             if linked:
                 out.append(f"{indent}  {heading}: {', '.join(link['name'] for link in linked)}")
+        for label, text in run_lines(detail.get(n["id"], {}).get("properties", {})):
+            out.append(f"{indent}  {label}: {text}")
         return out
 
     lines = [f"# State machine: {title}", "", line, "",
@@ -419,6 +602,14 @@ def check_state_machine(page_path, title, line, graph_data, sm_data):
         if r.get("outcome"):
             lines.append(f"  Outcome: {r['outcome']}")
     lines.append("")
+    if since is not None:
+        lines.extend([f"## Changes from version {since['version_number']}", ""])
+        for c in since["changes"]:
+            what = f" ({', '.join(f.replace('_', ' ') for f in c['fields'])})" if c["fields"] else ""
+            where = f", in {c['routine']}" if c["routine"] else ""
+            lines.append(f"- {(c['reference'] + ' ') if c['reference'] else ''}{c['name']}{where}: {c['change']}{what}")
+        lines.extend([] if since["changes"] else ["None"])
+        lines.append("")
     findings = state_machine_findings(graph_data, sm_data)
     lines.extend(findings_lines(findings))
     write(page_path, lines)

@@ -1,0 +1,15 @@
+/* Big Puffin's look, from brand/bigpuffin.md: one custom property for each colour and typeface. A card from Big Puffin's
+   connector takes these where the business has no Brand record. Each colour follows the card's colour scheme, which the
+   card takes from Claude's theme: the first in light, the second in dark. A card keeps the chat's own type. */
+:root {
+  --brand-ink: light-dark(#0D1420, #F1F3F5);
+  --brand-paper: light-dark(#F1F3F5, #0D1420);
+  --brand-surface: light-dark(#E6E9EE, #131C2B);
+  --brand-muted: light-dark(#5A6475, #8D98AB);
+  --brand-rule: light-dark(#D3D9E1, #223048);
+  --brand-accent: #F2A21E;
+  --brand-on-accent: #0D1420;
+  --brand-accent-text: light-dark(#9A5A00, #F2A21E);
+  --brand-heading-font: var(--font-sans, system-ui, sans-serif);
+  --brand-body-font: var(--font-sans, system-ui, sans-serif);
+}
