@@ -1,17 +1,29 @@
 -- 0009-bigpuffin-template
 -- base: new
 -- Big Puffin's own access template is bigpuffin, and Big Puffin's own plugin's scope is plugins_bigpuffin. The template
--- kinetik becomes bigpuffin, with its grants, and Kinetik becomes Big Puffin in the templates' descriptions and in
--- the messages of okb_private.save_access_template and okb.okb_get_file_parts. The same text is in setup.sql. Safe to
--- run twice. Run as the postgres login.
+-- an earlier install gave its provider, the one that changes the plugins scope's files, becomes bigpuffin, with its
+-- grants, and the provider's name becomes Big Puffin in the templates' descriptions and in the messages of
+-- okb_private.save_access_template and okb.okb_get_file_parts. The same text is in setup.sql. Safe to run twice. Run
+-- as the postgres login.
 
 -- ===================================================================
 -- 8aa. The bigpuffin template.
 -- ===================================================================
 set role okb_owner;
-update okb.access_template set code='bigpuffin'
- where code='kinetik' and not exists(select 1 from okb.access_template where code='bigpuffin');
-update okb.access_template set description=replace(description,'Kinetik','Big Puffin') where description like '%Kinetik%';
+-- The earlier provider's template is the one other template that adds files to the plugins scope. Its code is the
+-- provider's name in lower case, and the descriptions name the provider with a capital.
+do $upgrade$
+declare earlier text;
+begin
+ select code into earlier from okb.access_template
+  where code<>'bigpuffin' and grants @> '[{"scope":"plugins","actions":["create"]}]'::jsonb order by code limit 1;
+ if earlier is null then return; end if;
+ update okb.access_template set code='bigpuffin'
+  where code=earlier and not exists(select 1 from okb.access_template where code='bigpuffin');
+ update okb.access_template set description=replace(description,initcap(earlier),'Big Puffin')
+  where description like '%'||initcap(earlier)||'%';
+end
+$upgrade$;
 alter table okb.scope drop constraint if exists scope_code_not_own_plugin;
 alter table okb.scope add constraint scope_code_not_own_plugin check (code not in ('plugins_bigpuffin','plugins_okb','plugins_business_analyst','plugins_project'));
 

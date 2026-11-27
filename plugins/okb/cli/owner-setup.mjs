@@ -3,14 +3,20 @@
 // analyst once did with the Supabase connector, in the order of the setup design's "How it works":
 //
 //   the token, checked with GET /v1/organizations; the organisation; the project, found or created in London, and
-//   healthy; where the project stands, read with state.sql; okb-setup deployed, the setup files approved and run;
-//   file search's functions and schedule; the Data API serving okb; the owner's own sign-in; the business's short
-//   name, its slug, kept with Big Puffin's website; the administrator, the health check, the scopes and file search
+//   healthy; where the project stands, read with state.sql; the business's short name, its slug, kept with Big
+//   Puffin's connector; the setup key, at a hidden prompt, and Big Puffin's hosted functions fetched with it from the
+//   connector; okb-setup deployed, the setup files approved and run;
+//   file search's functions and schedule; the Data API serving okb; the owner's own sign-in; the administrator, the health check, the scopes and file search
 //   checked as the owner, the setup record and the open task saved, okb_setup dropped, setup ended in the folder;
 //   then the five settings of Big Puffin's connector, public sign-up off among them, and the summary.
 //
-// The token, the owner's password and the database password the command makes stay in this process's memory. None
-// goes on a command line, into an environment variable, a file or a log, and none is printed.
+// The token, the setup key, the owner's password and the database password the command makes stay in this process's
+// memory. None goes on a command line, into an environment variable, a file or a log, and none is printed. The setup key
+// goes to Big Puffin's connector alone. A run after a stop asks for the key again, while setup has not finished.
+//
+// Big Puffin's hosted functions are not in this marketplace. Big Puffin's connector serves them, at POST /api/functions,
+// to a setup with the one-time setup key Big Puffin gave the owner, as hosted-functions.mjs fetches them. A wrong, used or
+// expired key stops setup before anything is deployed, with a line saying to email Big Puffin.
 //
 // The setup folder keeps the business's name, its slug and the project's reference in .okb-setup-business.json,
 // readable by the owner alone, so a run after a stop carries on with the same project and slug, and never proposes
@@ -20,7 +26,7 @@
 // Exit codes: 0 everything done, 1 a step failed or was refused, 2 bad options, 3 run again later, for the signing
 // key's second run.
 //
-// OKB_TEST_MANAGEMENT_API and OKB_TEST_BIGPUFFIN_SITE name loopback stand-ins for Supabase and Big Puffin's website, for
+// OKB_TEST_MANAGEMENT_API and OKB_TEST_BIGPUFFIN_SITE name loopback stand-ins for Supabase and Big Puffin's connector, for
 // the stand-in's tests. Each is used only when it is a loopback http address, and the run says so before any prompt.
 // With the Management API's stand-in, the project's own address is the stand-in's too, and OKB_TEST_HEALTH_WAIT_MS
 // may shorten the wait for a healthy project.
@@ -37,6 +43,7 @@ import { AGAIN, makeSettings, TOKEN_OPTIONS, TOKEN_PAGE } from "./connector-sett
 import { ownerSignIn } from "../mcp/lib/sign-in-flow.mjs";
 import { createTools } from "../mcp/lib/tools.mjs";
 import { readActor } from "../mcp/lib/actor-file.mjs";
+import { fetchFunctions, Unfetched } from "./hosted-functions.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /** The setup skill's files, beside the okb plugin in Big Puffin's marketplace. */
@@ -46,19 +53,21 @@ export const SETUP_FOLDER = resolve(HERE, "../../business-analyst/skills/setup/o
 export const BUSINESS_FILE = ".okb-setup-business.json";
 /** Where a new project is made: London. */
 export const REGION = "eu-west-2";
-/** Big Puffin's website, which keeps each business's slug. */
-export const SITE = "https://kinetik.it.com";
+/** Big Puffin's connector, which keeps each business's slug at /api/slug and serves each client at /<slug>. */
 export const CONNECTOR = "https://mcp.bigpuffin.dev";
+export const SITE = CONNECTOR;
 const LOOPBACK = /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]):\d{1,5}$/;
 /** A slug: lower-case words and numbers joined by hyphens, 2 to 40 characters. */
 export const SLUG = /^(?=.{2,40}$)[a-z0-9]+(-[a-z0-9]+)*$/;
+/** The first path segments the connector serves itself, which no business can take as its slug. */
+export const RESERVED = ["api"];
 /** The highest number a slug is tried with, after the slug itself: <slug>-2 up to <slug>-9. */
 const LAST_TRY = 9;
 const SCOPES = ["general", "routines", "reference", "plugins"];
 const TASK_TITLE = "Connect Big Puffin's connector";
 
 /**
- * Big Puffin's website's address: the real one, or a loopback stand-in named by OKB_TEST_BIGPUFFIN_SITE, which counts only
+ * Big Puffin's connector's address: the real one, or a loopback stand-in named by OKB_TEST_BIGPUFFIN_SITE, which counts only
  * when the Management API is a stand-in too, so a real run never sends a business's slug anywhere but Big Puffin.
  */
 export function siteBase(base = apiBase(), env = process.env) {
@@ -91,8 +100,8 @@ export const slugTry = (slug, n) => n === 1 ? slug : `${cutAt(slug, 38)}-${n}`;
 export const OWNER_SETUP_USAGE = `Usage: node okb.mjs setup --owner --folder <folder>
 
 setup --owner sets Big Puffin up for your business in one run. It asks for a Supabase access token, which you make
-at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} You delete it on that page once setup is done. It then asks your business's name, finds or creates your Supabase project in London, builds your
-Big Puffin knowledge base in it, asks your name, email and the password you choose, and makes the five settings of
+at ${TOKEN_PAGE}. ${TOKEN_OPTIONS} You delete it on that page once setup is done. It then asks your business's name, finds or creates your Supabase project in London, asks
+the setup key Big Puffin gave you, builds your Big Puffin knowledge base in it, asks your name, email and the password you choose, and makes the five settings of
 Big Puffin's connector. Run it again after a stop, and it carries on from where it stopped.`;
 
 /** --folder, checked. */
@@ -194,25 +203,23 @@ class Stop extends Error {}
 /** Supabase's own message for a failed call, as one line. */
 const said = err => (err instanceof Error ? err.message : String(err)).replace(/\s+/g, " ").trim().replace(/([^.!?…])$/, "$1.");
 
-/** Big Puffin's support address, from bigpuffin.ts, or null. */
-function supportEmail(setup) {
-  try { return /^export const SUPPORT_EMAIL: string \| null = "([^"]+)";$/m.exec(readFileSync(join(setup, "functions", "okb-setup", "bigpuffin.ts"), "utf8"))?.[1] ?? null; }
-  catch { return null; }
-}
+/** Big Puffin's support address, which an owner writes to when setup stops. */
+export const SUPPORT_EMAIL = "support@bigpuffin.io";
 
-/** Big Puffin's website keeps slug for the project. Returns "held", "taken", or throws Stop. */
+/** Big Puffin's connector keeps slug for the project. Returns "held", "taken", or throws Stop. */
 async function claimSlug(site, { projectUrl, slug, key }) {
+  if (RESERVED.includes(slug)) return "taken";
   let res;
   try {
     res = await fetch(`${site}/api/slug`, { method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ project_url: projectUrl, slug, publishable_key: key }) });
   } catch (err) {
-    throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's website could not be reached: ${err?.cause?.code ?? err?.message ?? err}. Run this command again later.`);
+    throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's connector could not be reached: ${err?.cause?.code ?? err?.message ?? err}. Run this command again later.`);
   }
   await res.arrayBuffer().catch(() => null);
   if (res.status === 204) return "held";
   if (res.status === 409) return "taken";
-  throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's website answered HTTP ${res.status}. Run this command again later.`);
+  throw new Stop(`Keeping your short name with Big Puffin: failed. Big Puffin's connector answered HTTP ${res.status}. Run this command again later.`);
 }
 
 /**
@@ -232,11 +239,11 @@ export async function ownerSetup(argv, {
   let build;
   try { build = await import(pathToFileURL(join(setup, "build.mjs")).href); }
   catch { say(`The setup files are not beside the okb plugin, at ${setup}. Run this command from Big Puffin's marketplace.`); return 1; }
-  const support = supportEmail(setup);
+  const support = SUPPORT_EMAIL;
   const stand = base !== API;
   // Each stand-in is said before any prompt, so a token is never pasted for one unseen.
   if (stand) say(`This run talks to a test stand-in at ${base}, not to Supabase. Paste no real token.`);
-  if (site !== SITE) say(`This run talks to a test stand-in at ${site}, not to Big Puffin's website.`);
+  if (site !== SITE) say(`This run talks to a test stand-in at ${site}, not to Big Puffin's connector.`);
   const projectUrl = ref => stand ? base : `https://${ref}.supabase.co`;
   const waitMs = stand && Number(env.OKB_TEST_HEALTH_WAIT_MS) > 0 ? Number(env.OKB_TEST_HEALTH_WAIT_MS) : 600000;
 
@@ -350,23 +357,38 @@ export async function ownerSetup(argv, {
     let email = readActor(folder)?.ok ? readActor(folder).value.auth_email : null;
 
     if (!state.setup_finished) {
-      // The slug, kept with Big Puffin's website before approve: the saved one after a stop, or the first free try.
+      // The slug, kept with Big Puffin's connector before approve: the saved one after a stop, or the first free try.
       doing = "Keeping your short name with Big Puffin";
       const tries = business.held ? [business.slug] : Array.from({ length: LAST_TRY }, (_, i) => slugTry(business.slug, i + 1));
       let held = null;
       for (const slug of tries) if (await claimSlug(site, { projectUrl: url, slug, key }) === "held") { held = slug; break; }
       if (!held) throw new Stop(business.held
-        ? `Big Puffin's website says your short name, ${business.slug}, is no longer yours. Please email ${support ?? "Big Puffin"}.`
-        : `Big Puffin's website says ${business.slug} and each number after it up to ${slugTry(business.slug, LAST_TRY)} are taken. Please email ${support ?? "Big Puffin"}.`);
+        ? `Big Puffin's connector says your short name, ${business.slug}, is no longer yours. Please email ${support ?? "Big Puffin"}.`
+        : `Big Puffin's connector says ${business.slug} and each number after it up to ${slugTry(business.slug, LAST_TRY)} are taken. Please email ${support ?? "Big Puffin"}.`);
       business = { ...business, slug: held, held: true };
       writeBusiness(folder, business);
       say(`Keeping your short name, ${held}, with Big Puffin: done.`);
 
+      // The setup key, at a hidden prompt, and Big Puffin's hosted functions fetched with it, before anything is deployed.
+      doing = "Fetching Big Puffin's hosted functions";
+      say("Type the setup key Big Puffin gave you. It is three groups of four letters and numbers, such as ABCD-EFGH-JKMN.");
+      let setupKey = "";
+      while (!setupKey) setupKey = (await askHidden("Big Puffin setup key: ")).trim().toUpperCase();
+      let all;
+      try { all = (await fetchFunctions(site, { projectUrl: url, publishableKey: key, setupKey }, build.FUNCTIONS)).functions; }
+      catch (err) {
+        if (!(err instanceof Unfetched)) throw err;
+        if (err.status === 403) throw new Stop(`Big Puffin's connector did not take your setup key, so nothing was deployed. Check you typed it as Big Puffin sent it, and run this command again. If it still fails, please email ${support} for a new key.`);
+        throw new Stop(`${doing}: failed. ${err.message} Nothing was deployed. Run this command again later.`);
+      }
+      setupKey = "";
+      say("Fetching Big Puffin's hosted functions: done.");
+
       doing = "Building your Big Puffin knowledge base";
-      const all = build.functions(setup);
+      const ordered = build.FUNCTIONS.map(f => all.find(x => x.name === f.name));
       const deploy = async f => deployFunction(c, ref, { name: f.name, entrypoint: f.entrypoint_path, verifyJwt: f.verify_jwt,
-        files: f.files.map(x => ({ name: x.name, text: readFileSync(x.path, "utf8") })) });
-      await deploy(all[0]);
+        files: f.files.map(x => ({ name: x.name, text: x.text })) });
+      await deploy(ordered[0]);
       await query(c, ref, build.approve({ ref, folder, firm: business.name, slug: held, reset }, { here: setup }).sql);
       const runFiles = async names => {
         for (const name of names) {
@@ -378,7 +400,7 @@ export async function ownerSetup(argv, {
       say("Building your Big Puffin knowledge base: done.");
 
       doing = "Setting up file search";
-      for (const f of all.slice(1)) await deploy(f);
+      for (const f of ordered.slice(1)) await deploy(f);
       await runFiles(["schedule.sql"]);
       say("Setting up file search: done.");
 
@@ -461,11 +483,11 @@ export async function ownerSetup(argv, {
     for (const line of settings.lines) say(line);
     if (settings.code !== 0) return settings.code === AGAIN ? AGAIN : 1;
 
-    // The summary. Big Puffin's codes the website did not take are read here, and their file deleted only once they are
+    // The summary. Big Puffin's codes the connector did not take are read here, and their file deleted only once they are
     // shown, so a run that stops before this point keeps them for the next.
     try { codes = build.bigpuffinCodes(folder, { keep: true }); } catch { codes = []; }
     say(`Big Puffin is set up in ${business.project}, and you are its administrator.`);
-    for (const line of codes) say(`Big Puffin's website did not take its invitation code. Please email it to ${support ?? "Big Puffin"}, so Big Puffin can sign in: ${line}.`);
+    for (const line of codes) say(`Big Puffin's connector did not take its invitation code. Please email it to ${support ?? "Big Puffin"}, so Big Puffin can sign in: ${line}.`);
     if (plan === "free") say("Your Supabase plan is Free, which pauses a project nobody uses for a week. A paid plan keeps it running.");
     say("One step is left. Once Big Puffin confirms your business, the Owner of your Claude organisation adds Big Puffin's connector at this address:");
     say(`${CONNECTOR}/${business.slug}`);
